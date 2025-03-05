@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 export function AnimatedBackground() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800" />
+      <div className="absolute inset-0 bg-linear-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800" />
       
       <motion.div 
         className="absolute top-[10%] -left-[5%] w-72 h-72 rounded-full bg-blue-300/10 backdrop-blur-3xl"
