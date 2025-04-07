@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Mail, User, Lock } from 'lucide-react';
+import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,6 +26,8 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from '@/schemas/auth';
 import { AuthMode } from '@/types/auth';
+import { login, register, userStatus } from '@/app/api/auth';
+import { useRouter } from 'next/navigation';
 
 const formVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -71,11 +73,11 @@ export function AuthForm() {
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const router = useRouter();
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: ''
     }
   });
@@ -83,8 +85,7 @@ export function AuthForm() {
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
-      email: '',
+      username: '',
       password: '',
       confirmPassword: ''
     }
@@ -94,54 +95,33 @@ export function AuthForm() {
     setMode(mode === 'login' ? 'register' : 'login');
   };
 
-  const onLoginSubmit = async (data: LoginFormData) => {
+  const onLoginSubmit = async (value: LoginFormData) => {
     setIsLoading(true);
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      console.log('Login data:', data);
-
-      toast.success('Login Successful', {
-        description: 'Welcome back!'
-      });
-
-      // Reset form
+      const { code, data } = await login(value);
+      if (code === 0) {
+        toast.success('登录成功');
+        // router.push('/dashboard');
+        const res = await userStatus();
+        console.log('%c [ res ]-106', 'font-size:13px; background:pink; color:#bf2c9f;', res);
+      }
       loginForm.reset();
     } catch (error) {
-      console.error('Login error:', error);
-
-      toast.error('Login Failed', {
-        description: 'Please check your credentials and try again.'
-      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const onRegisterSubmit = async (data: RegisterFormData) => {
+  const onRegisterSubmit = async (value: RegisterFormData) => {
     setIsLoading(true);
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      console.log('Register data:', data);
-
-      toast.success('Registration Successful', {
-        description: 'Your account has been created!'
-      });
-
-      // Switch to login mode
+      const { code, data } = await register(value);
+      if (code === 0) {
+        toast.success('注册成功');
+      }
       registerForm.reset();
       setMode('login');
     } catch (error) {
-      console.error('Registration error:', error);
-
-      toast.error('Registration Failed', {
-        description: 'Please try again with different information.'
-      });
     } finally {
       setIsLoading(false);
     }
@@ -160,8 +140,8 @@ export function AuthForm() {
         >
           <Card className="glass-card rounded-3xl overflow-hidden">
             <CardHeader className="space-y-2 text-center">
-              <CardTitle className="text-3xl font-bold">Welcome back</CardTitle>
-              <CardDescription>Enter your credentials to sign in to your account</CardDescription>
+              <CardTitle className="text-3xl font-bold">欢迎回来</CardTitle>
+              {/* <CardDescription>Enter your credentials to sign in to your account</CardDescription> */}
             </CardHeader>
             <CardContent>
               <Form {...loginForm}>
@@ -174,15 +154,15 @@ export function AuthForm() {
                   >
                     <FormField
                       control={loginForm.control}
-                      name="email"
+                      name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>用户名</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                              <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
-                                placeholder="you@example.com"
+                                placeholder="admin"
                                 className="pl-10 rounded-xl input-focus-ring h-12"
                                 {...field}
                               />
@@ -193,7 +173,6 @@ export function AuthForm() {
                       )}
                     />
                   </motion.div>
-
                   <motion.div
                     variants={inputVariants}
                     initial="hidden"
@@ -205,13 +184,13 @@ export function AuthForm() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>密码</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
+                                placeholder="请输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
                                 {...field}
                               />
@@ -233,7 +212,6 @@ export function AuthForm() {
                       )}
                     />
                   </motion.div>
-
                   <motion.div
                     variants={inputVariants}
                     initial="hidden"
@@ -251,7 +229,7 @@ export function AuthForm() {
                         className="w-full h-12 auth-button text-base font-medium"
                         disabled={isLoading}
                       >
-                        {isLoading ? 'Signing in...' : 'Sign in'}
+                        {isLoading ? '登录中...' : '登录'}
                       </Button>
                     </motion.div>
                   </motion.div>
@@ -260,14 +238,14 @@ export function AuthForm() {
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <div className="text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                没有账号?
                 <motion.span
                   className="text-primary cursor-pointer font-medium"
                   onClick={toggleMode}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Sign up
+                  立即注册
                 </motion.span>
               </div>
             </CardFooter>
@@ -284,8 +262,8 @@ export function AuthForm() {
         >
           <Card className="glass-card rounded-3xl overflow-hidden">
             <CardHeader className="space-y-2 text-center">
-              <CardTitle className="text-3xl font-bold">Create an account</CardTitle>
-              <CardDescription>Enter your information to create your account</CardDescription>
+              <CardTitle className="text-3xl font-bold">创建账户</CardTitle>
+              {/* <CardDescription>Enter your information to create your account</CardDescription> */}
             </CardHeader>
             <CardContent>
               <Form {...registerForm}>
@@ -298,15 +276,15 @@ export function AuthForm() {
                   >
                     <FormField
                       control={registerForm.control}
-                      name="name"
+                      name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Name</FormLabel>
+                          <FormLabel>用户名</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
-                                placeholder="Your full name"
+                                placeholder="admin"
                                 className="pl-10 rounded-xl input-focus-ring h-12"
                                 {...field}
                               />
@@ -317,35 +295,6 @@ export function AuthForm() {
                       )}
                     />
                   </motion.div>
-
-                  <motion.div
-                    variants={inputVariants}
-                    initial="hidden"
-                    animate="visible"
-                    custom={1}
-                  >
-                    <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                              <Input
-                                placeholder="you@example.com"
-                                className="pl-10 rounded-xl input-focus-ring h-12"
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </motion.div>
-
                   <motion.div
                     variants={inputVariants}
                     initial="hidden"
@@ -357,13 +306,13 @@ export function AuthForm() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>密码</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
+                                placeholder="请输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
                                 {...field}
                               />
@@ -397,13 +346,13 @@ export function AuthForm() {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
+                          <FormLabel>重复密码</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
+                                placeholder="请重复输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
                                 {...field}
                               />
@@ -443,7 +392,7 @@ export function AuthForm() {
                         className="w-full h-12 auth-button text-base font-medium"
                         disabled={isLoading}
                       >
-                        {isLoading ? 'Creating account...' : 'Create account'}
+                        {isLoading ? '注册中...' : '注册'}
                       </Button>
                     </motion.div>
                   </motion.div>
@@ -452,14 +401,14 @@ export function AuthForm() {
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <div className="text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
+                已有账号?
                 <motion.span
                   className="text-primary cursor-pointer font-medium"
                   onClick={toggleMode}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Sign in
+                  去登录
                 </motion.span>
               </div>
             </CardFooter>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="83f94258-8523-416b-8dbb-62f3078f8edf" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/../auth-service/.env" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/cmd/server/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/go.mod" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/go.sum" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/api/handlers/auth_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/api/handlers/user_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/api/middlewares/cors.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/api/middlewares/error_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/api/middlewares/internal_auth.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/api/routes/route.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/config/config.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/models/token.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/models/user.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/repositories/token_repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/repositories/user_repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/services/auth_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/services/user_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/utils/jwt.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/utils/password.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/internal/utils/response.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/migrations/001_create_users_table.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../auth-service/migrations/002_create_refresh_tokens_table.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/back.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/.idea/auth-service.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth/logto_controller.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth/logto_middleware.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth/session_storage.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/controllers/product_controller.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/controllers/user_controller.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/product.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/user.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/product_service.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user_service.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/response/response.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/../front/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/auth/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/auth/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../front/bun.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/components/ui/button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/components/ui/button.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/components/ui/card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/components/ui/card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/components/ui/input.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/components/ui/input.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/components/ui/sonner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/components/ui/sonner.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/components/ui/tabs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/components/ui/tabs.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/next.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../front/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/schemas/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/schemas/auth.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file://$USER_HOME$/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.23.5.windows-amd64" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="2vAE294igBRezHQtc6lDXxbl7JP" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;Go 构建.go build auth-service/cmd/server.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/mengfei&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;database.query.execution&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
+    ]
+  }
+}</component>
+  <component name="RunManager">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="auth-service" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go build auth-service/cmd/server" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="auth-service" />
+      <working_directory value="$PROJECT_DIR$/../auth-service" />
+      <kind value="PACKAGE" />
+      <package value="auth-service/cmd/server" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/../auth-service/cmd/server/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="auth-service" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go 构建.go build auth-service/cmd/server" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-d297c17c1fbd-85c80fddc9a6-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-243.23654.166" />
+        <option value="bundled-js-predefined-d6986cc7102b-822845ee3bb5-JavaScript-GO-243.23654.166" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName=".env" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

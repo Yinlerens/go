@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/branding/Logo';
@@ -47,7 +47,7 @@ const Index = () => {
             <Link href="/auth">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button className="auth-button text-lg font-medium px-8 py-6 h-auto">
-                  Try the Auth Flow
+                  登录系统
                 </Button>
               </motion.div>
             </Link>

@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true
   },
-  output: 'standalone'
+  output: 'standalone',
+  experimental: {
+    taint: true
+  }
 };
 
 export default withBundleAnalyzer({

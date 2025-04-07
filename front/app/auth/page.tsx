@@ -1,10 +1,10 @@
-"use client"
+'use client';
 import { motion } from 'framer-motion';
 import { AuthForm } from './components/AuthForm';
 import { Logo } from '@/components/branding/Logo';
 import { AnimatedBackground } from '@/components/ui/animated-background';
 
-export  function AuthPage() {
+const AuthPage = () => {
   return (
     <>
       <AnimatedBackground />
@@ -64,6 +64,6 @@ export  function AuthPage() {
       </div>
     </>
   );
-}
+};
 
 export default AuthPage;
