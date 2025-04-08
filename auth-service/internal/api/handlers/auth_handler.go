@@ -103,18 +103,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
 		return
 	}
-
-	// 设置Cookie: auth_token
-	c.SetCookie(
-		"auth_token",
-		accessToken,
-		int(h.accessExpiry.Seconds()),
-		"/",
-		h.cookieDomain,
-		h.secureCookie,
-		true, // HttpOnly
-	)
-
 	// 设置Cookie: refresh_auth_token
 	c.SetCookie(
 		"refresh_auth_token",
@@ -128,8 +116,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// 返回成功响应
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
-		"user_id":  user.UserID,
-		"username": user.Username,
+		"user_id":      user.UserID,
+		"username":     user.Username,
+		"access_token": accessToken,
 	}))
 }
 

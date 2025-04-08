@@ -55,7 +55,7 @@ func LoadConfig() (*Config, error) {
 		DBPassword:   getEnv("DB_PASSWORD", "kid@1412"),
 		DBName:       getEnv("DB_NAME", "auth_service"),
 		JWTSecret:    getEnv("JWT_SECRET", ""),
-		CookieDomain: getEnv("COOKIE_DOMAIN", ".yourdomain.com"),
+		CookieDomain: getEnv("COOKIE_DOMAIN", ""),
 		SecureCookie: getEnv("SECURE_COOKIE", "true") == "true",
 	}
 

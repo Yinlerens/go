@@ -70,14 +70,7 @@ const request = {
   },
   post: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
     return service.post(url, data, config);
-  },
-  put: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-    return service.put(url, data, config);
-  },
-  delete: <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-    return service.delete(url, config);
   }
-  // 可以添加其他请求方法，例如 patch
 };
 
 export { service, request };
