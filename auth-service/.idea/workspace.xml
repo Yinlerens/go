@@ -5,36 +5,53 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f94258-8523-416b-8dbb-62f3078f8edf" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/cmd/server/main.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/config/config.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/models/token.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/models/user.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/repositories/user_repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/utils/jwt.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/utils/password.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/utils/response.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/logto_controller.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/logto_middleware.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/session_storage.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/controllers/product_controller.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/controllers/user_controller.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/product.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/user.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/product_service.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user_service.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/response/response.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/../front/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/app/auth/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/auth/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/layout.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/.env" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/rbac-service.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/cmd/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/audit_log_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/check_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/health_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/permission_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/role_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/role_permission_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/user_role_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/middlewares/error_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/middlewares/internal_auth.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/routes/route.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/config/config.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/audit_log.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/permission.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/role.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/role_permission.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/user_role.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/audit_log_repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/cache.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/permission_repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/role_permission_repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/role_repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/user_role_repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/audit_log_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/auth_client.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/check_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/permission_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/role_permission_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/role_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/user_role_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/utils/audit.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/utils/response.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/1.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/2.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/3.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/4.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/5.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../back/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../back/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/api/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/api/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../front/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../front/bun.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/next.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../front/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,10 +69,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="2vAE294igBRezHQtc6lDXxbl7JP" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -64,25 +81,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultGoTemplateProperty": "Go File",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "git-widget-placeholder": "master",
-    "go.import.settings.migrated": "true",
-    "go.sdk.automatically.set": "true",
-    "last_opened_file_path": "C:/Users/mengfei",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/mengfei&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

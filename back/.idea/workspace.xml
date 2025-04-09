@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="83f94258-8523-416b-8dbb-62f3078f8edf" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/../auth-service/.env" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth-service/internal/api/handlers/auth_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/internal/api/handlers/auth_handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth-service/internal/config/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/internal/config/config.go" afterDir="false" />
+    <list default="true" id="83f94258-8523-416b-8dbb-62f3078f8edf" name="更改" comment="back：修改登录返回">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/utils/request.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/utils/request.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/api/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/api/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,6 +24,7 @@
   </component>
   <component name="GOROOT" url="file://$USER_HOME$/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.23.5.windows-amd64" />
   <component name="Git.Settings">
+    <branch-grouping />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ProjectColorInfo">{
@@ -57,6 +57,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.lookFeel",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\GoLand 2024.3.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -139,7 +140,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/main" />
+                        <option value="master" />
                       </list>
                     </value>
                   </entry>
@@ -155,6 +156,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="back：修改登录返回" />
+    <option name="LAST_COMMIT_MESSAGE" value="back：修改登录返回" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

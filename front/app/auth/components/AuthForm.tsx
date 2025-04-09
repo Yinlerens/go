@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from '@/schemas/auth';
 import { AuthMode } from '@/types/auth';
-import { login, register, userStatus } from '@/app/api/auth';
+import { login, logout, register } from '@/app/api/auth';
 import { useRouter } from 'next/navigation';
 
 const formVariants = {
@@ -101,9 +101,9 @@ export function AuthForm() {
       const { code, data } = await login(value);
       if (code === 0) {
         toast.success('登录成功');
-        // router.push('/dashboard');
-        const res = await userStatus();
-        console.log('%c [ res ]-106', 'font-size:13px; background:pink; color:#bf2c9f;', res);
+        localStorage.setItem('access_token', data.access_token);
+        router.push('/dashboard');
+        // const res = await logout();
       }
       loginForm.reset();
     } catch (error) {
