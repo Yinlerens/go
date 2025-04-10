@@ -7,10 +7,10 @@ export interface ApiResponse<T> {
   msg: string;
   data: T;
 }
-
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL ;
+const RBAC_API_URL = process.env.NEXT_PUBLIC_RBAC_API_URL ;
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
   timeout: 10000,
   withCredentials: true
 });
@@ -21,6 +21,12 @@ service.interceptors.request.use(
     const token = localStorage.getItem('access_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    const url = config.url || "";
+    if (url.includes("/rbac/")) {
+      config.baseURL = RBAC_API_URL;
+    } else {
+      config.baseURL = AUTH_API_URL;
     }
     return config;
   },

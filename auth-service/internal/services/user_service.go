@@ -2,6 +2,7 @@
 package services
 
 import (
+	"auth-service/internal/models"
 	"auth-service/internal/repositories"
 	"errors"
 )
@@ -9,6 +10,7 @@ import (
 // UserService 用户服务接口
 type UserService interface {
 	UpdateUserStatus(userID, status string) error
+	GetUsers(page, pageSize int, username string) ([]*models.User, int64, error)
 }
 
 // userService 用户服务实现
@@ -42,4 +44,7 @@ func (s *userService) UpdateUserStatus(userID, status string) error {
 	}
 
 	return nil
+}
+func (s *userService) GetUsers(page, pageSize int, username string) ([]*models.User, int64, error) {
+	return s.userRepo.FindAll(page, pageSize, username)
 }

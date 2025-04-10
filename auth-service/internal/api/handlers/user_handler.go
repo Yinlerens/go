@@ -20,6 +20,12 @@ type UserHandler struct {
 	userService services.UserService
 }
 
+type listUsersRequest struct {
+	Page     int    `json:"page"`
+	PageSize int    `json:"page_size"`
+	Username string `json:"username"`
+}
+
 // NewUserHandler 创建用户处理器实例
 func NewUserHandler(userService services.UserService) *UserHandler {
 	return &UserHandler{
@@ -57,4 +63,42 @@ func (h *UserHandler) UpdateStatus(c *gin.Context) {
 
 	// 返回成功响应
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, nil))
+}
+
+func (h *UserHandler) ListUsers(c *gin.Context) {
+	var req listUsersRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// Use default values for pagination if not provided
+		if req.Page <= 0 {
+			req.Page = 1
+		}
+		if req.PageSize <= 0 || req.PageSize > 100 {
+			req.PageSize = 10
+		}
+	}
+
+	// Call service to get users
+	users, total, err := h.userService.GetUsers(req.Page, req.PageSize, req.Username)
+	if err != nil {
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
+		return
+	}
+
+	// Transform to response format (exclude sensitive data)
+	userList := make([]map[string]interface{}, len(users))
+	for i, user := range users {
+		userList[i] = map[string]interface{}{
+			"user_id":    user.UserID,
+			"username":   user.Username,
+			"status":     user.Status,
+			"created_at": user.CreatedAt,
+			"updated_at": user.UpdatedAt,
+		}
+	}
+
+	// Return success response
+	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
+		"list":  userList,
+		"total": total,
+	}))
 }

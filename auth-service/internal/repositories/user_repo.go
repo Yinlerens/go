@@ -12,6 +12,7 @@ type UserRepository interface {
 	FindByUsername(username string) (*models.User, error)
 	FindByUserID(userID string) (*models.User, error)
 	UpdateStatus(userID string, status string) error
+	FindAll(page, pageSize int, username string) ([]*models.User, int64, error)
 }
 
 // userRepository 用户数据访问层实现
@@ -52,4 +53,30 @@ func (r *userRepository) FindByUserID(userID string) (*models.User, error) {
 // UpdateStatus 更新用户状态
 func (r *userRepository) UpdateStatus(userID string, status string) error {
 	return r.db.Model(&models.User{}).Where("user_id = ?", userID).Update("status", status).Error
+}
+
+// FindAll 查询所有用户
+func (r *userRepository) FindAll(page, pageSize int, username string) ([]*models.User, int64, error) {
+	var users []*models.User
+	var total int64
+
+	query := r.db.Model(&models.User{})
+
+	// Apply username filter if provided
+	if username != "" {
+		query = query.Where("username LIKE ?", "%"+username+"%")
+	}
+
+	// Count total records matching the filter
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Apply pagination
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Find(&users).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
 }

@@ -5,53 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f94258-8523-416b-8dbb-62f3078f8edf" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/../rbac-service/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/rbac-service.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/cmd/main.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/audit_log_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/check_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/health_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/permission_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/role_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/role_permission_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/user_role_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/middlewares/error_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/middlewares/internal_auth.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/routes/route.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/config/config.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/audit_log.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/permission.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/role.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/role_permission.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/models/user_role.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/audit_log_repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/cache.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/permission_repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/role_permission_repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/role_repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/repositories/user_role_repo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/audit_log_service.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/auth_client.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/check_service.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/permission_service.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/role_permission_service.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/role_service.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/services/user_role_service.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/utils/audit.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/utils/response.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/1.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/2.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/3.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/4.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/migrations/5.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../back/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../back/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/app/api/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/api/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/auth/components/AuthForm.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/lb.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/lb.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +24,9 @@
   <component name="GOROOT" url="file://$USER_HOME$/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.23.5.windows-amd64" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$USER_HOME$/.bun/install/cache/npm/7.24.2@@@1/package.json" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -92,7 +51,8 @@
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
     &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/mengfei&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/mengfei/Desktop/lb/lb/auth-service&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,

@@ -53,6 +53,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		// 公开路由，不需要认证
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
+		auth.POST("/logout", authHandler.Logout)
 
 		// 以下路由需要内部API密钥认证
 		authProtected := auth.Group("/")
@@ -60,14 +61,13 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		{
 			authProtected.POST("/verify", authHandler.Verify)
 			authProtected.POST("/refresh", authHandler.Refresh)
-			authProtected.POST("/logout", authHandler.Logout)
 		}
 	}
 
 	// 用户相关路由组
 	users := v1.Group("/users")
-	users.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
 	{
+		users.POST("/list", userHandler.ListUsers)
 		users.POST("/status", userHandler.UpdateStatus)
 	}
 }

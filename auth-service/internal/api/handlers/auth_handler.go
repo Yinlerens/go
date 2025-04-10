@@ -4,6 +4,7 @@ package handlers
 import (
 	"auth-service/internal/services"
 	"auth-service/internal/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -126,6 +127,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) Verify(c *gin.Context) {
 	// 从Authorization头获取Token
 	authHeader := c.GetHeader("Authorization")
+	fmt.Print(authHeader)
 	if authHeader == "" {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeTokenMissing, nil))
 		return
