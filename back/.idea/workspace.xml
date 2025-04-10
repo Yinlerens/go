@@ -5,27 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f94258-8523-416b-8dbb-62f3078f8edf" name="更改" comment="back：修改登录返回">
-      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/dataSources.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/.idea/sqldialects.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../rbac-service/internal/api/middlewares/cors.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/lb.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/lb.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth-service/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth-service/internal/api/handlers/auth_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/internal/api/handlers/auth_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../auth-service/internal/api/handlers/user_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/internal/api/handlers/user_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../auth-service/internal/api/routes/route.go" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/internal/api/routes/route.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth-service/internal/repositories/user_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/internal/repositories/user_repo.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../auth-service/internal/services/user_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/../auth-service/internal/services/user_service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/app/api/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/api/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../front/bun.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/components/app-sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/components/app-sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/components/nav-main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../front/components/nav-main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/next.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../front/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../front/utils/request.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/utils/request.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../front/app/api/rbac.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../front/app/api/rbac.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rbac-service/.idea/rbac-service.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../rbac-service/.idea/rbac-service.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/user_role_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/../rbac-service/internal/api/handlers/user_role_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../rbac-service/internal/api/routes/route.go" beforeDir="false" afterPath="$PROJECT_DIR$/../rbac-service/internal/api/routes/route.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../rbac-service/internal/services/auth_client.go" beforeDir="false" afterPath="$PROJECT_DIR$/../rbac-service/internal/services/auth_client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rbac-service/internal/services/user_role_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/../rbac-service/internal/services/user_role_service.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,13 +47,13 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "DefaultGoTemplateProperty": "Go File",
-    "Go 构建.go build auth-service/cmd/server.executor": "Debug",
+    "Go 构建.go build auth-service/cmd/server.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.go.formatter.settings.were.checked": "true",
     "RunOnceActivity.go.migrated.go.modules.settings": "true",
     "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "main",
     "go.import.settings.migrated": "true",
     "go.sdk.automatically.set": "true",
     "ignore.virus.scanning.warn.message": "true",

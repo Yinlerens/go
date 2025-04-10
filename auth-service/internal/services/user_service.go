@@ -11,6 +11,7 @@ import (
 type UserService interface {
 	UpdateUserStatus(userID, status string) error
 	GetUsers(page, pageSize int, username string) ([]*models.User, int64, error)
+	ValidateUser(userID string) (bool, error) // 新增方法
 }
 
 // userService 用户服务实现
@@ -47,4 +48,20 @@ func (s *userService) UpdateUserStatus(userID, status string) error {
 }
 func (s *userService) GetUsers(page, pageSize int, username string) ([]*models.User, int64, error) {
 	return s.userRepo.FindAll(page, pageSize, username)
+}
+
+// ValidateUser 验证用户是否存在且状态为active
+func (s *userService) ValidateUser(userID string) (bool, error) {
+	// 查找用户
+	user, err := s.userRepo.FindByUserID(userID)
+	if err != nil {
+		return false, errors.New("用户不存在")
+	}
+
+	// 检查用户状态
+	if user.Status != "active" {
+		return false, errors.New("用户状态非active")
+	}
+
+	return true, nil
 }

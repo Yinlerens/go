@@ -136,6 +136,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		userGroup.POST("/assign-role", userRoleHandler.AssignRole)
 		userGroup.POST("/unassign-role", userRoleHandler.UnassignRole)
 		userGroup.POST("/roles", userRoleHandler.GetUserRoles)
+		userGroup.POST("/batch-roles", userRoleHandler.GetBatchUserRoles)
 	}
 
 	// 审计日志路由 (需要内部API密钥认证)

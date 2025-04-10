@@ -69,5 +69,6 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	{
 		users.POST("/list", userHandler.ListUsers)
 		users.POST("/status", userHandler.UpdateStatus)
+		users.POST("/validate", middlewares.InternalAuth(cfg.InternalAPIKeys), userHandler.ValidateUser)
 	}
 }

@@ -25,6 +25,9 @@ type listUsersRequest struct {
 	PageSize int    `json:"page_size"`
 	Username string `json:"username"`
 }
+type validateUserRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
 
 // NewUserHandler 创建用户处理器实例
 func NewUserHandler(userService services.UserService) *UserHandler {
@@ -100,5 +103,30 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
 		"list":  userList,
 		"total": total,
+	}))
+}
+
+// ValidateUser 验证用户是否存在且状态为active
+func (h *UserHandler) ValidateUser(c *gin.Context) {
+	var req validateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		return
+	}
+
+	// 调用服务验证用户
+	valid, err := h.userService.ValidateUser(req.UserID)
+	if err != nil {
+		code := utils.CodeUserNotFound
+		if strings.Contains(err.Error(), "用户状态非active") {
+			code = utils.CodeUserInactive
+		}
+		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
+		"valid": valid,
 	}))
 }

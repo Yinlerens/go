@@ -58,20 +58,24 @@ export function UserRoleForm({ userId, username }: UserRoleFormProps) {
     try {
       if (checked) {
         // 添加角色
-        await assignRole({
+        const { code } = await assignRole({
           user_id: userId,
           role_keys: [roleKey]
         });
-        setSelectedRoles([...selectedRoles, roleKey]);
-        toast.success(`已为用户 ${username} 分配角色`);
+        if (code === 0) {
+          setSelectedRoles([...selectedRoles, roleKey]);
+          toast.success(`已为用户 ${username} 分配角色`);
+        }
       } else {
         // 移除角色
-        await unassignRole({
+        const { code } = await unassignRole({
           user_id: userId,
           role_keys: [roleKey]
         });
-        setSelectedRoles(selectedRoles.filter(key => key !== roleKey));
-        toast.success(`已解除用户 ${username} 的角色`);
+        if (code === 0) {
+          setSelectedRoles(selectedRoles.filter(key => key !== roleKey));
+          toast.success(`已解除用户 ${username} 的角色`);
+        }
       }
     } catch (error) {}
   };

@@ -28,6 +28,9 @@ type getUserRolesRequest struct {
 type UserRoleHandler struct {
 	userRoleService services.UserRoleService
 }
+type getBatchUserRolesRequest struct {
+	UserIDs []string `json:"user_ids" binding:"required"`
+}
 
 // NewUserRoleHandler 创建用户-角色处理器实例
 func NewUserRoleHandler(userRoleService services.UserRoleService) *UserRoleHandler {
@@ -121,5 +124,26 @@ func (h *UserRoleHandler) GetUserRoles(c *gin.Context) {
 	// 返回成功响应
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
 		"roles": roles,
+	}))
+}
+
+// GetBatchUserRoles 批量获取多个用户的角色
+func (h *UserRoleHandler) GetBatchUserRoles(c *gin.Context) {
+	var req getBatchUserRolesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		return
+	}
+
+	// 调用服务批量获取用户角色
+	rolesMap, err := h.userRoleService.GetBatchUserRoles(req.UserIDs)
+	if err != nil {
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, nil))
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
+		"user_roles": rolesMap,
 	}))
 }

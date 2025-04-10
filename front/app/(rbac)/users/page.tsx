@@ -23,12 +23,13 @@ import {
 } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import { listUsers, User } from "@/app/api/auth";
-
+import { getUsersRoles, Role } from "@/app/api/rbac";
+type UserWithRole = User & { roles: Role[] };
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserWithRole[]>([]);
   const pageSize = 10;
   const [totalUsers, setTotalUsers] = useState(0);
 
@@ -43,8 +44,15 @@ export default function UsersPage() {
         username: searchQuery
       });
       if (code === 0) {
-        setUsers(data.list);
         setTotalUsers(data.total);
+        const userList = data.list;
+        const userIds = userList.map(user => user.user_id);
+        const { code, data: roleData } = await getUsersRoles({ user_ids: userIds });
+        const usersWithRoles = userList.map(user => ({
+          ...user,
+          roles: code === 0 ? roleData.user_roles[user.user_id as any] || [] : []
+        }));
+        setUsers(usersWithRoles as UserWithRole[]);
       }
     } catch (error) {
     } finally {
@@ -113,7 +121,7 @@ export default function UsersPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {/* {user.roles.length > 0 ? (
+                      {user.roles.length > 0 ? (
                         user.roles.map(role => (
                           <Badge key={role.role_key} variant="secondary">
                             {role.name}
@@ -121,7 +129,7 @@ export default function UsersPage() {
                         ))
                       ) : (
                         <span className="text-muted-foreground text-sm">无角色</span>
-                      )} */}
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

@@ -26,7 +26,7 @@ interface ListRolesRequest {
   page_size?: number;
 }
 
-interface Role {
+export interface Role {
   role_key: string;
   name: string;
   description?: string;
@@ -185,6 +185,18 @@ interface GetUserRolesResponse {
 
 export const getUserRoles = (data: GetUserRolesRequest) =>
   request.post<GetUserRolesResponse>("/rbac/users/roles", data);
+
+// 批量获取用户角色
+interface GetUsersRolesRequest {
+  user_ids: string[];
+}
+
+interface GetUsersRolesResponse {
+  user_roles: Role[];
+}
+
+export const getUsersRoles = (data: GetUsersRolesRequest) =>
+  request.post<GetUsersRolesResponse>("/rbac/users/batch-roles", data);
 
 // 权限检查API
 // -------------------------------------------------

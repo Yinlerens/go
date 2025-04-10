@@ -13,6 +13,7 @@ type UserRoleService interface {
 	AssignRolesToUser(userID string, roleKeys []string, actorID, actorType string) error
 	UnassignRolesFromUser(userID string, roleKeys []string, actorID, actorType string) error
 	GetUserRoles(userID string) ([]map[string]interface{}, error)
+	GetBatchUserRoles(userIDs []string) (map[string][]map[string]interface{}, error)
 }
 
 // userRoleService 用户-角色服务实现
@@ -220,6 +221,23 @@ func (s *userRoleService) GetUserRoles(userID string) ([]map[string]interface{},
 			"name":        role.Name,
 			"description": role.Description,
 		})
+	}
+
+	return result, nil
+}
+
+// 批量查询用户所属角色
+func (s *userRoleService) GetBatchUserRoles(userIDs []string) (map[string][]map[string]interface{}, error) {
+	result := make(map[string][]map[string]interface{})
+
+	for _, userID := range userIDs {
+		roles, err := s.GetUserRoles(userID)
+		if err != nil {
+			// 如果某个用户查询失败，可以选择跳过或返回空角色列表
+			result[userID] = []map[string]interface{}{}
+			continue
+		}
+		result[userID] = roles
 	}
 
 	return result, nil
