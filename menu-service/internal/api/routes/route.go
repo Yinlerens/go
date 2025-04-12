@@ -64,11 +64,11 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	v1 := r.Group("/api/v1/menu")
 
 	// 用户菜单路由 (需要内部API密钥认证)
-	v1.POST("/user-menu", middlewares.InternalAuth(cfg.InternalAPIKeys), userMenuHandler.GetUserMenu)
+	v1.POST("/user-menu", userMenuHandler.GetUserMenu)
 
 	// 菜单项管理路由 (需要内部API密钥认证)
 	items := v1.Group("/items")
-	items.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
+	// items.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
 	{
 		items.POST("/create", menuItemHandler.CreateMenuItem)
 		items.POST("/tree", menuItemHandler.GetMenuTree)
@@ -79,7 +79,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 菜单变更日志路由 (需要内部API密钥认证)
 	logs := v1.Group("/logs")
-	logs.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
+	// logs.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
 	{
 		logs.POST("/list", menuLogHandler.ListMenuLogs)
 	}
