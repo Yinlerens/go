@@ -1,28 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers
-} from "@tabler/icons-react";
+import { ArrowUpCircleIcon } from "lucide-react";
 
-import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
+import { useMenuStore } from "@/store/menu-store";
 import {
   Sidebar,
   SidebarContent,
@@ -30,135 +13,53 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  SidebarRail
 } from "@/components/ui/sidebar";
-
+interface RawMenuItem {
+  id: string | number; // 假设有唯一 ID 用于可能的 key
+  name: string;
+  path: string;
+  icon?: any; // 图标名称字符串
+  children?: RawMenuItem[];
+}
+export interface NavMainItemProps {
+  title: string;
+  url: string;
+  icon?: any;
+  items?: NavMainItemProps[];
+  // 可能还需要 key 属性，取决于 NavMain 的实现
+  // key?: string | number;
+}
+// This is sample data.
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg"
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard
-    },
-    {
-      title: "Lifecycle",
-      url: "/lifecycle",
-      icon: IconListDetails
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers
-    }
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#"
-        },
-        {
-          title: "Archived",
-          url: "#"
-        }
-      ]
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#"
-        },
-        {
-          title: "Archived",
-          url: "#"
-        }
-      ]
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#"
-        },
-        {
-          title: "Archived",
-          url: "#"
-        }
-      ]
-    }
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch
-    }
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord
-    }
-  ]
+  }
 };
-
+const transformMenuItems = (menuItems: RawMenuItem[]): NavMainItemProps[] => {
+  return menuItems.map(item => ({
+    title: item.name,
+    url: item.path,
+    icon: item.icon,
+    items: item.children ? transformMenuItems(item.children) : undefined
+  }));
+};
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { menuItems } = useMenuStore();
+  const navMainItems = React.useMemo(() => {
+    return transformMenuItems(menuItems);
+  }, [menuItems]);
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
               <a href="#">
-                <IconInnerShadowTop className="!size-5" />
+                <ArrowUpCircleIcon className="h-5 w-5" />
                 <span className="text-base font-semibold">Acme Inc.</span>
               </a>
             </SidebarMenuButton>
@@ -166,13 +67,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMainItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

@@ -1,9 +1,9 @@
 import { request } from '@/utils/request';
-interface Request {
+export interface Request {
   password: string;
   username: string;
 }
-interface LoginResponse {
+export interface LoginResponse {
   user_id: string;
   username: string;
   access_token: string;

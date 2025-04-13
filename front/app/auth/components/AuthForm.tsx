@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, User, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff, User, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -21,13 +21,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from '@/schemas/auth';
-import { AuthMode } from '@/types/auth';
-import { login, logout, register } from '@/app/api/auth';
-import { useRouter } from 'next/navigation';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from "@/schemas/auth";
+import { AuthMode } from "@/types/auth";
+import { login, logout, register } from "@/app/api/auth";
+import { useRouter } from "next/navigation";
+import { useMenuStore } from "@/store/menu-store";
+import { useAuthStore } from "@/store/user-store";
 
 const formVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -36,7 +38,7 @@ const formVariants = {
     scale: 1,
     transition: {
       duration: 0.4,
-      type: 'spring',
+      type: "spring",
       damping: 20,
       stiffness: 300
     }
@@ -70,66 +72,46 @@ const buttonVariants = {
 };
 
 export function AuthForm() {
-  const [mode, setMode] = useState<AuthMode>('login');
+  const { fetchMenu } = useMenuStore();
+  const { user, login, loading } = useAuthStore();
+  const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
-      password: ''
+      username: "",
+      password: ""
     }
   });
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: '',
-      password: '',
-      confirmPassword: ''
+      username: "",
+      password: "",
+      confirmPassword: ""
     }
   });
 
   const toggleMode = () => {
-    setMode(mode === 'login' ? 'register' : 'login');
+    setMode(mode === "login" ? "register" : "login");
   };
-
+  useEffect(() => {
+    if (!user.user_id) return;
+    fetchMenu(user.user_id).then(() => {
+      router.push("/dashboard");
+    });
+  }, [user]);
   const onLoginSubmit = async (value: LoginFormData) => {
-    setIsLoading(true);
-    try {
-      const { code, data } = await login(value);
-      if (code === 0) {
-        toast.success('登录成功');
-        localStorage.setItem('access_token', data.access_token);
-        router.push('/dashboard');
-        // const res = await logout();
-      }
-      loginForm.reset();
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
+    await login(value);
   };
 
-  const onRegisterSubmit = async (value: RegisterFormData) => {
-    setIsLoading(true);
-    try {
-      const { code, data } = await register(value);
-      if (code === 0) {
-        toast.success('注册成功');
-      }
-      registerForm.reset();
-      setMode('login');
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const onRegisterSubmit = async (value: RegisterFormData) => {};
 
   return (
     <AnimatePresence mode="wait">
-      {mode === 'login' ? (
+      {mode === "login" ? (
         <motion.div
           key="login"
           variants={formVariants}
@@ -189,7 +171,7 @@ export function AuthForm() {
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
-                                type={showPassword ? 'text' : 'password'}
+                                type={showPassword ? "text" : "password"}
                                 placeholder="请输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
                                 {...field}
@@ -227,9 +209,9 @@ export function AuthForm() {
                       <Button
                         type="submit"
                         className="w-full h-12 auth-button text-base font-medium"
-                        disabled={isLoading}
+                        disabled={loading}
                       >
-                        {isLoading ? '登录中...' : '登录'}
+                        {loading ? "登录中..." : "登录"}
                       </Button>
                     </motion.div>
                   </motion.div>
@@ -311,7 +293,7 @@ export function AuthForm() {
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
-                                type={showPassword ? 'text' : 'password'}
+                                type={showPassword ? "text" : "password"}
                                 placeholder="请输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
                                 {...field}
@@ -351,7 +333,7 @@ export function AuthForm() {
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
-                                type={showPassword ? 'text' : 'password'}
+                                type={showPassword ? "text" : "password"}
                                 placeholder="请重复输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
                                 {...field}
@@ -390,9 +372,9 @@ export function AuthForm() {
                       <Button
                         type="submit"
                         className="w-full h-12 auth-button text-base font-medium"
-                        disabled={isLoading}
+                        disabled={loading}
                       >
-                        {isLoading ? '注册中...' : '注册'}
+                        {loading ? "注册中..." : "注册"}
                       </Button>
                     </motion.div>
                   </motion.div>

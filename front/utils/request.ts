@@ -1,6 +1,6 @@
+import { useAuthStore } from "@/store/user-store";
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { toast } from "sonner";
-
 // 定义响应数据的通用类型
 export interface ApiResponse<T> {
   code: number;
@@ -19,7 +19,8 @@ const service: AxiosInstance = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   config => {
-    const token = localStorage.getItem("access_token");
+    const state = useAuthStore.getState();
+    const token = state.user.access_token;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
