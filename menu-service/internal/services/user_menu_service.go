@@ -2,6 +2,7 @@
 package services
 
 import (
+	"log"
 	"menu-service/internal/models"
 	"menu-service/internal/repositories"
 	"time"
@@ -57,6 +58,7 @@ func (s *userMenuService) GetUserMenu(userID string) ([]*UserMenuNode, error) {
 
 	// 获取用户权限列表
 	userPermissions, err := s.rbacClient.GetUserPermissions(userID)
+	log.Println("GetUserPermissions", userPermissions)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +88,6 @@ func (s *userMenuService) GetUserMenu(userID string) ([]*UserMenuNode, error) {
 			filteredItems = append(filteredItems, item)
 		}
 	}
-
 	// 构建用户菜单树
 	userMenuTree := s.buildUserMenuTree(filteredItems)
 

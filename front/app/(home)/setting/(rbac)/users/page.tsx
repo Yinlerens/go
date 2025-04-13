@@ -232,25 +232,29 @@ export default function UsersPage() {
         </Pagination>
       )}
 
-      {/* 用户角色管理弹窗 */}
+      {/* 用户角色管理弹窗 - 使用新风格 */}
       <Dialog open={showRolesDialog} onOpenChange={setShowRolesDialog}>
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>角色管理: {selectedUser?.username}</DialogTitle>
+        <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle>角色管理</DialogTitle>
             <DialogDescription>为此用户分配或移除角色</DialogDescription>
           </DialogHeader>
-          {selectedUser && (
-            <div className="overflow-y-auto flex-1">
+
+          <div className="flex-1 overflow-auto px-6 py-4">
+            {selectedUser && (
               <UserRoleForm
                 userId={selectedUser.user_id}
                 username={selectedUser.username}
-                onSuccess={() => {
-                  setShowRolesDialog(false);
-                  fetchUsers();
-                }}
               />
-            </div>
-          )}
+            )}
+          </div>
+
+          <div className="p-4 bg-muted/30 border-t flex justify-end">
+            <Button onClick={() => {
+              setShowRolesDialog(false) 
+              fetchUsers()
+            }}>完成</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

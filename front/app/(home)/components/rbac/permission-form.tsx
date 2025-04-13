@@ -63,15 +63,10 @@ export function PermissionForm({ initialData, isEdit = false, onSuccess }: Permi
     }
   });
 
-  // 如果是编辑模式，权限标识应该是只读的
-  useEffect(() => {
-    if (isEdit) {
-      form.register("permission_key", { disabled: true });
-    }
-  }, [form, isEdit]);
 
   // 表单提交处理
   async function onSubmit(values: z.infer<typeof permissionFormSchema>) {
+    console.log('%c [ values ]-75', 'font-size:13px; background:pink; color:#bf2c9f;', values)
     try {
       if (isEdit) {
         // 更新权限
