@@ -88,7 +88,7 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">用户角色管理</h2>
+        <h2 className="text-2xl font-bold tracking-tight">用户管理</h2>
       </div>
 
       <div className="flex items-center py-4">

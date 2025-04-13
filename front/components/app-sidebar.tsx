@@ -36,7 +36,7 @@ const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg"
+    avatar: ""
   }
 };
 const transformMenuItems = (menuItems: RawMenuItem[]): NavMainItemProps[] => {

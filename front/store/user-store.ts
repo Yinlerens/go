@@ -1,14 +1,15 @@
 import { create } from "zustand";
 // 导入 persist 中间件和存储辅助函数
 import { persist, createJSONStorage } from "zustand/middleware";
-import { login, LoginResponse, logout, Request } from "@/app/api/auth";
+import { login, LoginResponse, logout, register, Request } from "@/app/api/auth";
 
 interface UserState {
   user: LoginResponse;
   loading: boolean;
   error: string | null;
-  login: (value: Request) => Promise<void>;
+  login: (value: Request) => Promise<string>;
   logout: () => Promise<void>;
+  register: (value: Request) => Promise<boolean>;
 }
 
 export const useAuthStore = create<UserState>()(
@@ -22,7 +23,6 @@ export const useAuthStore = create<UserState>()(
       loading: false,
       error: null,
 
-      // 获取用户菜单
       login: async value => {
         set({ loading: true, error: null });
         try {
@@ -30,14 +30,17 @@ export const useAuthStore = create<UserState>()(
 
           if (code === 0 && data) {
             set({ user: data, loading: false });
+            return data.user_id as string;
           } else {
             set({ error: msg, loading: false });
+            return "";
           }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : "登录时发生错误",
             loading: false
           });
+          return "";
         }
       },
       logout: async () => {
@@ -61,6 +64,25 @@ export const useAuthStore = create<UserState>()(
             error: error instanceof Error ? error.message : "发生错误",
             loading: false
           });
+        }
+      },
+      register: async value => {
+        set({ loading: true, error: null });
+        try {
+          const { code, msg } = await register(value);
+          if (code === 0) {
+            set({ loading: false });
+            return true;
+          } else {
+            set({ error: msg, loading: false });
+            return false;
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : "发生错误",
+            loading: false
+          });
+          return false;
         }
       }
     }),

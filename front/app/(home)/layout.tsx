@@ -17,7 +17,7 @@ export default function Page({children}: { children: React.ReactNode }) {
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">{children}</div>
+          <div className="@container/main flex flex-1 flex-col gap-2 p-4">{children}</div>
         </div>
       </SidebarInset>
     </SidebarProvider>

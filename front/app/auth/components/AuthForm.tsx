@@ -1,19 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -23,10 +16,8 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from "@/schemas/auth";
 import { AuthMode } from "@/types/auth";
-import { login, logout, register } from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 import { useMenuStore } from "@/store/menu-store";
 import { useAuthStore } from "@/store/user-store";
@@ -73,7 +64,7 @@ const buttonVariants = {
 
 export function AuthForm() {
   const { fetchMenu } = useMenuStore();
-  const { user, login, loading } = useAuthStore();
+  const { login, loading, register } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -97,17 +88,21 @@ export function AuthForm() {
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
   };
-  useEffect(() => {
-    if (!user.user_id) return;
-    fetchMenu(user.user_id).then(() => {
-      router.push("/dashboard");
-    });
-  }, [user]);
   const onLoginSubmit = async (value: LoginFormData) => {
-    await login(value);
+    const user_id = await login(value);
+    if (user_id) {
+      fetchMenu(user_id);
+      router.push("/dashboard");
+    }
   };
 
-  const onRegisterSubmit = async (value: RegisterFormData) => {};
+  const onRegisterSubmit = async (value: RegisterFormData) => {
+    const res = await register(value);
+    if (res) {
+      registerForm.reset();
+      setMode("login");
+    }
+  };
 
   return (
     <AnimatePresence mode="wait">

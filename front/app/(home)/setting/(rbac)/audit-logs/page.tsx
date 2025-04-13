@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle, Info, Calendar, User, Tag, Filter, RefreshCw } from "lucide-react";
-// import { format } from "date-fns";
+import { format } from "date-fns";
 import {
   Table,
   TableBody,
@@ -33,14 +33,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
 import { listAuditLogs } from "@/app/api/rbac";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
@@ -191,8 +183,7 @@ export default function AuditLogs() {
   const formatDateTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      // return format(date, "yyyy-MM-dd HH:mm:ss");
-      return dateString;
+      return format(date, "yyyy-MM-dd HH:mm:ss");
 
     } catch (e) {
       return dateString;

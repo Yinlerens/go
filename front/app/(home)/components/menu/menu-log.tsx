@@ -447,32 +447,32 @@ export function MenuLogs() {
                   : "变更详情"}
               </span>
             </DialogTitle>
-            <DialogDescription>
-              {selectedLog && (
-                <div className="flex flex-col gap-2 mt-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-1 text-sm">
-                      <User className="h-3 w-3" />
-                      <span>操作者: {selectedLog.operator_id}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({selectedLog.operator_type === "USER" ? "用户" : "服务"})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Calendar className="h-3 w-3" />
-                      <span>操作时间: {formatDate(selectedLog.created_at)}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm">
-                    <span>菜单ID: </span>
-                    <code className="bg-muted px-1 py-0.5 rounded text-xs">
-                      {selectedLog.menu_id}
-                    </code>
-                  </div>
-                </div>
-              )}
-            </DialogDescription>
+            {/* 简化DialogDescription，不再在其中嵌套复杂内容 */}
+            <DialogDescription>操作详细信息</DialogDescription>
           </DialogHeader>
+
+          {/* 将原来在DialogDescription中的内容移到这里 */}
+          {selectedLog && (
+            <div className="flex flex-col gap-2 mt-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-1 text-sm">
+                  <User className="h-3 w-3" />
+                  <span>操作者: {selectedLog.operator_id}</span>
+                  <span className="text-xs text-muted-foreground">
+                    ({selectedLog.operator_type === "USER" ? "用户" : "服务"})
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-sm">
+                  <Calendar className="h-3 w-3" />
+                  <span>操作时间: {formatDate(selectedLog.created_at)}</span>
+                </div>
+              </div>
+              <div className="text-sm">
+                <span>菜单ID: </span>
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{selectedLog.menu_id}</code>
+              </div>
+            </div>
+          )}
 
           <div className="mt-4">
             {selectedLog &&
