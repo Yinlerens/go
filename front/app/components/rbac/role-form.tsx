@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -39,12 +38,11 @@ interface RoleFormProps {
     description?: string;
   };
   isEdit?: boolean;
+  onSuccess: () => void;
 }
 
 // 角色表单组件
-export function RoleForm({ initialData, isEdit = false }: RoleFormProps) {
-  const router = useRouter();
-
+export function RoleForm({ initialData, isEdit = false, onSuccess }: RoleFormProps) {
   // 初始化表单
   const form = useForm<z.infer<typeof roleFormSchema>>({
     resolver: zodResolver(roleFormSchema),
@@ -74,7 +72,7 @@ export function RoleForm({ initialData, isEdit = false }: RoleFormProps) {
         });
         if (code === 0) {
           toast.success("角色已更新");
-          router.push("/roles");
+          onSuccess();
         }
       } else {
         // 创建角色
@@ -85,10 +83,12 @@ export function RoleForm({ initialData, isEdit = false }: RoleFormProps) {
         });
         if (code === 0) {
           toast.success("角色已创建");
-          router.push("/roles");
+          onSuccess();
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      toast.error("操作失败");
+    }
   }
 
   return (
@@ -137,7 +137,7 @@ export function RoleForm({ initialData, isEdit = false }: RoleFormProps) {
           )}
         />
         <div className="flex gap-4 justify-end">
-          <Button type="button" variant="outline" onClick={() => router.push("/roles")}>
+          <Button type="button" variant="outline" onClick={onSuccess}>
             取消
           </Button>
           <Button type="submit">{isEdit ? "保存更改" : "创建角色"}</Button>

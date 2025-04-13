@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,10 +19,10 @@ type Role = {
 interface UserRoleFormProps {
   userId: string;
   username: string;
+  onSuccess: () => void;
 }
 
-export function UserRoleForm({ userId, username }: UserRoleFormProps) {
-  const router = useRouter();
+export function UserRoleForm({ userId, username, onSuccess }: UserRoleFormProps) {
   const [loading, setLoading] = useState(true);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
@@ -45,13 +44,14 @@ export function UserRoleForm({ userId, username }: UserRoleFormProps) {
           setAllRoles(allRolesResponse.data.list);
         }
       } catch (error) {
+        toast.error("获取角色数据失败");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [userId]);
 
   // 切换选择角色
   const toggleRole = async (roleKey: string, checked: boolean) => {
@@ -77,15 +77,14 @@ export function UserRoleForm({ userId, username }: UserRoleFormProps) {
           toast.success(`已解除用户 ${username} 的角色`);
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      toast.error("操作失败");
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col">
-        <h2 className="text-xl font-semibold">
-          为用户 &quot;{username}&quot; ({userId}) 分配角色
-        </h2>
         <p className="text-sm text-muted-foreground">
           选择要分配给此用户的角色。已选择 {selectedRoles.length} 个角色。
         </p>
@@ -96,7 +95,7 @@ export function UserRoleForm({ userId, username }: UserRoleFormProps) {
       ) : allRoles.length === 0 ? (
         <div className="text-center py-6">系统中暂无角色数据。请先创建角色，然后再分配给用户。</div>
       ) : (
-        <ScrollArea className="h-full rounded-md border p-4">
+        <ScrollArea className="h-[400px] rounded-md border p-4">
           <div className="space-y-4">
             {allRoles.map(role => (
               <Card key={role.role_key} className="overflow-hidden">
@@ -142,9 +141,9 @@ export function UserRoleForm({ userId, username }: UserRoleFormProps) {
         </ScrollArea>
       )}
 
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={() => router.push("/users")}>
-          返回用户列表
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={onSuccess}>
+          完成
         </Button>
       </div>
     </div>

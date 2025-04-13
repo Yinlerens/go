@@ -26,7 +26,7 @@ service.interceptors.request.use(
     const url = config.url || "";
     if (url.includes("/rbac/")) {
       config.baseURL = RBAC_API_URL;
-    } else if (url.includes("/auth/")) {
+    } else if (url.includes("/auth/") || url.includes("/users/")) {
       config.baseURL = AUTH_API_URL;
     } else if (url.includes("/menu/")) {
       config.baseURL = MENU_API_URL;

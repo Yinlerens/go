@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,14 +28,21 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { deleteRole, listRoles } from "@/app/api/rbac";
+import { RoleForm } from "@/app/components/rbac/role-form";
+import { RolePermissionForm } from "@/app/components/rbac/role-permission-form";
 
 export default function RolesPage() {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -47,35 +52,68 @@ export default function RolesPage() {
   const [totalRoles, setTotalRoles] = useState(0);
   const pageSize = 10;
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-      setLoading(true);
-      try {
-        const response = await listRoles({ page: currentPage, page_size: pageSize });
-        if (response.data) {
-          setRoles(response.data.list);
-          setTotalRoles(response.data.total);
-        }
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
+  // 弹窗状态
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<{
+    role_key: string;
+    name: string;
+    description?: string;
+  } | null>(null);
 
+  useEffect(() => {
     fetchRoles();
   }, [currentPage, pageSize]);
+
+  const fetchRoles = async () => {
+    setLoading(true);
+    try {
+      const response = await listRoles({ page: currentPage, page_size: pageSize });
+      if (response.data) {
+        setRoles(response.data.list);
+        setTotalRoles(response.data.total);
+      }
+    } catch (error) {
+      toast.error("获取角色列表失败");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (roleKey: string) => {
     try {
       await deleteRole({ role_key: roleKey });
       // 重新加载角色列表
-      const response = await listRoles({ page: 1, page_size: pageSize });
-      if (response.data) {
-        setRoles(response.data.list);
-        setTotalRoles(response.data.total);
-      }
+      await fetchRoles();
       toast.success("角色已删除");
-    } catch (error) {}
+      setShowDeleteDialog(false);
+    } catch (error) {
+      toast.error("删除角色失败");
+    }
+  };
+
+  // 编辑角色
+  const handleEdit = (role: { role_key: string; name: string; description?: string }) => {
+    setSelectedRole(role);
+    setShowEditDialog(true);
+  };
+
+  // 管理权限
+  const handleManagePermissions = (role: {
+    role_key: string;
+    name: string;
+    description?: string;
+  }) => {
+    setSelectedRole(role);
+    setShowPermissionsDialog(true);
+  };
+
+  // 确认删除
+  const confirmDelete = (role: { role_key: string; name: string; description?: string }) => {
+    setSelectedRole(role);
+    setShowDeleteDialog(true);
   };
 
   // 筛选角色列表
@@ -94,11 +132,9 @@ export default function RolesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">角色管理</h2>
-        <Button asChild>
-          <Link href="/roles/create">
-            <Plus className="mr-2 h-4 w-4" />
-            创建角色
-          </Link>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          创建角色
         </Button>
       </div>
 
@@ -142,46 +178,31 @@ export default function RolesPage() {
                   <TableCell>{role.description || "-"}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="icon" asChild title="编辑角色">
-                        <Link href={`/roles/${role.role_key}`}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title="编辑角色"
+                        onClick={() => handleEdit(role)}
+                      >
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="icon" asChild title="管理权限">
-                        <Link href={`/roles/${role.role_key}/permissions`}>
-                          <Shield className="h-4 w-4" />
-                        </Link>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title="管理权限"
+                        onClick={() => handleManagePermissions(role)}
+                      >
+                        <Shield className="h-4 w-4" />
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="text-destructive"
-                            title="删除角色"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>确认删除</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              您确定要删除角色 "{role.name}" ({role.role_key})
-                              吗？此操作不可恢复，并将解除该角色与所有用户的关联。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(role.role_key)}
-                              className="bg-destructive  hover:bg-destructive/70"
-                            >
-                              删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="text-destructive"
+                        title="删除角色"
+                        onClick={() => confirmDelete(role)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -206,20 +227,34 @@ export default function RolesPage() {
                 className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <PaginationItem key={i + 1}>
-                <PaginationLink
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    setCurrentPage(i + 1);
-                  }}
-                  isActive={currentPage === i + 1}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+              // 计算要显示的页码（显示当前页面和周围页面）
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    href="#"
+                    onClick={e => {
+                      e.preventDefault();
+                      setCurrentPage(pageNum);
+                    }}
+                    isActive={currentPage === pageNum}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
             <PaginationItem>
               <PaginationNext
                 href="#"
@@ -235,6 +270,87 @@ export default function RolesPage() {
           </PaginationContent>
         </Pagination>
       )}
+
+      {/* 创建角色弹窗 */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>创建角色</DialogTitle>
+            <DialogDescription>添加新角色，并设置基本信息。创建后可以分配权限。</DialogDescription>
+          </DialogHeader>
+          <RoleForm
+            onSuccess={() => {
+              setShowCreateDialog(false);
+              fetchRoles();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* 编辑角色弹窗 */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>编辑角色</DialogTitle>
+            <DialogDescription>修改角色信息，角色标识不可更改。</DialogDescription>
+          </DialogHeader>
+          {selectedRole && (
+            <RoleForm
+              initialData={selectedRole}
+              isEdit={true}
+              onSuccess={() => {
+                setShowEditDialog(false);
+                fetchRoles();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 管理权限弹窗 */}
+      <Dialog
+        open={showPermissionsDialog}
+        onOpenChange={setShowPermissionsDialog}
+      >
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>权限管理</DialogTitle>
+            <DialogDescription>设置角色权限</DialogDescription>
+          </DialogHeader>
+          {selectedRole && (
+            <div className="overflow-y-auto">
+              <RolePermissionForm roleKey={selectedRole.role_key} roleName={selectedRole.name} />
+            </div>
+          )}
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => setShowPermissionsDialog(false)}>
+              关闭
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认弹窗 */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              您确定要删除角色 "{selectedRole?.name}" ({selectedRole?.role_key})
+              吗？此操作不可恢复，并将解除该角色与所有用户的关联。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedRole && handleDelete(selectedRole.role_key)}
+              className="bg-destructive hover:bg-destructive/70"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -48,12 +47,11 @@ interface PermissionFormProps {
     description?: string;
   };
   isEdit?: boolean;
+  onSuccess: () => void;
 }
 
 // 权限表单组件
-export function PermissionForm({ initialData, isEdit = false }: PermissionFormProps) {
-  const router = useRouter();
-
+export function PermissionForm({ initialData, isEdit = false, onSuccess }: PermissionFormProps) {
   // 初始化表单
   const form = useForm<z.infer<typeof permissionFormSchema>>({
     resolver: zodResolver(permissionFormSchema),
@@ -85,7 +83,7 @@ export function PermissionForm({ initialData, isEdit = false }: PermissionFormPr
         });
         if (code === 0) {
           toast.success("权限已更新");
-          router.push("/permissions");
+          onSuccess();
         }
       } else {
         // 创建权限
@@ -97,10 +95,12 @@ export function PermissionForm({ initialData, isEdit = false }: PermissionFormPr
         });
         if (code === 0) {
           toast.success("权限已创建");
-          router.push("/permissions");
+          onSuccess();
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      toast.error("操作失败");
+    }
   }
 
   return (
@@ -178,7 +178,7 @@ export function PermissionForm({ initialData, isEdit = false }: PermissionFormPr
           )}
         />
         <div className="flex gap-4 justify-end">
-          <Button type="button" variant="outline" onClick={() => router.push("/permissions")}>
+          <Button type="button" variant="outline" onClick={onSuccess}>
             取消
           </Button>
           <Button type="submit">{isEdit ? "保存更改" : "创建权限"}</Button>

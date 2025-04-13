@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Shield, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,9 +21,20 @@ import {
   PaginationPrevious
 } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { listUsers, User } from "@/app/api/auth";
 import { getUsersRoles, Role } from "@/app/api/rbac";
+import { UserRoleForm } from "@/app/components/rbac/user-role-form";
+import { toast } from "sonner";
+
 type UserWithRole = User & { roles: Role[] };
+
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,9 +43,13 @@ export default function UsersPage() {
   const pageSize = 10;
   const [totalUsers, setTotalUsers] = useState(0);
 
+  // 弹窗状态
+  const [showRolesDialog, setShowRolesDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
+
   const totalPages = Math.ceil(totalUsers / pageSize);
-  const paginatedUsers = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const getListUsers = async () => {
+
+  const fetchUsers = async () => {
     try {
       setLoading(true);
       const { code, data } = await listUsers({
@@ -47,21 +61,30 @@ export default function UsersPage() {
         setTotalUsers(data.total);
         const userList = data.list;
         const userIds = userList.map(user => user.user_id);
-        const { code, data: roleData } = await getUsersRoles({ user_ids: userIds });
+        const { code: rolesCode, data: roleData } = await getUsersRoles({ user_ids: userIds });
         const usersWithRoles = userList.map(user => ({
           ...user,
-          roles: code === 0 ? roleData.user_roles[user.user_id as any] || [] : []
+          roles: rolesCode === 0 ? roleData.user_roles[user.user_id as any] || [] : []
         }));
         setUsers(usersWithRoles as UserWithRole[]);
       }
     } catch (error) {
+      toast.error("获取用户列表失败");
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    getListUsers();
+    fetchUsers();
   }, [currentPage, pageSize, searchQuery]);
+
+  // 处理管理角色按钮点击
+  const handleManageRoles = (user: UserWithRole) => {
+    setSelectedUser(user);
+    setShowRolesDialog(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -136,13 +159,11 @@ export default function UsersPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      asChild
                       className="flex items-center space-x-1"
+                      onClick={() => handleManageRoles(user)}
                     >
-                      <Link href={`/users/${user.username}/roles`}>
-                        <Shield className="h-3.5 w-3.5 mr-1" />
-                        管理角色
-                      </Link>
+                      <Shield className="h-3.5 w-3.5 mr-1" />
+                      管理角色
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -167,20 +188,34 @@ export default function UsersPage() {
                 className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <PaginationItem key={i + 1}>
-                <PaginationLink
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    setCurrentPage(i + 1);
-                  }}
-                  isActive={currentPage === i + 1}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+              // 计算要显示的页码（显示当前页面和周围页面）
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    href="#"
+                    onClick={e => {
+                      e.preventDefault();
+                      setCurrentPage(pageNum);
+                    }}
+                    isActive={currentPage === pageNum}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
             <PaginationItem>
               <PaginationNext
                 href="#"
@@ -196,6 +231,28 @@ export default function UsersPage() {
           </PaginationContent>
         </Pagination>
       )}
+
+      {/* 用户角色管理弹窗 */}
+      <Dialog open={showRolesDialog} onOpenChange={setShowRolesDialog}>
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>角色管理: {selectedUser?.username}</DialogTitle>
+            <DialogDescription>为此用户分配或移除角色</DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="overflow-y-auto flex-1">
+              <UserRoleForm
+                userId={selectedUser.user_id}
+                username={selectedUser.username}
+                onSuccess={() => {
+                  setShowRolesDialog(false);
+                  fetchUsers();
+                }}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
