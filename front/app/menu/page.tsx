@@ -3,30 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator
-} from "@/components/ui/breadcrumb";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,19 +19,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { FolderTree, Plus, PenSquare, Trash2, FileWarning, Check, X } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { FolderTree, Plus, FileWarning } from "lucide-react";
 import { MenuNode } from "./menu";
 import { deleteMenuItem, getMenuTree } from "../api/menu";
 import { MenuForm } from "../components/menu/menu-form";
 import { MenuLogs } from "../components/menu/menu-log";
-import { PermissionForm } from "../components/menu/permission-form";
+import { MenuTreeTable } from "../components/menu/menu-tree";
+// 移除不再需要的PermissionForm导入
+// 导入新创建的树形菜单表格组件
 
 export default function MenuManagementPage() {
   const [menuItems, setMenuItems] = useState<MenuNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingMenu, setEditingMenu] = useState<MenuNode | null>(null);
-  const [editPermission, setEditPermission] = useState<MenuNode | null>(null);
+  // 移除editPermission状态
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [menuToDelete, setMenuToDelete] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -78,19 +71,8 @@ export default function MenuManagementPage() {
     loadMenuData();
   }, [loadMenuData]);
 
-  // 将树结构扁平化以用于表格视图
-  const flattenMenuItems = (items: MenuNode[], level = 0): (MenuNode & { level: number })[] => {
-    return items.reduce((acc, item) => {
-      return [...acc, { ...item, level }, ...flattenMenuItems(item.children || [], level + 1)];
-    }, [] as (MenuNode & { level: number })[]);
-  };
-
   const handleEdit = (item: MenuNode) => {
     setEditingMenu(item);
-  };
-
-  const handleEditPermission = (item: MenuNode) => {
-    setEditPermission(item);
   };
 
   const handleDelete = async (id: string) => {
@@ -114,12 +96,6 @@ export default function MenuManagementPage() {
   const handleAddNew = (parentId?: string) => {
     setSelectedParentId(parentId || null);
     setShowAddDialog(true);
-  };
-
-  const renderIndent = (level: number) => {
-    return Array(level)
-      .fill(0)
-      .map((_, i) => <span key={i} className="inline-block w-6"></span>);
   };
 
   return (
@@ -163,115 +139,18 @@ export default function MenuManagementPage() {
             </div>
           )}
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px] text-center">名称</TableHead>
-                  <TableHead className="text-center">路径</TableHead>
-                  <TableHead className="text-center">权限键</TableHead>
-                  <TableHead className="text-center">状态</TableHead>
-                  <TableHead className="text-center">排序</TableHead>
-                  <TableHead className="text-center">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      正在加载菜单项...
-                    </TableCell>
-                  </TableRow>
-                ) : flattenMenuItems(menuItems).length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      未找到菜单项。创建您的第一个菜单项。
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  flattenMenuItems(menuItems).map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center justify-center">
-                          {renderIndent(item.level)}
-                          {item.name}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">{item.path}</TableCell>
-                      <TableCell className="text-center">
-                        {item.permission_key ? (
-                          <span className="text-xs text-muted-foreground font-mono">
-                            {item.permission_key}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">无需权限</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {item.is_enabled ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1 mx-auto"
-                          >
-                            <Check className="h-3 w-3" /> 已启用
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1 mx-auto"
-                          >
-                            <X className="h-3 w-3" /> 已禁用
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">{item.order}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleAddNew(item.id)}
-                            title="添加子项"
-                          >
-                            <Plus className="h-4 w-4" />
-                            添加子项
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(item)}
-                            title="编辑菜单"
-                          >
-                            <PenSquare className="h-4 w-4" />
-                            编辑菜单
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditPermission(item)}
-                            title="更新权限"
-                          >
-                            <Check className="h-4 w-4" />
-                            更新权限
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => confirmDelete(item.id)}
-                            title="删除"
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            删除
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <MenuTreeTable
+              menuItems={menuItems}
+              onAddChild={handleAddNew}
+              onEdit={handleEdit}
+              onDelete={confirmDelete}
+            />
+          )}
         </TabsContent>
         <TabsContent value="menu-logs">
           <MenuLogs />
@@ -294,6 +173,7 @@ export default function MenuManagementPage() {
               }}
             />
           )}
+          {/* 使用优化后的MenuForm组件，已包含权限选择功能 */}
         </DialogContent>
       </Dialog>
 
@@ -316,27 +196,7 @@ export default function MenuManagementPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 编辑权限对话框 */}
-      <Dialog
-        open={editPermission !== null}
-        onOpenChange={open => !open && setEditPermission(null)}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>更新菜单权限</DialogTitle>
-            <DialogDescription>设置或更改此菜单项所需的权限。</DialogDescription>
-          </DialogHeader>
-          {editPermission && (
-            <PermissionForm
-              item={editPermission}
-              onSuccess={() => {
-                setEditPermission(null);
-                loadMenuData();
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* 已移除编辑权限对话框 */}
 
       {/* 删除确认对话框 */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

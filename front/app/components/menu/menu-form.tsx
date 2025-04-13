@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -16,9 +16,28 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Shield } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { updateMenuItem, createMenuItem } from "@/app/api/menu";
 import { MenuNode } from "@/app/menu/menu";
+import { listPermissions } from "@/app/api/rbac";
+
+// 权限类型
+type Permission = {
+  permission_key: string;
+  name: string;
+  type: string;
+  description?: string;
+};
 
 // 表单验证模式
 const menuItemSchema = z.object({
@@ -46,7 +65,28 @@ interface MenuFormProps {
 
 export function MenuForm({ item, parentId, onSuccess }: MenuFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [filteredPermissions, setFilteredPermissions] = useState<Permission[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const isEditing = !!item;
+
+  // 获取权限列表
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const response = await listPermissions({ page_size: 500, type: "MENU" });
+        if (response.data) {
+          const menuPermissions = response.data.list;
+          setPermissions(menuPermissions);
+          setFilteredPermissions(menuPermissions);
+        }
+      } catch (error) {
+        console.error("获取权限列表失败:", error);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
 
   // 根据是编辑还是创建设置默认值
   const defaultValues: Partial<MenuFormValues> = {
@@ -63,6 +103,23 @@ export function MenuForm({ item, parentId, onSuccess }: MenuFormProps) {
     resolver: zodResolver(menuItemSchema),
     defaultValues
   });
+
+  // 处理权限搜索
+  const handlePermissionSearch = (value: string) => {
+    setSearchTerm(value);
+    if (!value.trim()) {
+      setFilteredPermissions(permissions);
+      return;
+    }
+
+    const lowerCaseValue = value.toLowerCase();
+    const filtered = permissions.filter(
+      permission =>
+        permission.name.toLowerCase().includes(lowerCaseValue) ||
+        permission.permission_key.toLowerCase().includes(lowerCaseValue)
+    );
+    setFilteredPermissions(filtered);
+  };
 
   const onSubmit = async (values: MenuFormValues) => {
     try {
@@ -93,10 +150,17 @@ export function MenuForm({ item, parentId, onSuccess }: MenuFormProps) {
         }
       }
     } catch (error) {
+      toast.error("操作失败");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // 获取当前选择的权限信息
+  const selectedPermission = permissions.find(
+    p => p.permission_key === form.watch("permission_key")
+  );
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -153,11 +217,79 @@ export function MenuForm({ item, parentId, onSuccess }: MenuFormProps) {
             name="permission_key"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>权限标识</FormLabel>
-                <FormControl>
-                  <Input placeholder="menu:section:action" {...field} />
-                </FormControl>
-                <FormDescription>查看此菜单所需的RBAC权限标识</FormDescription>
+                <FormLabel className="flex items-center gap-1">
+                  权限
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <Shield className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-80">
+                      <p className="text-sm">
+                        选择该菜单项需要的权限。选择权限后，只有拥有该权限的用户才能访问此菜单。
+                      </p>
+                    </HoverCardContent>
+                  </HoverCard>
+                </FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择权限（可选）" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <div className="flex items-center px-2 pb-1">
+                      <Input
+                        placeholder="搜索权限..."
+                        value={searchTerm}
+                        onChange={e => handlePermissionSearch(e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                    <SelectItem value="ALL">无权限要求 (公开访问)</SelectItem>
+                    {filteredPermissions.length === 0 ? (
+                      <div className="text-center py-2 text-muted-foreground text-sm">
+                        未找到匹配的权限
+                      </div>
+                    ) : (
+                      filteredPermissions.map(permission => (
+                        <SelectItem
+                          key={permission.permission_key}
+                          value={permission.permission_key}
+                        >
+                          <div className="flex flex-col">
+                            <span>{permission.name}</span>
+                            <span className="text-xs text-muted-foreground font-mono truncate">
+                              {permission.permission_key}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+
+                {selectedPermission && (
+                  <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <Badge variant="outline" className="mb-1">
+                          {selectedPermission.name}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {selectedPermission.permission_key}
+                        </p>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">菜单权限</Badge>
+                    </div>
+                    {selectedPermission.description && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {selectedPermission.description}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <FormDescription>查看此菜单所需的权限</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

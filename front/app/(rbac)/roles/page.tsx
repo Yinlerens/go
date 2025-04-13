@@ -307,25 +307,22 @@ export default function RolesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 管理权限弹窗 */}
-      <Dialog
-        open={showPermissionsDialog}
-        onOpenChange={setShowPermissionsDialog}
-      >
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
+      {/* 管理权限弹窗 - 使用优化后的UI */}
+      <Dialog open={showPermissionsDialog} onOpenChange={setShowPermissionsDialog}>
+        <DialogContent className="sm:max-w-[800px] h-[85vh] max-h-[750px] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>权限管理</DialogTitle>
-            <DialogDescription>设置角色权限</DialogDescription>
+            <DialogDescription>设置角色可访问的权限</DialogDescription>
           </DialogHeader>
-          {selectedRole && (
-            <div className="overflow-y-auto">
+
+          <div className="flex-1 overflow-hidden">
+            {selectedRole && (
               <RolePermissionForm roleKey={selectedRole.role_key} roleName={selectedRole.name} />
-            </div>
-          )}
-          <div className="mt-4 flex justify-end">
-            <Button variant="outline" onClick={() => setShowPermissionsDialog(false)}>
-              关闭
-            </Button>
+            )}
+          </div>
+
+          <div className="p-4 bg-muted/30 border-t flex justify-end">
+            <Button onClick={() => setShowPermissionsDialog(false)}>完成</Button>
           </div>
         </DialogContent>
       </Dialog>
