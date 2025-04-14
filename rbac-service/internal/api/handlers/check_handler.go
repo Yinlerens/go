@@ -1,12 +1,19 @@
 // internal/api/handlers/check_handler.go
+
 package handlers
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 )
+
+// CheckHandler 权限检查处理器
+type CheckHandler struct {
+	checkService services.CheckService
+}
 
 // 请求结构体
 type checkPermissionRequest struct {
@@ -17,11 +24,6 @@ type checkPermissionRequest struct {
 type getUserPermissionsRequest struct {
 	UserID string `json:"user_id" binding:"required"`
 	Type   string `json:"type"`
-}
-
-// CheckHandler 权限检查处理器
-type CheckHandler struct {
-	checkService services.CheckService
 }
 
 // NewCheckHandler 创建权限检查处理器实例
@@ -38,6 +40,15 @@ func (h *CheckHandler) CheckPermission(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
+
+	// 设置审计信息到上下文
+	c.Set("audit_action", "CHECK_PERMISSION")
+	c.Set("audit_target_type", "PERMISSION")
+	c.Set("audit_target_key", req.PermissionKey)
+	c.Set("audit_details", models.JSON{
+		"user_id":        req.UserID,
+		"permission_key": req.PermissionKey,
+	})
 
 	// 调用服务检查权限
 	allowed, err := h.checkService.CheckPermission(req.UserID, req.PermissionKey)
@@ -70,6 +81,15 @@ func (h *CheckHandler) GetUserPermissions(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
+
+	// 设置审计信息到上下文
+	c.Set("audit_action", "GET_USER_PERMISSIONS")
+	c.Set("audit_target_type", "USER")
+	c.Set("audit_target_key", req.UserID)
+	c.Set("audit_details", models.JSON{
+		"user_id": req.UserID,
+		"type":    req.Type,
+	})
 
 	// 调用服务获取用户权限
 	permissions, err := h.checkService.GetUserPermissions(req.UserID, req.Type)

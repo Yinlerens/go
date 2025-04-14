@@ -1,4 +1,5 @@
 // internal/api/handlers/role_handler.go
+
 package handlers
 
 import (
@@ -7,7 +8,13 @@ import (
 	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
+	"strings"
 )
+
+// RoleHandler 角色处理器
+type RoleHandler struct {
+	roleService services.RoleService
+}
 
 // 请求结构体
 type createRoleRequest struct {
@@ -31,11 +38,6 @@ type listRolesRequest struct {
 	PageSize int `json:"page_size"`
 }
 
-// RoleHandler 角色处理器
-type RoleHandler struct {
-	roleService services.RoleService
-}
-
 // NewRoleHandler 创建角色处理器实例
 func NewRoleHandler(roleService services.RoleService) *RoleHandler {
 	return &RoleHandler{
@@ -51,7 +53,17 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 		return
 	}
 
-	// 获取调用者信息（从API Key或请求中）
+	// 设置审计信息到上下文
+	c.Set("audit_action", "ROLE_CREATE")
+	c.Set("audit_target_type", "ROLE")
+	c.Set("audit_target_key", req.RoleKey)
+	c.Set("audit_details", models.JSON{
+		"role_key":    req.RoleKey,
+		"name":        req.Name,
+		"description": req.Description,
+	})
+
+	// 获取调用者信息
 	actorID := c.GetString("caller_id")
 	if actorID == "" {
 		actorID = "system"
@@ -91,6 +103,15 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 		req.Page = 1
 		req.PageSize = 10
 	}
+
+	// 设置审计信息到上下文 (虽然是查询操作，但可能也需要记录谁查询了什么)
+	c.Set("audit_action", "ROLE_LIST")
+	c.Set("audit_target_type", "ROLE")
+	c.Set("audit_target_key", "ALL")
+	c.Set("audit_details", models.JSON{
+		"page":      req.Page,
+		"page_size": req.PageSize,
+	})
 
 	// 确保有效的分页参数
 	if req.Page < 1 {
@@ -136,25 +157,33 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	c.Set("audit_action", "ROLE_UPDATE")
 	c.Set("audit_target_type", "ROLE")
 	c.Set("audit_target_key", req.RoleKey)
+	c.Set("audit_details", models.JSON{
+		"role_key":    req.RoleKey,
+		"name":        req.Name,
+		"description": req.Description,
+	})
+
+	// 获取调用者信息
+	actorID := c.GetString("caller_id")
+	if actorID == "" {
+		actorID = "system"
+	}
+	actorType := c.GetString("caller_type")
+	if actorType == "" {
+		actorType = "SERVICE"
+	}
 
 	// 调用服务更新角色
-	role, oldData, err := h.roleService.UpdateRole(req.RoleKey, req.Name, req.Description)
+	err := h.roleService.UpdateRole(req.RoleKey, req.Name, req.Description, actorID, actorType)
 	if err != nil {
 		code := utils.CodeInternalError
-		if err.Error() == "角色不存在" {
+		if strings.Contains(err.Error(), "角色不存在") {
 			code = utils.CodeRoleNotFound
 		}
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
 		return
 	}
-	// 设置更详细的审计信息
-	c.Set("audit_details", models.JSON{
-		"old": oldData,
-		"new": map[string]interface{}{
-			"name":        role.Name,
-			"description": role.Description,
-		},
-	})
+
 	// 返回成功响应
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, nil))
 }
@@ -166,6 +195,14 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
+
+	// 设置审计信息到上下文
+	c.Set("audit_action", "ROLE_DELETE")
+	c.Set("audit_target_type", "ROLE")
+	c.Set("audit_target_key", req.RoleKey)
+	c.Set("audit_details", models.JSON{
+		"role_key": req.RoleKey,
+	})
 
 	// 获取调用者信息
 	actorID := c.GetString("caller_id")
@@ -181,7 +218,7 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	err := h.roleService.DeleteRole(req.RoleKey, actorID, actorType)
 	if err != nil {
 		code := utils.CodeInternalError
-		if err.Error() == "角色不存在" {
+		if strings.Contains(err.Error(), "角色不存在") {
 			code = utils.CodeRoleNotFound
 		}
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))

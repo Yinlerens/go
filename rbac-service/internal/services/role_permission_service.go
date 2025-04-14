@@ -55,16 +55,6 @@ func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissi
 	// 验证角色是否存在
 	_, err := s.roleRepo.FindByKey(roleKey)
 	if err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "ASSIGN_ROLE_PERMISSION", "ROLE_PERMISSION", roleKey,
-			models.JSON{
-				"role_key": roleKey,
-				"error":    "角色不存在",
-			},
-			"FAILURE", "角色不存在",
-		)
-		s.auditRepo.Create(auditLog)
 		return errors.New("角色不存在")
 	}
 
@@ -72,17 +62,6 @@ func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissi
 	for _, permKey := range permissionKeys {
 		_, err := s.permRepo.FindByKey(permKey)
 		if err != nil {
-			// 创建审计日志
-			auditLog := s.auditCreator.CreateAuditLog(
-				actorID, actorType, "ASSIGN_ROLE_PERMISSION", "ROLE_PERMISSION", roleKey,
-				models.JSON{
-					"role_key":       roleKey,
-					"permission_key": permKey,
-					"error":          "权限不存在",
-				},
-				"FAILURE", "权限不存在:"+permKey,
-			)
-			s.auditRepo.Create(auditLog)
 			return errors.New("权限不存在:" + permKey)
 		}
 	}
@@ -110,17 +89,6 @@ func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissi
 
 	// 如果没有需要新分配的权限，直接返回成功
 	if len(newPermKeys) == 0 {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "ASSIGN_ROLE_PERMISSION", "ROLE_PERMISSION", roleKey,
-			models.JSON{
-				"role_key":             roleKey,
-				"permissions_assigned": []string{},
-				"message":              "角色已拥有所有指定权限",
-			},
-			"SUCCESS", "",
-		)
-		s.auditRepo.Create(auditLog)
 		return nil
 	}
 
@@ -134,33 +102,11 @@ func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissi
 	}
 
 	if err := s.rolePermRepo.BatchCreate(rolePermissions); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "ASSIGN_ROLE_PERMISSION", "ROLE_PERMISSION", roleKey,
-			models.JSON{
-				"role_key":              roleKey,
-				"permissions_to_assign": newPermKeys,
-				"error":                 err.Error(),
-			},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return err
 	}
 
 	// 清除所有拥有此角色的用户的权限缓存
 	s.clearCacheForRoleUsers(roleKey)
-
-	// 创建成功审计日志
-	auditLog := s.auditCreator.CreateAuditLog(
-		actorID, actorType, "ASSIGN_ROLE_PERMISSION", "ROLE_PERMISSION", roleKey,
-		models.JSON{
-			"role_key":             roleKey,
-			"permissions_assigned": newPermKeys,
-		},
-		"SUCCESS", "",
-	)
-	s.auditRepo.Create(auditLog)
 
 	return nil
 }
@@ -169,33 +115,11 @@ func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissi
 func (s *rolePermissionService) UnassignPermissionsFromRole(roleKey string, permissionKeys []string, actorID, actorType string) error {
 	// 执行删除
 	if err := s.rolePermRepo.DeleteByRoleKeyAndPermissionKeys(roleKey, permissionKeys); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "UNASSIGN_ROLE_PERMISSION", "ROLE_PERMISSION", roleKey,
-			models.JSON{
-				"role_key":                roleKey,
-				"permissions_to_unassign": permissionKeys,
-				"error":                   err.Error(),
-			},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return err
 	}
 
 	// 清除所有拥有此角色的用户的权限缓存
 	s.clearCacheForRoleUsers(roleKey)
-
-	// 创建成功审计日志
-	auditLog := s.auditCreator.CreateAuditLog(
-		actorID, actorType, "UNASSIGN_ROLE_PERMISSION", "ROLE_PERMISSION", roleKey,
-		models.JSON{
-			"role_key":               roleKey,
-			"permissions_unassigned": permissionKeys,
-		},
-		"SUCCESS", "",
-	)
-	s.auditRepo.Create(auditLog)
 
 	return nil
 }

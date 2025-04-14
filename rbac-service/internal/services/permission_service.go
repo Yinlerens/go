@@ -51,26 +51,12 @@ func isValidPermissionKey(permissionKey string) bool {
 func (s *permissionService) CreatePermission(permissionKey, name, permType, description string, actorID, actorType string) (*models.Permission, error) {
 	// 验证permissionKey格式
 	if !isValidPermissionKey(permissionKey) {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_CREATE", "PERMISSION", permissionKey,
-			models.JSON{"error": "权限Key格式无效"},
-			"FAILURE", "权限Key格式无效",
-		)
-		s.auditRepo.Create(auditLog)
 		return nil, errors.New("权限Key格式无效")
 	}
 
 	// 检查权限是否已存在
 	existingPerm, err := s.permRepo.FindByKey(permissionKey)
 	if err == nil && existingPerm != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_CREATE", "PERMISSION", permissionKey,
-			models.JSON{"error": "权限Key已存在"},
-			"FAILURE", "权限Key已存在",
-		)
-		s.auditRepo.Create(auditLog)
 		return nil, errors.New("权限Key已存在")
 	}
 
@@ -83,29 +69,8 @@ func (s *permissionService) CreatePermission(permissionKey, name, permType, desc
 	}
 
 	if err := s.permRepo.Create(permission); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_CREATE", "PERMISSION", permissionKey,
-			models.JSON{"error": err.Error()},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return nil, err
 	}
-
-	// 创建成功审计日志
-	auditLog := s.auditCreator.CreateAuditLog(
-		actorID, actorType, "PERMISSION_CREATE", "PERMISSION", permissionKey,
-		models.JSON{
-			"permission_key": permissionKey,
-			"name":           name,
-			"type":           permType,
-			"description":    description,
-		},
-		"SUCCESS", "",
-	)
-	s.auditRepo.Create(auditLog)
-
 	return permission, nil
 }
 
@@ -119,23 +84,8 @@ func (s *permissionService) UpdatePermission(permissionKey, name, permType, desc
 	// 查找权限
 	permission, err := s.permRepo.FindByKey(permissionKey)
 	if err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_UPDATE", "PERMISSION", permissionKey,
-			models.JSON{"error": "权限不存在"},
-			"FAILURE", "权限不存在",
-		)
-		s.auditRepo.Create(auditLog)
 		return errors.New("权限不存在")
 	}
-
-	// 记录旧值
-	oldPerm := map[string]interface{}{
-		"name":        permission.Name,
-		"type":        permission.Type,
-		"description": permission.Description,
-	}
-
 	// 更新权限
 	if name != "" {
 		permission.Name = name
@@ -148,34 +98,8 @@ func (s *permissionService) UpdatePermission(permissionKey, name, permType, desc
 	}
 
 	if err := s.permRepo.Update(permission); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_UPDATE", "PERMISSION", permissionKey,
-			models.JSON{
-				"error": err.Error(),
-				"old":   oldPerm,
-			},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return err
 	}
-
-	// 创建成功审计日志
-	auditLog := s.auditCreator.CreateAuditLog(
-		actorID, actorType, "PERMISSION_UPDATE", "PERMISSION", permissionKey,
-		models.JSON{
-			"old": oldPerm,
-			"new": map[string]interface{}{
-				"name":        permission.Name,
-				"type":        permission.Type,
-				"description": permission.Description,
-			},
-		},
-		"SUCCESS", "",
-	)
-	s.auditRepo.Create(auditLog)
-
 	return nil
 }
 
@@ -184,47 +108,18 @@ func (s *permissionService) DeletePermission(permissionKey string, actorID, acto
 	// 查找权限
 	_, err := s.permRepo.FindByKey(permissionKey)
 	if err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_DELETE", "PERMISSION", permissionKey,
-			models.JSON{"error": "权限不存在"},
-			"FAILURE", "权限不存在",
-		)
-		s.auditRepo.Create(auditLog)
 		return errors.New("权限不存在")
 	}
 
 	// 删除关联的角色-权限记录
 	if err := s.rolePermRepo.DeleteByPermissionKey(permissionKey); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_DELETE", "PERMISSION", permissionKey,
-			models.JSON{"error": "删除角色-权限关联失败"},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return err
 	}
 
 	// 删除权限
 	if err := s.permRepo.Delete(permissionKey); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "PERMISSION_DELETE", "PERMISSION", permissionKey,
-			models.JSON{"error": "删除权限失败"},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return err
 	}
-
-	// 创建成功审计日志
-	auditLog := s.auditCreator.CreateAuditLog(
-		actorID, actorType, "PERMISSION_DELETE", "PERMISSION", permissionKey,
-		models.JSON{"permission_key": permissionKey},
-		"SUCCESS", "",
-	)
-	s.auditRepo.Create(auditLog)
 
 	return nil
 }

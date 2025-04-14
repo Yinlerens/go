@@ -38,8 +38,6 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		roleRepo,
 		userRoleRepo,
 		rolePermRepo,
-		auditRepo,
-		auditCreator,
 	)
 
 	permissionService := services.NewPermissionService(

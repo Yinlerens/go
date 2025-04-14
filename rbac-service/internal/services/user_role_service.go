@@ -50,16 +50,6 @@ func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string, ac
 	// 验证用户ID
 	isValid, err := s.authClient.ValidateUser(userID)
 	if err != nil || !isValid {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "ASSIGN_USER_ROLE", "USER_ROLE", userID,
-			models.JSON{
-				"user_id": userID,
-				"error":   "用户不存在或无效",
-			},
-			"FAILURE", "用户不存在或无效",
-		)
-		s.auditRepo.Create(auditLog)
 		return errors.New("用户不存在或无效")
 	}
 
@@ -67,17 +57,6 @@ func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string, ac
 	for _, roleKey := range roleKeys {
 		_, err := s.roleRepo.FindByKey(roleKey)
 		if err != nil {
-			// 创建审计日志
-			auditLog := s.auditCreator.CreateAuditLog(
-				actorID, actorType, "ASSIGN_USER_ROLE", "USER_ROLE", userID,
-				models.JSON{
-					"user_id":  userID,
-					"role_key": roleKey,
-					"error":    "角色不存在",
-				},
-				"FAILURE", "角色不存在:"+roleKey,
-			)
-			s.auditRepo.Create(auditLog)
 			return errors.New("角色不存在:" + roleKey)
 		}
 	}
@@ -105,17 +84,6 @@ func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string, ac
 
 	// 如果没有需要新分配的角色，直接返回成功
 	if len(newRoleKeys) == 0 {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "ASSIGN_USER_ROLE", "USER_ROLE", userID,
-			models.JSON{
-				"user_id":        userID,
-				"roles_assigned": []string{},
-				"message":        "用户已拥有所有指定角色",
-			},
-			"SUCCESS", "",
-		)
-		s.auditRepo.Create(auditLog)
 		return nil
 	}
 
@@ -129,33 +97,11 @@ func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string, ac
 	}
 
 	if err := s.userRoleRepo.BatchCreate(userRoles); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "ASSIGN_USER_ROLE", "USER_ROLE", userID,
-			models.JSON{
-				"user_id":         userID,
-				"roles_to_assign": newRoleKeys,
-				"error":           err.Error(),
-			},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return err
 	}
 
 	// 清除用户权限缓存
 	s.checkService.ClearUserPermissionCache(userID)
-
-	// 创建成功审计日志
-	auditLog := s.auditCreator.CreateAuditLog(
-		actorID, actorType, "ASSIGN_USER_ROLE", "USER_ROLE", userID,
-		models.JSON{
-			"user_id":        userID,
-			"roles_assigned": newRoleKeys,
-		},
-		"SUCCESS", "",
-	)
-	s.auditRepo.Create(auditLog)
 
 	return nil
 }
@@ -164,33 +110,11 @@ func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string, ac
 func (s *userRoleService) UnassignRolesFromUser(userID string, roleKeys []string, actorID, actorType string) error {
 	// 执行删除
 	if err := s.userRoleRepo.DeleteByUserIDAndRoleKeys(userID, roleKeys); err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "UNASSIGN_USER_ROLE", "USER_ROLE", userID,
-			models.JSON{
-				"user_id":           userID,
-				"roles_to_unassign": roleKeys,
-				"error":             err.Error(),
-			},
-			"FAILURE", err.Error(),
-		)
-		s.auditRepo.Create(auditLog)
 		return err
 	}
 
 	// 清除用户权限缓存
 	s.checkService.ClearUserPermissionCache(userID)
-
-	// 创建成功审计日志
-	auditLog := s.auditCreator.CreateAuditLog(
-		actorID, actorType, "UNASSIGN_USER_ROLE", "USER_ROLE", userID,
-		models.JSON{
-			"user_id":          userID,
-			"roles_unassigned": roleKeys,
-		},
-		"SUCCESS", "",
-	)
-	s.auditRepo.Create(auditLog)
 
 	return nil
 }

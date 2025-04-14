@@ -1,13 +1,20 @@
 // internal/api/handlers/permission_handler.go
+
 package handlers
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 	"strings"
 )
+
+// PermissionHandler 权限处理器
+type PermissionHandler struct {
+	permissionService services.PermissionService
+}
 
 // 请求结构体
 type createPermissionRequest struct {
@@ -34,11 +41,6 @@ type listPermissionsRequest struct {
 	Type     string `json:"type"`
 }
 
-// PermissionHandler 权限处理器
-type PermissionHandler struct {
-	permissionService services.PermissionService
-}
-
 // NewPermissionHandler 创建权限处理器实例
 func NewPermissionHandler(permissionService services.PermissionService) *PermissionHandler {
 	return &PermissionHandler{
@@ -53,6 +55,17 @@ func (h *PermissionHandler) CreatePermission(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
+
+	// 设置审计信息到上下文
+	c.Set("audit_action", "PERMISSION_CREATE")
+	c.Set("audit_target_type", "PERMISSION")
+	c.Set("audit_target_key", req.PermissionKey)
+	c.Set("audit_details", models.JSON{
+		"permission_key": req.PermissionKey,
+		"name":           req.Name,
+		"type":           req.Type,
+		"description":    req.Description,
+	})
 
 	// 获取调用者信息
 	actorID := c.GetString("caller_id")
@@ -95,6 +108,16 @@ func (h *PermissionHandler) ListPermissions(c *gin.Context) {
 		req.PageSize = 10
 	}
 
+	// 设置审计信息到上下文
+	c.Set("audit_action", "PERMISSION_LIST")
+	c.Set("audit_target_type", "PERMISSION")
+	c.Set("audit_target_key", "ALL")
+	c.Set("audit_details", models.JSON{
+		"page":      req.Page,
+		"page_size": req.PageSize,
+		"type":      req.Type,
+	})
+
 	// 确保有效的分页参数
 	if req.Page < 1 {
 		req.Page = 1
@@ -136,6 +159,17 @@ func (h *PermissionHandler) UpdatePermission(c *gin.Context) {
 		return
 	}
 
+	// 设置审计信息到上下文
+	c.Set("audit_action", "PERMISSION_UPDATE")
+	c.Set("audit_target_type", "PERMISSION")
+	c.Set("audit_target_key", req.PermissionKey)
+	c.Set("audit_details", models.JSON{
+		"permission_key": req.PermissionKey,
+		"name":           req.Name,
+		"type":           req.Type,
+		"description":    req.Description,
+	})
+
 	// 获取调用者信息
 	actorID := c.GetString("caller_id")
 	if actorID == "" {
@@ -168,6 +202,14 @@ func (h *PermissionHandler) DeletePermission(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
+
+	// 设置审计信息到上下文
+	c.Set("audit_action", "PERMISSION_DELETE")
+	c.Set("audit_target_type", "PERMISSION")
+	c.Set("audit_target_key", req.PermissionKey)
+	c.Set("audit_details", models.JSON{
+		"permission_key": req.PermissionKey,
+	})
 
 	// 获取调用者信息
 	actorID := c.GetString("caller_id")
