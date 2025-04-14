@@ -10,10 +10,10 @@ import (
 
 // RoleService 角色服务接口
 type RoleService interface {
-	CreateRole(roleKey, name, description string, actorID, actorType string) (*models.Role, error)
+	CreateRole(roleKey, name, description string) (*models.Role, error)
 	GetRoles(page, pageSize int) ([]*models.Role, int64, error)
-	UpdateRole(roleKey, name, description string, actorID, actorType string) error
-	DeleteRole(roleKey string, actorID, actorType string) error
+	UpdateRole(roleKey, name, description string) error
+	DeleteRole(roleKey string) error
 }
 
 // roleService 角色服务实现
@@ -44,7 +44,7 @@ func isValidRoleKey(roleKey string) bool {
 }
 
 // CreateRole 创建角色
-func (s *roleService) CreateRole(roleKey, name, description string, actorID, actorType string) (*models.Role, error) {
+func (s *roleService) CreateRole(roleKey, name, description string) (*models.Role, error) {
 	// 验证roleKey格式
 	if !isValidRoleKey(roleKey) {
 		return nil, errors.New("角色Key格式无效")
@@ -76,7 +76,7 @@ func (s *roleService) GetRoles(page, pageSize int) ([]*models.Role, int64, error
 }
 
 // UpdateRole 更新角色
-func (s *roleService) UpdateRole(roleKey, name, description string, actorID, actorType string) error {
+func (s *roleService) UpdateRole(roleKey, name, description string) error {
 	// 查找角色
 	role, err := s.roleRepo.FindByKey(roleKey)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *roleService) UpdateRole(roleKey, name, description string, actorID, act
 }
 
 // DeleteRole 删除角色
-func (s *roleService) DeleteRole(roleKey string, actorID, actorType string) error {
+func (s *roleService) DeleteRole(roleKey string) error {
 	// 查找角色
 	_, err := s.roleRepo.FindByKey(roleKey)
 	if err != nil {

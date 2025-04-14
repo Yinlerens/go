@@ -5,13 +5,12 @@ import (
 	"errors"
 	"rbac-service/internal/models"
 	"rbac-service/internal/repositories"
-	"rbac-service/internal/utils"
 )
 
 // RolePermissionService 角色-权限服务接口
 type RolePermissionService interface {
-	AssignPermissionsToRole(roleKey string, permissionKeys []string, actorID, actorType string) error
-	UnassignPermissionsFromRole(roleKey string, permissionKeys []string, actorID, actorType string) error
+	AssignPermissionsToRole(roleKey string, permissionKeys []string) error
+	UnassignPermissionsFromRole(roleKey string, permissionKeys []string) error
 	GetRolePermissions(roleKey string) ([]map[string]interface{}, error)
 }
 
@@ -21,8 +20,6 @@ type rolePermissionService struct {
 	roleRepo     repositories.RoleRepository
 	permRepo     repositories.PermissionRepository
 	userRoleRepo repositories.UserRoleRepository
-	auditRepo    repositories.AuditLogRepository
-	auditCreator utils.AuditLogCreator
 	checkService CheckService
 	cache        repositories.Cache
 }
@@ -33,8 +30,6 @@ func NewRolePermissionService(
 	roleRepo repositories.RoleRepository,
 	permRepo repositories.PermissionRepository,
 	userRoleRepo repositories.UserRoleRepository,
-	auditRepo repositories.AuditLogRepository,
-	auditCreator utils.AuditLogCreator,
 	checkService CheckService,
 	cache repositories.Cache,
 ) RolePermissionService {
@@ -43,15 +38,13 @@ func NewRolePermissionService(
 		roleRepo:     roleRepo,
 		permRepo:     permRepo,
 		userRoleRepo: userRoleRepo,
-		auditRepo:    auditRepo,
-		auditCreator: auditCreator,
 		checkService: checkService,
 		cache:        cache,
 	}
 }
 
 // AssignPermissionsToRole 分配权限给角色
-func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissionKeys []string, actorID, actorType string) error {
+func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissionKeys []string) error {
 	// 验证角色是否存在
 	_, err := s.roleRepo.FindByKey(roleKey)
 	if err != nil {
@@ -112,7 +105,7 @@ func (s *rolePermissionService) AssignPermissionsToRole(roleKey string, permissi
 }
 
 // UnassignPermissionsFromRole 从角色中移除权限
-func (s *rolePermissionService) UnassignPermissionsFromRole(roleKey string, permissionKeys []string, actorID, actorType string) error {
+func (s *rolePermissionService) UnassignPermissionsFromRole(roleKey string, permissionKeys []string) error {
 	// 执行删除
 	if err := s.rolePermRepo.DeleteByRoleKeyAndPermissionKeys(roleKey, permissionKeys); err != nil {
 		return err

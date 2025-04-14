@@ -63,18 +63,8 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 		"description": req.Description,
 	})
 
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务创建角色
-	role, err := h.roleService.CreateRole(req.RoleKey, req.Name, req.Description, actorID, actorType)
+	role, err := h.roleService.CreateRole(req.RoleKey, req.Name, req.Description)
 	if err != nil {
 		code := utils.CodeInternalError
 		switch err.Error() {
@@ -103,15 +93,6 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 		req.Page = 1
 		req.PageSize = 10
 	}
-
-	// 设置审计信息到上下文 (虽然是查询操作，但可能也需要记录谁查询了什么)
-	c.Set("audit_action", "ROLE_LIST")
-	c.Set("audit_target_type", "ROLE")
-	c.Set("audit_target_key", "ALL")
-	c.Set("audit_details", models.JSON{
-		"page":      req.Page,
-		"page_size": req.PageSize,
-	})
 
 	// 确保有效的分页参数
 	if req.Page < 1 {
@@ -153,28 +134,8 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	// 设置审计信息到上下文
-	c.Set("audit_action", "ROLE_UPDATE")
-	c.Set("audit_target_type", "ROLE")
-	c.Set("audit_target_key", req.RoleKey)
-	c.Set("audit_details", models.JSON{
-		"role_key":    req.RoleKey,
-		"name":        req.Name,
-		"description": req.Description,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务更新角色
-	err := h.roleService.UpdateRole(req.RoleKey, req.Name, req.Description, actorID, actorType)
+	err := h.roleService.UpdateRole(req.RoleKey, req.Name, req.Description)
 	if err != nil {
 		code := utils.CodeInternalError
 		if strings.Contains(err.Error(), "角色不存在") {
@@ -204,18 +165,8 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 		"role_key": req.RoleKey,
 	})
 
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务删除角色
-	err := h.roleService.DeleteRole(req.RoleKey, actorID, actorType)
+	err := h.roleService.DeleteRole(req.RoleKey)
 	if err != nil {
 		code := utils.CodeInternalError
 		if strings.Contains(err.Error(), "角色不存在") {

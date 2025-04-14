@@ -5,7 +5,6 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 	"strings"
@@ -55,30 +54,8 @@ func (h *PermissionHandler) CreatePermission(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "PERMISSION_CREATE")
-	c.Set("audit_target_type", "PERMISSION")
-	c.Set("audit_target_key", req.PermissionKey)
-	c.Set("audit_details", models.JSON{
-		"permission_key": req.PermissionKey,
-		"name":           req.Name,
-		"type":           req.Type,
-		"description":    req.Description,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务创建权限
-	permission, err := h.permissionService.CreatePermission(req.PermissionKey, req.Name, req.Type, req.Description, actorID, actorType)
+	permission, err := h.permissionService.CreatePermission(req.PermissionKey, req.Name, req.Type, req.Description)
 	if err != nil {
 		code := utils.CodeInternalError
 		if strings.Contains(err.Error(), "权限Key已存在") {
@@ -107,16 +84,6 @@ func (h *PermissionHandler) ListPermissions(c *gin.Context) {
 		req.Page = 1
 		req.PageSize = 10
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "PERMISSION_LIST")
-	c.Set("audit_target_type", "PERMISSION")
-	c.Set("audit_target_key", "ALL")
-	c.Set("audit_details", models.JSON{
-		"page":      req.Page,
-		"page_size": req.PageSize,
-		"type":      req.Type,
-	})
 
 	// 确保有效的分页参数
 	if req.Page < 1 {
@@ -159,29 +126,8 @@ func (h *PermissionHandler) UpdatePermission(c *gin.Context) {
 		return
 	}
 
-	// 设置审计信息到上下文
-	c.Set("audit_action", "PERMISSION_UPDATE")
-	c.Set("audit_target_type", "PERMISSION")
-	c.Set("audit_target_key", req.PermissionKey)
-	c.Set("audit_details", models.JSON{
-		"permission_key": req.PermissionKey,
-		"name":           req.Name,
-		"type":           req.Type,
-		"description":    req.Description,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务更新权限
-	err := h.permissionService.UpdatePermission(req.PermissionKey, req.Name, req.Type, req.Description, actorID, actorType)
+	err := h.permissionService.UpdatePermission(req.PermissionKey, req.Name, req.Type, req.Description)
 	if err != nil {
 		code := utils.CodeInternalError
 		if strings.Contains(err.Error(), "权限不存在") {
@@ -203,26 +149,8 @@ func (h *PermissionHandler) DeletePermission(c *gin.Context) {
 		return
 	}
 
-	// 设置审计信息到上下文
-	c.Set("audit_action", "PERMISSION_DELETE")
-	c.Set("audit_target_type", "PERMISSION")
-	c.Set("audit_target_key", req.PermissionKey)
-	c.Set("audit_details", models.JSON{
-		"permission_key": req.PermissionKey,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务删除权限
-	err := h.permissionService.DeletePermission(req.PermissionKey, actorID, actorType)
+	err := h.permissionService.DeletePermission(req.PermissionKey)
 	if err != nil {
 		code := utils.CodeInternalError
 		if strings.Contains(err.Error(), "权限不存在") {

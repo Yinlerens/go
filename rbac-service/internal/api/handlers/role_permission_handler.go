@@ -5,7 +5,6 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 	"strings"
@@ -46,27 +45,8 @@ func (h *RolePermissionHandler) AssignPermission(c *gin.Context) {
 		return
 	}
 
-	// 设置审计信息到上下文
-	c.Set("audit_action", "ASSIGN_ROLE_PERMISSION")
-	c.Set("audit_target_type", "ROLE_PERMISSION")
-	c.Set("audit_target_key", req.RoleKey)
-	c.Set("audit_details", models.JSON{
-		"role_key":        req.RoleKey,
-		"permission_keys": req.PermissionKeys,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务分配权限
-	err := h.rolePermissionService.AssignPermissionsToRole(req.RoleKey, req.PermissionKeys, actorID, actorType)
+	err := h.rolePermissionService.AssignPermissionsToRole(req.RoleKey, req.PermissionKeys)
 	if err != nil {
 		code := utils.CodeInternalError
 		if strings.Contains(err.Error(), "角色不存在") {
@@ -92,27 +72,8 @@ func (h *RolePermissionHandler) UnassignPermission(c *gin.Context) {
 		return
 	}
 
-	// 设置审计信息到上下文
-	c.Set("audit_action", "UNASSIGN_ROLE_PERMISSION")
-	c.Set("audit_target_type", "ROLE_PERMISSION")
-	c.Set("audit_target_key", req.RoleKey)
-	c.Set("audit_details", models.JSON{
-		"role_key":        req.RoleKey,
-		"permission_keys": req.PermissionKeys,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务解除权限
-	err := h.rolePermissionService.UnassignPermissionsFromRole(req.RoleKey, req.PermissionKeys, actorID, actorType)
+	err := h.rolePermissionService.UnassignPermissionsFromRole(req.RoleKey, req.PermissionKeys)
 	if err != nil {
 		code := utils.CodeInternalError
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
@@ -130,14 +91,6 @@ func (h *RolePermissionHandler) GetRolePermissions(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "GET_ROLE_PERMISSIONS")
-	c.Set("audit_target_type", "ROLE")
-	c.Set("audit_target_key", req.RoleKey)
-	c.Set("audit_details", models.JSON{
-		"role_key": req.RoleKey,
-	})
 
 	// 调用服务获取角色权限
 	permissions, err := h.rolePermissionService.GetRolePermissions(req.RoleKey)

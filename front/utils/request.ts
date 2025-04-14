@@ -24,6 +24,12 @@ service.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // if (state.user.user_id) {
+    //   config.headers["X-User-ID"] = state.user.user_id;
+    // }
+    // if (state.user.username) {
+    //   config.headers["X-Username"] = state.user.username;
+    // }
     const url = config.url || "";
     if (url.includes("/rbac/")) {
       config.baseURL = RBAC_API_URL;

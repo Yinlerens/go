@@ -5,13 +5,12 @@ import (
 	"errors"
 	"rbac-service/internal/models"
 	"rbac-service/internal/repositories"
-	"rbac-service/internal/utils"
 )
 
 // UserRoleService 用户-角色服务接口
 type UserRoleService interface {
-	AssignRolesToUser(userID string, roleKeys []string, actorID, actorType string) error
-	UnassignRolesFromUser(userID string, roleKeys []string, actorID, actorType string) error
+	AssignRolesToUser(userID string, roleKeys []string) error
+	UnassignRolesFromUser(userID string, roleKeys []string) error
 	GetUserRoles(userID string) ([]map[string]interface{}, error)
 	GetBatchUserRoles(userIDs []string) (map[string][]map[string]interface{}, error)
 }
@@ -20,8 +19,6 @@ type UserRoleService interface {
 type userRoleService struct {
 	userRoleRepo repositories.UserRoleRepository
 	roleRepo     repositories.RoleRepository
-	auditRepo    repositories.AuditLogRepository
-	auditCreator utils.AuditLogCreator
 	authClient   AuthClient
 	checkService CheckService
 }
@@ -30,23 +27,19 @@ type userRoleService struct {
 func NewUserRoleService(
 	userRoleRepo repositories.UserRoleRepository,
 	roleRepo repositories.RoleRepository,
-	auditRepo repositories.AuditLogRepository,
-	auditCreator utils.AuditLogCreator,
 	authClient AuthClient,
 	checkService CheckService,
 ) UserRoleService {
 	return &userRoleService{
 		userRoleRepo: userRoleRepo,
 		roleRepo:     roleRepo,
-		auditRepo:    auditRepo,
-		auditCreator: auditCreator,
 		authClient:   authClient,
 		checkService: checkService,
 	}
 }
 
 // AssignRolesToUser 分配角色给用户
-func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string, actorID, actorType string) error {
+func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string) error {
 	// 验证用户ID
 	isValid, err := s.authClient.ValidateUser(userID)
 	if err != nil || !isValid {
@@ -107,7 +100,7 @@ func (s *userRoleService) AssignRolesToUser(userID string, roleKeys []string, ac
 }
 
 // UnassignRolesFromUser 从用户中移除角色
-func (s *userRoleService) UnassignRolesFromUser(userID string, roleKeys []string, actorID, actorType string) error {
+func (s *userRoleService) UnassignRolesFromUser(userID string, roleKeys []string) error {
 	// 执行删除
 	if err := s.userRoleRepo.DeleteByUserIDAndRoleKeys(userID, roleKeys); err != nil {
 		return err

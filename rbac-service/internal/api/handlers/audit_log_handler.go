@@ -5,7 +5,6 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 )
@@ -36,16 +35,6 @@ func (h *AuditLogHandler) ListAuditLogs(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文 (记录谁查询了审计日志)
-	c.Set("audit_action", "AUDIT_LOG_QUERY")
-	c.Set("audit_target_type", "AUDIT_LOG")
-	c.Set("audit_target_key", "ALL")
-	c.Set("audit_details", models.JSON{
-		"page":      req.Page,
-		"page_size": req.PageSize,
-		"filters":   req.Filters,
-	})
 
 	// 确保有效的分页参数
 	if req.Page < 1 {

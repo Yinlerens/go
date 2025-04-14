@@ -5,7 +5,6 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 )
@@ -41,15 +40,6 @@ func (h *CheckHandler) CheckPermission(c *gin.Context) {
 		return
 	}
 
-	// 设置审计信息到上下文
-	c.Set("audit_action", "CHECK_PERMISSION")
-	c.Set("audit_target_type", "PERMISSION")
-	c.Set("audit_target_key", req.PermissionKey)
-	c.Set("audit_details", models.JSON{
-		"user_id":        req.UserID,
-		"permission_key": req.PermissionKey,
-	})
-
 	// 调用服务检查权限
 	allowed, err := h.checkService.CheckPermission(req.UserID, req.PermissionKey)
 	if err != nil {
@@ -81,15 +71,6 @@ func (h *CheckHandler) GetUserPermissions(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "GET_USER_PERMISSIONS")
-	c.Set("audit_target_type", "USER")
-	c.Set("audit_target_key", req.UserID)
-	c.Set("audit_details", models.JSON{
-		"user_id": req.UserID,
-		"type":    req.Type,
-	})
 
 	// 调用服务获取用户权限
 	permissions, err := h.checkService.GetUserPermissions(req.UserID, req.Type)

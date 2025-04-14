@@ -9,7 +9,7 @@ import (
 // InternalAuth 服务间认证中间件
 func InternalAuth(apiKeys map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 获取API Key
+		// 获取和验证API Key
 		apiKey := c.GetHeader("X-Internal-API-Key")
 		if apiKey == "" {
 			c.JSON(200, utils.NewResponse(utils.CodeAPIKeyInvalid, nil))
@@ -19,11 +19,9 @@ func InternalAuth(apiKeys map[string]string) gin.HandlerFunc {
 
 		// 验证API Key
 		valid := false
-		var serviceID string
-		for id, validKey := range apiKeys {
+		for _, validKey := range apiKeys {
 			if apiKey == validKey {
 				valid = true
-				serviceID = id
 				break
 			}
 		}
@@ -33,19 +31,6 @@ func InternalAuth(apiKeys map[string]string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		// 设置调用者服务信息
-		c.Set("caller_id", serviceID)
-		c.Set("caller_type", "SERVICE")
-
-		// 从请求中获取并设置用户信息（如果存在）
-		userID := c.GetHeader("X-User-ID")
-		username := c.GetHeader("X-Username")
-		userIP := c.ClientIP()
-
-		c.Set("user_id", userID)
-		c.Set("username", username)
-		c.Set("user_ip", userIP)
 
 		c.Next()
 	}

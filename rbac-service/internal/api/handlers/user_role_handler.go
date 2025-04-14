@@ -5,7 +5,6 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 	"strings"
@@ -50,28 +49,8 @@ func (h *UserRoleHandler) AssignRole(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "ASSIGN_USER_ROLE")
-	c.Set("audit_target_type", "USER_ROLE")
-	c.Set("audit_target_key", req.UserID)
-	c.Set("audit_details", models.JSON{
-		"user_id":   req.UserID,
-		"role_keys": req.RoleKeys,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务分配角色
-	err := h.userRoleService.AssignRolesToUser(req.UserID, req.RoleKeys, actorID, actorType)
+	err := h.userRoleService.AssignRolesToUser(req.UserID, req.RoleKeys)
 	if err != nil {
 		code := utils.CodeInternalError
 		if strings.Contains(err.Error(), "用户不存在或无效") {
@@ -97,27 +76,8 @@ func (h *UserRoleHandler) UnassignRole(c *gin.Context) {
 		return
 	}
 
-	// 设置审计信息到上下文
-	c.Set("audit_action", "UNASSIGN_USER_ROLE")
-	c.Set("audit_target_type", "USER_ROLE")
-	c.Set("audit_target_key", req.UserID)
-	c.Set("audit_details", models.JSON{
-		"user_id":   req.UserID,
-		"role_keys": req.RoleKeys,
-	})
-
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
-
 	// 调用服务解除角色
-	err := h.userRoleService.UnassignRolesFromUser(req.UserID, req.RoleKeys, actorID, actorType)
+	err := h.userRoleService.UnassignRolesFromUser(req.UserID, req.RoleKeys)
 	if err != nil {
 		code := utils.CodeInternalError
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
@@ -135,14 +95,6 @@ func (h *UserRoleHandler) GetUserRoles(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "GET_USER_ROLES")
-	c.Set("audit_target_type", "USER")
-	c.Set("audit_target_key", req.UserID)
-	c.Set("audit_details", models.JSON{
-		"user_id": req.UserID,
-	})
 
 	// 调用服务获取用户角色
 	roles, err := h.userRoleService.GetUserRoles(req.UserID)
@@ -164,14 +116,6 @@ func (h *UserRoleHandler) GetBatchUserRoles(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "GET_BATCH_USER_ROLES")
-	c.Set("audit_target_type", "USER")
-	c.Set("audit_target_key", "BATCH")
-	c.Set("audit_details", models.JSON{
-		"user_ids": req.UserIDs,
-	})
 
 	// 调用服务批量获取用户角色
 	rolesMap, err := h.userRoleService.GetBatchUserRoles(req.UserIDs)

@@ -5,38 +5,31 @@ import (
 	"errors"
 	"rbac-service/internal/models"
 	"rbac-service/internal/repositories"
-	"rbac-service/internal/utils"
 	"regexp"
 )
 
 // PermissionService 权限服务接口
 type PermissionService interface {
-	CreatePermission(permissionKey, name, permType, description string, actorID, actorType string) (*models.Permission, error)
+	CreatePermission(permissionKey, name, permType, description string) (*models.Permission, error)
 	GetPermissions(page, pageSize int, permType string) ([]*models.Permission, int64, error)
-	UpdatePermission(permissionKey, name, permType, description string, actorID, actorType string) error
-	DeletePermission(permissionKey string, actorID, actorType string) error
+	UpdatePermission(permissionKey, name, permType, description string) error
+	DeletePermission(permissionKey string) error
 }
 
 // permissionService 权限服务实现
 type permissionService struct {
 	permRepo     repositories.PermissionRepository
 	rolePermRepo repositories.RolePermissionRepository
-	auditRepo    repositories.AuditLogRepository
-	auditCreator utils.AuditLogCreator
 }
 
 // NewPermissionService 创建权限服务实例
 func NewPermissionService(
 	permRepo repositories.PermissionRepository,
 	rolePermRepo repositories.RolePermissionRepository,
-	auditRepo repositories.AuditLogRepository,
-	auditCreator utils.AuditLogCreator,
 ) PermissionService {
 	return &permissionService{
 		permRepo:     permRepo,
 		rolePermRepo: rolePermRepo,
-		auditRepo:    auditRepo,
-		auditCreator: auditCreator,
 	}
 }
 
@@ -48,7 +41,7 @@ func isValidPermissionKey(permissionKey string) bool {
 }
 
 // CreatePermission 创建权限
-func (s *permissionService) CreatePermission(permissionKey, name, permType, description string, actorID, actorType string) (*models.Permission, error) {
+func (s *permissionService) CreatePermission(permissionKey, name, permType, description string) (*models.Permission, error) {
 	// 验证permissionKey格式
 	if !isValidPermissionKey(permissionKey) {
 		return nil, errors.New("权限Key格式无效")
@@ -80,7 +73,7 @@ func (s *permissionService) GetPermissions(page, pageSize int, permType string) 
 }
 
 // UpdatePermission 更新权限
-func (s *permissionService) UpdatePermission(permissionKey, name, permType, description string, actorID, actorType string) error {
+func (s *permissionService) UpdatePermission(permissionKey, name, permType, description string) error {
 	// 查找权限
 	permission, err := s.permRepo.FindByKey(permissionKey)
 	if err != nil {
@@ -104,7 +97,7 @@ func (s *permissionService) UpdatePermission(permissionKey, name, permType, desc
 }
 
 // DeletePermission 删除权限
-func (s *permissionService) DeletePermission(permissionKey string, actorID, actorType string) error {
+func (s *permissionService) DeletePermission(permissionKey string) error {
 	// 查找权限
 	_, err := s.permRepo.FindByKey(permissionKey)
 	if err != nil {
