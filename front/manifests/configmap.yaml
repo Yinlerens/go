@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mac-config
+  namespace: namespace-workflow-1744623339384
+  labels:
+    app.kubernetes.io/name: mac
+    kubernetes.azure.com/generator: devhub
+data:
