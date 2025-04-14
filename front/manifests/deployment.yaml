@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mac
+  name: mac1
   labels:
-    app.kubernetes.io/name: mac
+    app.kubernetes.io/name: mac1
     kubernetes.azure.com/generator: devhub
-  namespace: namespace-workflow-1744623339384
+  namespace: namespace-workflow-1744624376021
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: mac
+      app.kubernetes.io/name: mac1
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: mac
+        app.kubernetes.io/name: mac1
     spec:
       containers:
-        - name: mac
-          image: kongregistry.azurecr.io/image-workflow-1744623339384:latest
+        - name: mac1
+          image: kongregistry.azurecr.io/image-workflow-1744624376021:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -31,7 +31,7 @@ spec:
               memory: "1Gi"
           envFrom:
             - configMapRef:
-                name: mac-config
+                name: mac1-config
             - secretRef:
                 name: secret-ref
                 optional: true
@@ -83,11 +83,11 @@ spec:
               topologyKey: kubernetes.io/hostname
               labelSelector:
                 matchLabels:
-                  app.kubernetes.io/name: mac
+                  app.kubernetes.io/name: mac1
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: mac
+              app.kubernetes.io/name: mac1
