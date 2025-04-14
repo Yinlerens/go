@@ -4,6 +4,7 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 )
@@ -131,18 +132,13 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	// 获取调用者信息
-	actorID := c.GetString("caller_id")
-	if actorID == "" {
-		actorID = "system"
-	}
-	actorType := c.GetString("caller_type")
-	if actorType == "" {
-		actorType = "SERVICE"
-	}
+	// 设置审计信息到上下文
+	c.Set("audit_action", "ROLE_UPDATE")
+	c.Set("audit_target_type", "ROLE")
+	c.Set("audit_target_key", req.RoleKey)
 
 	// 调用服务更新角色
-	err := h.roleService.UpdateRole(req.RoleKey, req.Name, req.Description, actorID, actorType)
+	role, oldData, err := h.roleService.UpdateRole(req.RoleKey, req.Name, req.Description)
 	if err != nil {
 		code := utils.CodeInternalError
 		if err.Error() == "角色不存在" {
@@ -151,7 +147,14 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
 		return
 	}
-
+	// 设置更详细的审计信息
+	c.Set("audit_details", models.JSON{
+		"old": oldData,
+		"new": map[string]interface{}{
+			"name":        role.Name,
+			"description": role.Description,
+		},
+	})
 	// 返回成功响应
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, nil))
 }

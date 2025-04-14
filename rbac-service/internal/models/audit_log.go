@@ -37,6 +37,9 @@ type AuditLog struct {
 	Details      JSON      `gorm:"type:json;null"`
 	Status       string    `gorm:"type:varchar(10);not null;index"`
 	ErrorMessage string    `gorm:"type:text;null"`
+	UserID       string    `gorm:"type:varchar(36); null;index"`
+	Username     string    `gorm:"type:varchar(100); null;index"`
+	UserIP       string    `gorm:"type:varchar(50); null;index"`
 }
 
 // TableName 指定数据库表名

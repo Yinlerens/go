@@ -52,7 +52,6 @@ import { toast } from "sonner";
 export default function PermissionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [permissionType, setPermissionType] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [permissions, setPermissions] = useState<
     Array<{
@@ -78,7 +77,7 @@ export default function PermissionsPage() {
 
   useEffect(() => {
     fetchPermissions();
-  }, [currentPage, permissionType, pageSize]);
+  }, [currentPage, pageSize]);
 
   const fetchPermissions = async () => {
     setLoading(true);
@@ -86,7 +85,7 @@ export default function PermissionsPage() {
       const response = await listPermissions({
         page: currentPage,
         page_size: pageSize,
-        type: permissionType === "ALL" ? undefined : permissionType
+        type: "MENU"
       });
       if (response.data) {
         setPermissions(response.data.list);
@@ -183,24 +182,6 @@ export default function PermissionsPage() {
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-
-        <Select
-          value={permissionType}
-          onValueChange={value => {
-            setPermissionType(value);
-            setCurrentPage(1);
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="所有权限类型" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">所有权限类型</SelectItem>
-            <SelectItem value="MENU">菜单权限</SelectItem>
-            <SelectItem value="BUTTON">按钮权限</SelectItem>
-            <SelectItem value="API">接口权限</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="rounded-md border">
@@ -224,7 +205,7 @@ export default function PermissionsPage() {
             ) : filteredPermissions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8">
-                  {searchQuery || permissionType ? "没有找到匹配的权限" : "暂无权限数据"}
+                  {searchQuery ? "没有找到匹配的权限" : "暂无权限数据"}
                 </TableCell>
               </TableRow>
             ) : (

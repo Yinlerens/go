@@ -88,41 +88,39 @@ export default function AuditLogs() {
 
   // 目标类型列表
   const targetTypes = ["ROLE", "PERMISSION", "USER_ROLE", "ROLE_PERMISSION"];
+  const fetchAuditLogs = async () => {
+    setLoading(true);
+    try {
+      // 构建查询参数
+      const queryParams = {
+        page: currentPage,
+        page_size: pageSize,
+        filters: { ...filters }
+      };
 
+      // 添加日期范围
+      if (dateRange?.from) {
+        queryParams.filters.start_time = dateRange.from.toISOString();
+      }
+      if (dateRange?.to) {
+        // 设置为当天的结束时间 (23:59:59)
+        const endDate = new Date(dateRange.to);
+        endDate.setHours(23, 59, 59, 999);
+        queryParams.filters.end_time = endDate.toISOString();
+      }
+
+      const response = await listAuditLogs(queryParams);
+      if (response.data) {
+        setLogs(response.data.list);
+        setTotalLogs(response.data.total);
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
   // 加载审计日志
   useEffect(() => {
-    const fetchAuditLogs = async () => {
-      setLoading(true);
-      try {
-        // 构建查询参数
-        const queryParams = {
-          page: currentPage,
-          page_size: pageSize,
-          filters: { ...filters }
-        };
-
-        // 添加日期范围
-        if (dateRange?.from) {
-          queryParams.filters.start_time = dateRange.from.toISOString();
-        }
-        if (dateRange?.to) {
-          // 设置为当天的结束时间 (23:59:59)
-          const endDate = new Date(dateRange.to);
-          endDate.setHours(23, 59, 59, 999);
-          queryParams.filters.end_time = endDate.toISOString();
-        }
-
-        const response = await listAuditLogs(queryParams);
-        if (response.data) {
-          setLogs(response.data.list);
-          setTotalLogs(response.data.total);
-        }
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAuditLogs();
   }, [currentPage, filters, dateRange]);
 
@@ -184,7 +182,6 @@ export default function AuditLogs() {
     try {
       const date = new Date(dateString);
       return format(date, "yyyy-MM-dd HH:mm:ss");
-
     } catch (e) {
       return dateString;
     }
@@ -336,11 +333,7 @@ export default function AuditLogs() {
             variant="ghost"
             size="icon"
             onClick={() => {
-              setCurrentPage(1);
-              // 重新加载当前过滤条件下的数据
-              const currentFilters = { ...filters };
-              setFilters({});
-              setTimeout(() => setFilters(currentFilters), 0);
+             currentPage > 1 ? setCurrentPage(1) : fetchAuditLogs();
             }}
             title="刷新"
           >

@@ -34,9 +34,18 @@ func InternalAuth(apiKeys map[string]string) gin.HandlerFunc {
 			return
 		}
 
-		// 设置调用者信息
+		// 设置调用者服务信息
 		c.Set("caller_id", serviceID)
 		c.Set("caller_type", "SERVICE")
+
+		// 从请求中获取并设置用户信息（如果存在）
+		userID := c.GetHeader("X-User-ID")
+		username := c.GetHeader("X-Username")
+		userIP := c.ClientIP()
+
+		c.Set("user_id", userID)
+		c.Set("username", username)
+		c.Set("user_ip", userIP)
 
 		c.Next()
 	}

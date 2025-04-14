@@ -53,12 +53,6 @@ export function RoleForm({ initialData, isEdit = false, onSuccess }: RoleFormPro
     }
   });
 
-  // 如果是编辑模式，角色标识应该是只读的
-  useEffect(() => {
-    if (isEdit) {
-      form.register("role_key", { disabled: true });
-    }
-  }, [form, isEdit]);
 
   // 表单提交处理
   async function onSubmit(values: z.infer<typeof roleFormSchema>) {

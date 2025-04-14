@@ -116,22 +116,15 @@ func (s *roleService) GetRoles(page, pageSize int) ([]*models.Role, int64, error
 }
 
 // UpdateRole 更新角色
-func (s *roleService) UpdateRole(roleKey, name, description string, actorID, actorType string) error {
+func (s *roleService) UpdateRole(roleKey, name, description string) (*models.Role, models.JSON, error) {
 	// 查找角色
 	role, err := s.roleRepo.FindByKey(roleKey)
 	if err != nil {
-		// 创建审计日志
-		auditLog := s.auditCreator.CreateAuditLog(
-			actorID, actorType, "ROLE_UPDATE", "ROLE", roleKey,
-			models.JSON{"error": "角色不存在"},
-			"FAILURE", "角色不存在",
-		)
-		s.auditRepo.Create(auditLog)
-		return errors.New("角色不存在")
+		return nil, nil, errors.New("角色不存在")
 	}
 
 	// 记录旧值
-	oldRole := map[string]interface{}{
+	oldData := models.JSON{
 		"name":        role.Name,
 		"description": role.Description,
 	}
@@ -142,6 +135,10 @@ func (s *roleService) UpdateRole(roleKey, name, description string, actorID, act
 	}
 	if description != "" {
 		role.Description = description
+	}
+
+	if err := s.roleRepo.Update(role); err != nil {
+		return nil, nil, err
 	}
 
 	if err := s.roleRepo.Update(role); err != nil {

@@ -91,7 +91,8 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// 使用全局中间件
 	r.Use(middlewares.ErrorHandler())
 	r.Use(middlewares.CORS())
-
+	r.Use(middlewares.UserContext())
+	auditLogger := middlewares.AuditLogger(auditRepo, auditCreator)
 	// 健康检查路由
 	r.GET("/health", healthHandler.Health)
 
@@ -101,6 +102,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// 权限检查路由 (需要内部API密钥认证)
 	checkGroup := v1.Group("/")
 	checkGroup.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
+	checkGroup.Use(auditLogger)
 	{
 		checkGroup.POST("/check", checkHandler.CheckPermission)
 		checkGroup.POST("/users/permissions", checkHandler.GetUserPermissions)
@@ -108,6 +110,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 角色管理路由 (需要内部API密钥认证)
 	roleGroup := v1.Group("/roles")
+	roleGroup.Use(auditLogger)
 	{
 		roleGroup.POST("/create", roleHandler.CreateRole)
 		roleGroup.POST("/list", roleHandler.ListRoles)
@@ -122,6 +125,8 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 权限管理路由 (需要内部API密钥认证)
 	permGroup := v1.Group("/permissions")
+	permGroup.Use(auditLogger)
+
 	{
 		permGroup.POST("/create", permissionHandler.CreatePermission)
 		permGroup.POST("/list", permissionHandler.ListPermissions)
@@ -131,6 +136,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 用户-角色管理路由 (需要内部API密钥认证)
 	userGroup := v1.Group("/users")
+	userGroup.Use(auditLogger)
 	// userGroup.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
 	{
 		userGroup.POST("/assign-role", userRoleHandler.AssignRole)

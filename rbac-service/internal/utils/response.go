@@ -1,6 +1,8 @@
 // internal/utils/response.go
 package utils
 
+import "github.com/gin-gonic/gin"
+
 // 统一响应码定义
 const (
 	CodeSuccess            = 0    // 成功
@@ -57,4 +59,21 @@ func NewResponse(code int, data interface{}) Response {
 		Msg:  msg,
 		Data: data,
 	}
+}
+
+// NewResponseWithContext 创建新的响应并设置上下文信息
+func NewResponseWithContext(c *gin.Context, code int, data interface{}) Response {
+	// 设置响应代码到上下文，供审计中间件使用
+	c.Set("response_code", code)
+
+	// 如果是错误，记录错误信息
+	if code != CodeSuccess {
+		msg, exists := codeMessages[code]
+		if !exists {
+			msg = "未知错误"
+		}
+		c.Set("error_message", msg)
+	}
+
+	return NewResponse(code, data)
 }

@@ -63,17 +63,15 @@ export function PermissionForm({ initialData, isEdit = false, onSuccess }: Permi
     }
   });
 
-
   // 表单提交处理
   async function onSubmit(values: z.infer<typeof permissionFormSchema>) {
-    console.log('%c [ values ]-75', 'font-size:13px; background:pink; color:#bf2c9f;', values)
     try {
       if (isEdit) {
         // 更新权限
         const { code } = await updatePermission({
           permission_key: values.permission_key,
           name: values.name,
-          type: values.type,
+          type: "MENU",
           description: values.description
         });
         if (code === 0) {
@@ -85,7 +83,7 @@ export function PermissionForm({ initialData, isEdit = false, onSuccess }: Permi
         const { code } = await createPermission({
           permission_key: values.permission_key,
           name: values.name,
-          type: values.type,
+          type: "MENU",
           description: values.description
         });
         if (code === 0) {
@@ -127,29 +125,6 @@ export function PermissionForm({ initialData, isEdit = false, onSuccess }: Permi
                 <Input placeholder="仪表盘菜单" {...field} />
               </FormControl>
               <FormDescription>权限的显示名称</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>权限类型</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择权限类型" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="MENU">菜单权限</SelectItem>
-                  <SelectItem value="BUTTON">按钮权限</SelectItem>
-                  <SelectItem value="API">接口权限</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>权限的类型，用于归类和前端控制</FormDescription>
               <FormMessage />
             </FormItem>
           )}
