@@ -1,4 +1,4 @@
-// internal/api/routes/routes.go
+// Package routes internal/api/routes/routes.go
 package routes
 
 import (
@@ -65,7 +65,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	}
 
 	// 用户相关路由组
-	users := v1.Group("/users")
+	users := v1.Group("/auth/users")
 	{
 		users.POST("/list", userHandler.ListUsers)
 		users.POST("/status", userHandler.UpdateStatus)
