@@ -2,6 +2,7 @@
 package services
 
 import (
+	"audit-sdk/client"
 	"errors"
 	"rbac-service/internal/models"
 	"rbac-service/internal/repositories"
@@ -20,16 +21,20 @@ type PermissionService interface {
 type permissionService struct {
 	permRepo     repositories.PermissionRepository
 	rolePermRepo repositories.RolePermissionRepository
+	auditClient  client.Client
 }
 
 // NewPermissionService 创建权限服务实例
 func NewPermissionService(
 	permRepo repositories.PermissionRepository,
 	rolePermRepo repositories.RolePermissionRepository,
+	auditClient client.Client,
+
 ) PermissionService {
 	return &permissionService{
 		permRepo:     permRepo,
 		rolePermRepo: rolePermRepo,
+		auditClient:  auditClient,
 	}
 }
 

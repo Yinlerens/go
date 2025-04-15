@@ -2,6 +2,7 @@
 package services
 
 import (
+	"audit-sdk/client"
 	"errors"
 	"rbac-service/internal/models"
 	"rbac-service/internal/repositories"
@@ -21,6 +22,7 @@ type userRoleService struct {
 	roleRepo     repositories.RoleRepository
 	authClient   AuthClient
 	checkService CheckService
+	auditClient  client.Client
 }
 
 // NewUserRoleService 创建用户-角色服务实例
@@ -29,12 +31,15 @@ func NewUserRoleService(
 	roleRepo repositories.RoleRepository,
 	authClient AuthClient,
 	checkService CheckService,
+	auditClient client.Client,
+
 ) UserRoleService {
 	return &userRoleService{
 		userRoleRepo: userRoleRepo,
 		roleRepo:     roleRepo,
 		authClient:   authClient,
 		checkService: checkService,
+		auditClient:  auditClient,
 	}
 }
 

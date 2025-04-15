@@ -1,9 +1,9 @@
-// internal/api/routes/route.go
 package routes
 
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"log"
 	"menu-service/internal/api/handlers"
 	"menu-service/internal/api/middlewares"
 	"menu-service/internal/config"
@@ -11,6 +11,9 @@ import (
 	"menu-service/internal/services"
 	"menu-service/internal/utils"
 	"time"
+
+	"audit-sdk/client"
+	"audit-sdk/middleware"
 )
 
 // VERSION 版本号
@@ -18,6 +21,14 @@ const VERSION = "v1.0.0"
 
 // SetupRoutes 设置API路由
 func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
+	// 初始化审计客户端
+	auditClient, err := client.NewKafkaClient([]string{"111.230.105.184:9092"}, "audit-logs", "menu-service")
+	if err != nil {
+		log.Printf("初始化审计客户端失败: %v, 将使用内存客户端", err)
+		auditClient = client.NewMemoryClient("menu-service")
+	}
+	defer auditClient.Close()
+
 	// 创建仓库
 	menuItemRepo := repositories.NewMenuItemRepository(db)
 	menuLogRepo := repositories.NewMenuLogRepository(db)
@@ -36,6 +47,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		rbacClient,
 		menuLogCreator,
 		cache,
+		auditClient, // 传递审计客户端
 	)
 
 	userMenuService := services.NewUserMenuService(
@@ -56,6 +68,8 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// 使用全局中间件
 	r.Use(middlewares.ErrorHandler())
 	r.Use(middlewares.CORS())
+	r.Use(middleware.ErrorAuditMiddleware(auditClient)) // 添加错误审计中间件
+	r.Use(middlewares.AuditMiddleware(auditClient))     // 添加审计中间件
 
 	// 健康检查路由
 	r.GET("/health", healthHandler.Health)

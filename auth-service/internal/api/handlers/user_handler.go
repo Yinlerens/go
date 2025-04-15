@@ -1,4 +1,3 @@
-// internal/api/handlers/user_handler.go
 package handlers
 
 import (
@@ -7,19 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"audit-sdk/client"
 )
 
-// 请求结构体
 type updateStatusRequest struct {
 	UserID string `json:"user_id" binding:"required"`
 	Status string `json:"status" binding:"required"`
 }
-
-// UserHandler 用户处理器
-type UserHandler struct {
-	userService services.UserService
-}
-
 type listUsersRequest struct {
 	Page     int    `json:"page"`
 	PageSize int    `json:"page_size"`
@@ -29,10 +23,17 @@ type validateUserRequest struct {
 	UserID string `json:"user_id" binding:"required"`
 }
 
+// UserHandler 用户处理器
+type UserHandler struct {
+	userService services.UserService
+	auditClient client.Client // 添加审计客户端
+}
+
 // NewUserHandler 创建用户处理器实例
-func NewUserHandler(userService services.UserService) *UserHandler {
+func NewUserHandler(userService services.UserService, auditClient client.Client) *UserHandler {
 	return &UserHandler{
 		userService: userService,
+		auditClient: auditClient,
 	}
 }
 
@@ -60,9 +61,34 @@ func (h *UserHandler) UpdateStatus(c *gin.Context) {
 		case strings.Contains(err.Error(), "目标用户不存在"):
 			code = utils.CodeResourceNotFound
 		}
+
+		// 记录失败审计
+		h.auditClient.LogWithContext(
+			c,
+			client.EventUserStatusChange,
+			client.ResultFailure,
+			map[string]interface{}{
+				"target_user_id": req.UserID,
+				"new_status":     req.Status,
+				"error_code":     code,
+				"error_message":  err.Error(),
+			},
+		)
+
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
 		return
 	}
+
+	// 记录成功审计
+	h.auditClient.LogWithContext(
+		c,
+		client.EventUserStatusChange,
+		client.ResultSuccess,
+		map[string]interface{}{
+			"target_user_id": req.UserID,
+			"new_status":     req.Status,
+		},
+	)
 
 	// 返回成功响应
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, nil))

@@ -1,4 +1,4 @@
-// internal/api/handlers/auth_handler.go (完整版)
+// auth-service/internal/api/handlers/auth_handler.go
 package handlers
 
 import (
@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"audit-sdk/client"
 )
 
 // 请求结构体
@@ -29,6 +31,7 @@ type AuthHandler struct {
 	secureCookie  bool
 	accessExpiry  time.Duration
 	refreshExpiry time.Duration
+	auditClient   client.Client // 添加审计客户端
 }
 
 // NewAuthHandler 创建认证处理器实例
@@ -38,6 +41,7 @@ func NewAuthHandler(
 	secureCookie bool,
 	accessExpiry time.Duration,
 	refreshExpiry time.Duration,
+	auditClient client.Client, // 添加审计客户端参数
 ) *AuthHandler {
 	return &AuthHandler{
 		authService:   authService,
@@ -45,39 +49,8 @@ func NewAuthHandler(
 		secureCookie:  secureCookie,
 		accessExpiry:  accessExpiry,
 		refreshExpiry: refreshExpiry,
+		auditClient:   auditClient,
 	}
-}
-
-// Register 用户注册处理
-func (h *AuthHandler) Register(c *gin.Context) {
-	var req registerRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
-		return
-	}
-
-	// 调用服务进行注册
-	user, err := h.authService.Register(req.Username, req.Password)
-	if err != nil {
-		code := utils.CodeInternalServerError
-		// 根据错误信息确定业务状态码
-		switch {
-		case strings.Contains(err.Error(), "用户名格式或长度无效"):
-			code = utils.CodeInvalidParams
-		case strings.Contains(err.Error(), "密码长度至少需要6位"):
-			code = utils.CodePasswordInvalid
-		case strings.Contains(err.Error(), "用户名已被注册"):
-			code = utils.CodeUsernameExists
-		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
-		return
-	}
-
-	// 返回成功响应
-	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
-		"user_id":  user.UserID,
-		"username": user.Username,
-	}))
 }
 
 // Login 用户登录处理
@@ -90,6 +63,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// 调用服务进行登录
 	user, accessToken, refreshToken, err := h.authService.Login(req.Username, req.Password)
+
 	if err != nil {
 		code := utils.CodeInternalServerError
 		// 根据错误信息确定业务状态码
@@ -101,9 +75,34 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		case strings.Contains(err.Error(), "账户已被禁用"):
 			code = utils.CodeUserInactive
 		}
+
+		// 记录登录失败审计
+		h.auditClient.LogWithContext(
+			c,
+			client.EventUserLogin,
+			client.ResultFailure,
+			map[string]interface{}{
+				"username":      req.Username,
+				"error_code":    code,
+				"error_message": err.Error(),
+			},
+		)
+
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
 		return
 	}
+
+	// 记录登录成功审计
+	h.auditClient.LogWithContext(
+		c,
+		client.EventUserLogin,
+		client.ResultSuccess,
+		map[string]interface{}{
+			"user_id":  user.UserID,
+			"username": user.Username,
+		},
+	)
+
 	// 设置Cookie: refresh_auth_token
 	c.SetCookie(
 		"refresh_auth_token",
@@ -208,6 +207,10 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 
 // Logout 用户登出
 func (h *AuthHandler) Logout(c *gin.Context) {
+	// 获取用户信息
+	userID, _ := c.Get("user_id")
+	username, _ := c.Get("username")
+
 	// 验证访问令牌 (可选，取决于业务需求)
 	authHeader := c.GetHeader("Authorization")
 	if authHeader != "" {
@@ -229,6 +232,17 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
 		return
 	}
+
+	// 记录登出审计事件
+	h.auditClient.LogWithContext(
+		c,
+		client.EventUserLogout,
+		client.ResultSuccess,
+		map[string]interface{}{
+			"user_id":  userID,
+			"username": username,
+		},
+	)
 
 	// 清除Cookie: auth_token
 	c.SetCookie(
@@ -256,7 +270,37 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, nil))
 }
 
-// Health 健康检查
+// Register 用户注册处理
+func (h *AuthHandler) Register(c *gin.Context) {
+	var req registerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		return
+	}
+
+	// 调用服务进行注册
+	user, err := h.authService.Register(req.Username, req.Password)
+	if err != nil {
+		code := utils.CodeInternalServerError
+		// 根据错误信息确定业务状态码
+		switch {
+		case strings.Contains(err.Error(), "用户名格式或长度无效"):
+			code = utils.CodeInvalidParams
+		case strings.Contains(err.Error(), "密码长度至少需要6位"):
+			code = utils.CodePasswordInvalid
+		case strings.Contains(err.Error(), "用户名已被注册"):
+			code = utils.CodeUsernameExists
+		}
+		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
+		"user_id":  user.UserID,
+		"username": user.Username,
+	}))
+}
 func (h *AuthHandler) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "ok",

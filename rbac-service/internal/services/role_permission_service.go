@@ -2,6 +2,7 @@
 package services
 
 import (
+	"audit-sdk/client"
 	"errors"
 	"rbac-service/internal/models"
 	"rbac-service/internal/repositories"
@@ -22,6 +23,7 @@ type rolePermissionService struct {
 	userRoleRepo repositories.UserRoleRepository
 	checkService CheckService
 	cache        repositories.Cache
+	auditClient  client.Client
 }
 
 // NewRolePermissionService 创建角色-权限服务实例
@@ -32,6 +34,8 @@ func NewRolePermissionService(
 	userRoleRepo repositories.UserRoleRepository,
 	checkService CheckService,
 	cache repositories.Cache,
+	auditClient client.Client,
+
 ) RolePermissionService {
 	return &rolePermissionService{
 		rolePermRepo: rolePermRepo,
@@ -40,6 +44,7 @@ func NewRolePermissionService(
 		userRoleRepo: userRoleRepo,
 		checkService: checkService,
 		cache:        cache,
+		auditClient:  auditClient,
 	}
 }
 

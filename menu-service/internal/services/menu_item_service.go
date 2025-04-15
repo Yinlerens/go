@@ -2,11 +2,13 @@
 package services
 
 import (
+	"audit-sdk/client"
 	"errors"
 	"menu-service/internal/models"
 	"menu-service/internal/repositories"
 	"menu-service/internal/utils"
 	"regexp"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -47,6 +49,7 @@ type menuItemService struct {
 	rbacClient   RbacClient
 	logCreator   utils.MenuLogCreator
 	cache        repositories.Cache
+	auditClient  client.Client
 }
 
 // NewMenuItemService 创建菜单项服务实例
@@ -56,6 +59,7 @@ func NewMenuItemService(
 	rbacClient RbacClient,
 	logCreator utils.MenuLogCreator,
 	cache repositories.Cache,
+	auditClient client.Client,
 ) MenuItemService {
 	return &menuItemService{
 		menuItemRepo: menuItemRepo,
@@ -63,6 +67,7 @@ func NewMenuItemService(
 		rbacClient:   rbacClient,
 		logCreator:   logCreator,
 		cache:        cache,
+		auditClient:  auditClient,
 	}
 }
 
@@ -103,6 +108,19 @@ func (s *menuItemService) getMenuLevel(parentID string) (int, error) {
 func (s *menuItemService) CreateMenuItem(name, path, icon, permissionKey, parentID string, order int, isEnabled bool, meta models.JSON, actorID, actorType string) (*models.MenuItem, error) {
 	// 验证路径格式
 	if !isValidPath(path) {
+		// 记录错误审计
+		if s.auditClient != nil {
+			s.auditClient.LogError(
+				errors.New("菜单路径格式无效"),
+				map[string]interface{}{
+					"name":           name,
+					"path":           path,
+					"permission_key": permissionKey,
+					"parent_id":      parentID,
+					"operation":      "CREATE",
+				},
+			)
+		}
 		return nil, errors.New("菜单路径格式无效")
 	}
 
@@ -110,11 +128,37 @@ func (s *menuItemService) CreateMenuItem(name, path, icon, permissionKey, parent
 	if parentID != "" {
 		parent, err := s.menuItemRepo.FindByID(parentID)
 		if err != nil {
+			// 记录错误审计
+			if s.auditClient != nil {
+				s.auditClient.LogError(
+					errors.New("父菜单不存在"),
+					map[string]interface{}{
+						"name":           name,
+						"path":           path,
+						"permission_key": permissionKey,
+						"parent_id":      parentID,
+						"operation":      "CREATE",
+					},
+				)
+			}
 			return nil, errors.New("父菜单不存在")
 		}
 
 		// 检查是否创建循环引用
 		if parent.ParentID == parentID {
+			// 记录错误审计
+			if s.auditClient != nil {
+				s.auditClient.LogError(
+					errors.New("不能创建循环引用的菜单"),
+					map[string]interface{}{
+						"name":           name,
+						"path":           path,
+						"permission_key": permissionKey,
+						"parent_id":      parentID,
+						"operation":      "CREATE",
+					},
+				)
+			}
 			return nil, errors.New("不能创建循环引用的菜单")
 		}
 	}
@@ -122,15 +166,57 @@ func (s *menuItemService) CreateMenuItem(name, path, icon, permissionKey, parent
 	// 验证菜单层级
 	level, err := s.getMenuLevel(parentID)
 	if err != nil {
+		if s.auditClient != nil {
+			s.auditClient.LogError(
+				err,
+				map[string]interface{}{
+					"name":           name,
+					"path":           path,
+					"permission_key": permissionKey,
+					"parent_id":      parentID,
+					"operation":      "CREATE",
+					"step":           "验证菜单层级",
+				},
+			)
+		}
 		return nil, err
 	}
 	if level > MaxMenuLevel {
+		// 记录错误审计
+		if s.auditClient != nil {
+			s.auditClient.LogError(
+				errors.New("菜单层级超出限制"),
+				map[string]interface{}{
+					"name":           name,
+					"path":           path,
+					"permission_key": permissionKey,
+					"parent_id":      parentID,
+					"operation":      "CREATE",
+					"level":          level,
+					"max_level":      MaxMenuLevel,
+				},
+			)
+		}
 		return nil, errors.New("菜单层级超出限制")
 	}
 
 	// 检查路径唯一性
 	existingItem, err := s.menuItemRepo.FindByPath(path)
 	if err == nil && existingItem != nil {
+		// 记录错误审计
+		if s.auditClient != nil {
+			s.auditClient.LogError(
+				errors.New("菜单路径已存在"),
+				map[string]interface{}{
+					"name":           name,
+					"path":           path,
+					"permission_key": permissionKey,
+					"parent_id":      parentID,
+					"operation":      "CREATE",
+					"existing_id":    existingItem.ID,
+				},
+			)
+		}
 		return nil, errors.New("菜单路径已存在")
 	}
 
@@ -138,6 +224,19 @@ func (s *menuItemService) CreateMenuItem(name, path, icon, permissionKey, parent
 	if permissionKey != "" {
 		exists, err := s.rbacClient.CheckPermissionExists(permissionKey)
 		if err != nil || !exists {
+			// 记录错误审计
+			if s.auditClient != nil {
+				s.auditClient.LogError(
+					errors.New("权限标识不存在于RBAC系统"),
+					map[string]interface{}{
+						"name":           name,
+						"path":           path,
+						"permission_key": permissionKey,
+						"parent_id":      parentID,
+						"operation":      "CREATE",
+					},
+				)
+			}
 			return nil, errors.New("权限标识不存在于RBAC系统")
 		}
 	}
@@ -156,6 +255,20 @@ func (s *menuItemService) CreateMenuItem(name, path, icon, permissionKey, parent
 	}
 
 	if err := s.menuItemRepo.Create(menuItem); err != nil {
+		// 记录错误审计
+		if s.auditClient != nil {
+			s.auditClient.LogError(
+				err,
+				map[string]interface{}{
+					"name":           name,
+					"path":           path,
+					"permission_key": permissionKey,
+					"parent_id":      parentID,
+					"operation":      "CREATE",
+					"step":           "保存菜单项",
+				},
+			)
+		}
 		return nil, err
 	}
 
@@ -182,7 +295,29 @@ func (s *menuItemService) CreateMenuItem(name, path, icon, permissionKey, parent
 
 	// 清除菜单树缓存
 	s.cache.Delete("menu_tree")
-
+	if s.auditClient != nil {
+		s.auditClient.Log(&client.AuditEvent{
+			EventType:    string(client.EventMenuCreated),
+			Timestamp:    time.Now().UnixNano() / int64(time.Millisecond),
+			ServiceName:  "menu-service",
+			ResourceType: "MENU",
+			ResourceID:   menuItem.ID,
+			Operation:    "CREATE",
+			Result:       string(client.ResultSuccess),
+			Details: map[string]interface{}{
+				"id":             menuItem.ID,
+				"name":           menuItem.Name,
+				"path":           menuItem.Path,
+				"icon":           menuItem.Icon,
+				"permission_key": menuItem.PermissionKey,
+				"parent_id":      menuItem.ParentID,
+				"order":          menuItem.Order,
+				"is_enabled":     menuItem.IsEnabled,
+				"actor_id":       actorID,
+				"actor_type":     actorType,
+			},
+		})
+	}
 	return menuItem, nil
 }
 
