@@ -7,7 +7,6 @@ import (
 	"rbac-service/internal/config"
 	"rbac-service/internal/repositories"
 	"rbac-service/internal/services"
-	"rbac-service/internal/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,11 +23,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	permRepo := repositories.NewPermissionRepository(db)
 	userRoleRepo := repositories.NewUserRoleRepository(db)
 	rolePermRepo := repositories.NewRolePermissionRepository(db)
-	auditRepo := repositories.NewAuditLogRepository(db)
 	cache := repositories.NewInMemoryCache()
-
-	// 创建工具
-	auditCreator := utils.NewAuditLogCreator()
 
 	// 创建认证客户端
 	authClient := services.NewAuthClient(cfg.AuthServiceURL, cfg.InternalAPIKeys["default"])
@@ -69,21 +64,17 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		cache,
 	)
 
-	auditLogService := services.NewAuditLogService(auditRepo)
-
 	// 创建处理器
 	roleHandler := handlers.NewRoleHandler(roleService)
 	permissionHandler := handlers.NewPermissionHandler(permissionService)
 	checkHandler := handlers.NewCheckHandler(checkService)
 	userRoleHandler := handlers.NewUserRoleHandler(userRoleService)
 	rolePermissionHandler := handlers.NewRolePermissionHandler(rolePermissionService)
-	auditLogHandler := handlers.NewAuditLogHandler(auditLogService)
 	healthHandler := handlers.NewHealthHandler(VERSION)
 
 	// 使用全局中间件
 	r.Use(middlewares.ErrorHandler())
 	r.Use(middlewares.CORS())
-	r.Use(middlewares.EnhancedAuditLogger(auditRepo, auditCreator))
 	// 健康检查路由
 	r.GET("/health", healthHandler.Health)
 
@@ -124,17 +115,10 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 用户-角色管理路由 (需要内部API密钥认证)
 	userGroup := v1.Group("/users")
-	// userGroup.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
 	{
 		userGroup.POST("/assign-role", userRoleHandler.AssignRole)
 		userGroup.POST("/unassign-role", userRoleHandler.UnassignRole)
 		userGroup.POST("/roles", userRoleHandler.GetUserRoles)
 		userGroup.POST("/batch-roles", userRoleHandler.GetBatchUserRoles)
-	}
-
-	// 审计日志路由 (需要内部API密钥认证)
-	auditGroup := v1.Group("/audit-logs")
-	{
-		auditGroup.POST("/list", auditLogHandler.ListAuditLogs)
 	}
 }

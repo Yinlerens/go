@@ -5,7 +5,6 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"rbac-service/internal/models"
 	"rbac-service/internal/services"
 	"rbac-service/internal/utils"
 	"strings"
@@ -52,16 +51,6 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "ROLE_CREATE")
-	c.Set("audit_target_type", "ROLE")
-	c.Set("audit_target_key", req.RoleKey)
-	c.Set("audit_details", models.JSON{
-		"role_key":    req.RoleKey,
-		"name":        req.Name,
-		"description": req.Description,
-	})
 
 	// 调用服务创建角色
 	role, err := h.roleService.CreateRole(req.RoleKey, req.Name, req.Description)
@@ -156,15 +145,6 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
-	// 设置审计信息到上下文
-	c.Set("audit_action", "ROLE_DELETE")
-	c.Set("audit_target_type", "ROLE")
-	c.Set("audit_target_key", req.RoleKey)
-	c.Set("audit_details", models.JSON{
-		"role_key": req.RoleKey,
-	})
-
 	// 调用服务删除角色
 	err := h.roleService.DeleteRole(req.RoleKey)
 	if err != nil {
