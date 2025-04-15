@@ -43,8 +43,6 @@ WORKDIR /root/
 # 从builder阶段复制二进制文件
 COPY --from=builder /app/services/auth-service/auth-service .
 
-# 检查.env文件是否存在并复制（使用独立的RUN命令而不是COPY）
-COPY --from=builder /app/services/auth-service/.env /tmp/envfiles/.env
 
 # 暴露端口
 EXPOSE 8080
