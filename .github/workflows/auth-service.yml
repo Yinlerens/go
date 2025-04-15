@@ -29,7 +29,14 @@ jobs:
           registry: ccr.ccs.tencentyun.com
           username: ${{ secrets.TENCENTCLOUD_USERNAME }}
           password: ${{ secrets.TENCENTCLOUD_PASSWORD }}
-      
+
+      - name: List files for debugging
+        run: |
+          pwd
+          ls -lR ./auth-service
+          # Optionally list the root if needed
+          ls -l .
+          
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
