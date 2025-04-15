@@ -9,7 +9,7 @@ import (
 )
 
 // SetupRoutes 设置API路由
-func SetupRoutes(r *gin.Engine, auditService services.AuditService, jwtSecret string) {
+func SetupRoutes(r *gin.Engine, auditService services.AuditService) {
 	// 创建处理器
 	auditHandler := handlers.NewAuditHandler(auditService)
 
@@ -23,16 +23,10 @@ func SetupRoutes(r *gin.Engine, auditService services.AuditService, jwtSecret st
 	// API版本v1
 	v1 := r.Group("/api/v1/audit")
 
-	// 公开路由
+	// 所有路由都不需要JWT认证
+	v1.POST("/logs", auditHandler.ListAuditLogs)
+	v1.POST("/export", auditHandler.ExportAuditLogs)
 	v1.POST("/stats", auditHandler.GetStatistics)
 	v1.GET("/event-types", auditHandler.GetEventTypes)
 	v1.GET("/service-names", auditHandler.GetServiceNames)
-
-	// 需要认证的路由
-	v1Auth := v1.Group("/")
-	v1Auth.Use(middlewares.JWTAuthMiddleware(jwtSecret))
-	{
-		v1Auth.POST("/logs", auditHandler.ListAuditLogs)
-		v1Auth.POST("/export", auditHandler.ExportAuditLogs)
-	}
 }

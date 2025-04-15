@@ -67,7 +67,7 @@ func main() {
 
 	// 创建Gin路由
 	r := gin.Default()
-	routes.SetupRoutes(r, auditService, cfg.JWTSecret)
+	routes.SetupRoutes(r, auditService)
 
 	// 创建HTTP服务器
 	server := &http.Server{

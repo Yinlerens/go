@@ -44,9 +44,6 @@ func LoadConfig() (*Config, error) {
 		KafkaBrokers: strings.Split(getEnv("KAFKA_BROKERS", "111.230.105.184:9092"), ","),
 		KafkaTopic:   getEnv("KAFKA_TOPIC", "audit-logs"),
 		KafkaGroupID: getEnv("KAFKA_GROUP_ID", "audit-service"),
-
-		// 认证配置
-		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
 	}
 
 	return config, nil
