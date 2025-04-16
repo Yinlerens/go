@@ -1,4 +1,4 @@
-name: Auth Service CI/CD
+name: Front CI/CD
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./front
           file: ./front/Dockerfile
           push: true
           tags: ccr.ccs.tencentyun.com/tpctpc/lb:front-${{ github.sha }}
