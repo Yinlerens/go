@@ -18,18 +18,23 @@ func NewClient(serviceName string) (Client, error) {
 
 	// 根据模式创建客户端
 	switch strings.ToLower(auditMode) {
-	case "kafka":
-		brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
-		if len(brokers) == 0 || (len(brokers) == 1 && brokers[0] == "") {
-			brokers = []string{"111.230.105.184:9092"} // 默认配置
+	case "rabbitmq":
+		amqpURL := os.Getenv("RABBITMQ_URL")
+		if amqpURL == "" {
+			amqpURL = "amqp://rabbitmq:rabbitmq@111.230.105.184:5672/" // 默认配置
 		}
 
-		topic := os.Getenv("KAFKA_TOPIC")
-		if topic == "" {
-			topic = "audit-logs"
+		exchangeName := os.Getenv("RABBITMQ_EXCHANGE")
+		if exchangeName == "" {
+			exchangeName = "audit-logs"
 		}
 
-		return NewKafkaClient(brokers, topic, serviceName)
+		routingKey := os.Getenv("RABBITMQ_ROUTING_KEY")
+		if routingKey == "" {
+			routingKey = "audit-logs"
+		}
+
+		return NewRabbitMQClient(amqpURL, exchangeName, routingKey, serviceName)
 
 	case "memory":
 		return NewMemoryClient(serviceName), nil

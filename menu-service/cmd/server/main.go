@@ -31,7 +31,7 @@ func main() {
 	routes.SetupRoutes(r, db, cfg)
 
 	// 启动服务器
-	log.Printf("菜单服务启动在 %s 端口", cfg.ServerPort)
+	log.Printf("菜单服务启动在 %s 端口1", cfg.ServerPort)
 	if err := r.Run(":" + cfg.ServerPort); err != nil {
 		log.Fatalf("服务器启动失败: %v", err)
 	}

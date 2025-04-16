@@ -4,8 +4,8 @@ go 1.23.5
 
 require (
 	github.com/gin-gonic/gin v1.10.0
-	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/segmentio/kafka-go v0.4.47
+	github.com/streadway/amqp v1.1.0
 	github.com/xuri/excelize/v2 v2.9.0
 	go.mongodb.org/mongo-driver v1.17.3
 )

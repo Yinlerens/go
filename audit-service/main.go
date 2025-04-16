@@ -50,20 +50,26 @@ func main() {
 	// 创建服务
 	auditService := services.NewAuditService(auditRepo)
 
-	// 创建Kafka消费者
-	kafkaConsumer := consumers.NewKafkaConsumer(
-		cfg.KafkaBrokers,
-		cfg.KafkaTopic,
-		cfg.KafkaGroupID,
+	// 创建RabbitMQ消费者
+	rabbitMQConsumer, err := consumers.NewRabbitMQConsumer(
+		cfg.RabbitMQURL,
+		cfg.RabbitMQExchange,
+		cfg.RabbitMQRoutingKey,
+		cfg.RabbitMQQueue,
 		auditService,
 	)
+	if err != nil {
+		log.Fatalf("创建RabbitMQ消费者失败: %v", err)
+	}
 
 	// 创建上下文用于优雅关闭
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// 启动Kafka消费者
-	kafkaConsumer.Start(ctx)
+	// 启动RabbitMQ消费者
+	if err := rabbitMQConsumer.Start(ctx); err != nil {
+		log.Fatalf("启动RabbitMQ消费者失败: %v", err)
+	}
 
 	// 创建Gin路由
 	r := gin.Default()

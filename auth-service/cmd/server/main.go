@@ -32,7 +32,6 @@ func main() {
 
 	// 启动服务器
 	log.Printf("服务器启动在 %s 端口", cfg.ServerPort)
-	log.Printf("服务器启动在 %s 环境", cfg.Environment)
 	if err := r.Run(":" + cfg.ServerPort); err != nil {
 		log.Fatalf("服务器启动失败: %v", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -20,10 +19,11 @@ type Config struct {
 	MongoURI    string
 	MongoDBName string
 
-	// Kafka配置
-	KafkaBrokers []string
-	KafkaTopic   string
-	KafkaGroupID string
+	// RabbitMQ配置
+	RabbitMQURL        string
+	RabbitMQExchange   string
+	RabbitMQQueue      string
+	RabbitMQRoutingKey string
 
 	// 认证配置
 	JWTSecret string
@@ -40,10 +40,11 @@ func LoadConfig() (*Config, error) {
 		MongoURI:    getEnv("MONGODB_URI", "mongodb://111.230.105.184:27017"),
 		MongoDBName: getEnv("MONGODB_NAME", "audit"),
 
-		// Kafka配置
-		KafkaBrokers: strings.Split(getEnv("KAFKA_BROKERS", "111.230.105.184:9092"), ","),
-		KafkaTopic:   getEnv("KAFKA_TOPIC", "audit-logs"),
-		KafkaGroupID: getEnv("KAFKA_GROUP_ID", "audit-service"),
+		// RabbitMQ配置
+		RabbitMQURL:        getEnv("RABBITMQ_URL", "amqp://rabbitmq:rabbitmq@111.230.105.184:5672/"),
+		RabbitMQExchange:   getEnv("RABBITMQ_EXCHANGE", "audit-logs"),
+		RabbitMQQueue:      getEnv("RABBITMQ_QUEUE", "audit-service"),
+		RabbitMQRoutingKey: getEnv("RABBITMQ_ROUTING_KEY", "audit-logs"),
 	}
 
 	return config, nil
