@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -37,14 +36,10 @@ type Config struct {
 
 // LoadConfig 从环境变量加载配置
 func LoadConfig() (*Config, error) {
-	// 优先从.env文件加载环境变量
-	if err := godotenv.Load(); err != nil {
-		fmt.Println("警告: .env文件不存在或无法加载，将使用系统环境变量")
-	}
 
 	// 从环境变量读取配置
 	config := &Config{
-		ServerPort:     getEnv("SERVER_PORT", "8081"),
+		ServerPort:     getEnv("RBAC_SERVER_PORT", "8081"),
 		Environment:    getEnv("ENVIRONMENT", "development"),
 		DBHost:         getEnv("DB_HOST", "localhost"),
 		DBPort:         getEnv("DB_PORT", "3306"),

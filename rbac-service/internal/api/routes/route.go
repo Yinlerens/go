@@ -97,7 +97,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	r.GET("/health", healthHandler.Health)
 
 	// API版本v1
-	v1 := r.Group("/api/v1/rbac")
+	v1 := r.Group("/api/rbac")
 
 	// 权限检查路由 (需要内部API密钥认证)
 	checkGroup := v1.Group("/")
