@@ -60,7 +60,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	r.GET("/health", authHandler.Health)
 
 	// API版本v1
-	v1 := r.Group("/api/v1")
+	v1 := r.Group("/api")
 
 	// 认证相关路由组
 	auth := v1.Group("/auth")

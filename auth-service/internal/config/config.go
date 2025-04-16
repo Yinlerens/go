@@ -39,11 +39,6 @@ type Config struct {
 
 // LoadConfig 从环境变量加载配置
 func LoadConfig() (*Config, error) {
-	// 优先从.env文件加载环境变量
-	if err := godotenv.Load(); err != nil {
-		// 如果.env文件不存在，只记录日志，不返回错误
-		fmt.Println("警告: .env文件不存在或无法加载，将使用系统环境变量")
-	}
 
 	// 从环境变量读取配置
 	config := &Config{
