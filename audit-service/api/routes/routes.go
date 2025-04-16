@@ -21,7 +21,7 @@ func SetupRoutes(r *gin.Engine, auditService services.AuditService) {
 	r.GET("/health", auditHandler.Health)
 
 	// API版本v1
-	v1 := r.Group("/api/v1/audit")
+	v1 := r.Group("/api/audit")
 
 	// 所有路由都不需要JWT认证
 	v1.POST("/logs", auditHandler.ListAuditLogs)

@@ -31,12 +31,14 @@ jobs:
           password: ${{ secrets.TENCENTCLOUD_PASSWORD }}
       
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./audit-service/Dockerfile
           push: true
           tags: ccr.ccs.tencentyun.com/tpctpc/lb:audit-service-${{ github.sha }}
+          platforms: linux/amd64
+
       
       - name: Setup kubectl
         uses: Azure/setup-kubectl@v3
@@ -49,7 +51,7 @@ jobs:
       
       - name: Update deployment
         run: |
-          kubectl set image deployment/audit-service audit-service=ccr.ccs.tencentyun.com/tpctpc/lb:audit-service-${{ github.sha }} --record
+          kubectl set image deployment/audit-service audit-service=ccr.ccs.tencentyun.com/tpctpc/lb:audit-service-${{ github.sha }}
       
       - name: Verify deployment
         run: |
