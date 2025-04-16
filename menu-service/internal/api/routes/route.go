@@ -75,7 +75,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	r.GET("/health", healthHandler.Health)
 
 	// API版本v1
-	v1 := r.Group("/api/v1/menu")
+	v1 := r.Group("/api/menu")
 
 	// 用户菜单路由 (需要内部API密钥认证)
 	v1.POST("/user-menu", userMenuHandler.GetUserMenu)

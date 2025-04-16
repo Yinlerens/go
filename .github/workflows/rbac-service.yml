@@ -50,7 +50,7 @@ jobs:
       
       - name: Update deployment
         run: |
-          kubectl set image deployment/rbac-service rbac-service=ccr.ccs.tencentyun.com/tpctpc/lb:rbac-service-${{ github.sha }} --record
+          kubectl set image deployment/rbac-service rbac-service=ccr.ccs.tencentyun.com/tpctpc/lb:rbac-service-${{ github.sha }}
       
       - name: Verify deployment
         run: |
