@@ -25,17 +25,13 @@ service.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // if (state.user.user_id) {
-    //   config.headers["X-User-ID"] = state.user.user_id;
-    // }
-    // if (state.user.username) {
-    //   config.headers["X-Username"] = state.user.username;
-    // }
+    
     const url = config.url || "";
     if (url.includes("/rbac/")) {
       config.baseURL = RBAC_API_URL;
-    } else if (url.includes("/auth/") || url.includes("/users/")) {
+    } else if (url.includes("/auth/")) {
       config.baseURL = AUTH_API_URL;
+      console.log('%c [ AUTH_API_URL ]-34', 'font-size:13px; background:pink; color:#bf2c9f;', AUTH_API_URL)
     } else if (url.includes("/menu/")) {
       config.baseURL = MENU_API_URL;
     } else if (url.includes("/audit/")) {
