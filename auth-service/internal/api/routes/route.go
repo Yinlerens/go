@@ -23,7 +23,6 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		log.Printf("初始化审计客户端失败: %v, 将使用内存客户端", err)
 		auditClient = client.NewMemoryClient("auth-service")
 	}
-	defer auditClient.Close()
 
 	// 创建存储库
 	userRepo := repositories.NewUserRepository(db)
