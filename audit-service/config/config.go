@@ -33,11 +33,11 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	config := &Config{
 		// 服务器配置
-		ServerPort:  getEnv("SERVER_PORT", "8083"),
+		ServerPort:  getEnv("AUDIT_SERVER_PORT", "8083"),
 		Environment: getEnv("ENVIRONMENT", "development"),
 
 		// MongoDB配置
-		MongoURI:    getEnv("MONGODB_URI", "mongodb://111.230.105.184:27017"),
+		MongoURI:    getEnv("MONGODB_URI", "mongodb://mongo_keJ3BC:mongo_RkP34J@111.230.105.184:27017"),
 		MongoDBName: getEnv("MONGODB_NAME", "audit"),
 
 		// RabbitMQ配置
