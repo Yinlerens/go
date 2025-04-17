@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"audit-sdk/client"
+	"github.com/Yinlerens/audit-sdk/client"
 )
 
 type updateStatusRequest struct {

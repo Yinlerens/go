@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"audit-sdk/client"
-	"audit-sdk/middleware"
+	"github.com/Yinlerens/audit-sdk/client"
+	"github.com/Yinlerens/audit-sdk/middleware"
 	"github.com/gin-gonic/gin"
 )
 

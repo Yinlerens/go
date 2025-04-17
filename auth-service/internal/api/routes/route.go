@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 	"log"
 
-	"audit-sdk/client"
-	"audit-sdk/middleware"
+	"github.com/Yinlerens/audit-sdk/client"
+	"github.com/Yinlerens/audit-sdk/middleware"
 )
 
 // SetupRoutes 设置API路由

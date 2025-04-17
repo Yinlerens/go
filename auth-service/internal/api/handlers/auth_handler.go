@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"audit-sdk/client"
+	"github.com/Yinlerens/audit-sdk/client"
 )
 
 // 请求结构体
