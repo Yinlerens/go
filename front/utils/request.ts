@@ -7,14 +7,12 @@ export interface ApiResponse<T> {
   msg: string;
   data: T;
 }
-const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL;
-const RBAC_API_URL = process.env.NEXT_PUBLIC_RBAC_API_URL;
-const MENU_API_URL = process.env.NEXT_PUBLIC_MENU_API_URL;
-const AUDIT_API_URL = process.env.NEXT_PUBLIC_AUDIT_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
   timeout: 10000,
-  withCredentials: true
+  withCredentials: true,
+  baseURL: API_URL
 });
 
 // 请求拦截器
@@ -25,20 +23,6 @@ service.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    const url = config.url || "";
-    if (url.includes("/rbac/")) {
-      config.baseURL = RBAC_API_URL;
-    } else if (url.includes("/auth/")) {
-      config.baseURL = AUTH_API_URL;
-      console.log('%c [ AUTH_API_URL ]-34', 'font-size:13px; background:pink; color:#bf2c9f;', AUTH_API_URL)
-    } else if (url.includes("/menu/")) {
-      config.baseURL = MENU_API_URL;
-    } else if (url.includes("/audit/")) {
-      config.baseURL = AUDIT_API_URL;
-    }
-    console.log("%c [ config ]-45", "font-size:13px; background:pink; color:#bf2c9f;", config);
-
     return config;
   },
   error => {

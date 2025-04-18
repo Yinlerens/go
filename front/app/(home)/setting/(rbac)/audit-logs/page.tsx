@@ -1,8 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, Info, Calendar, User, Tag, Filter, RefreshCw } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Info,
+  Calendar,
+  User,
+  Tag,
+  Filter,
+  RefreshCw,
+  Server,
+  Settings
+} from "lucide-react"; // Added Server, Settings icons
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
+
+// --- UI Component Imports ---
 import {
   Table,
   TableBody,
@@ -33,36 +47,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { listAuditLogs } from "@/app/api/rbac";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { DateRange } from "react-day-picker";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"; // Ensure this component calls onDateChange(range)
 
-// 审计日志项类型
-interface AuditLog {
-  id: number;
-  timestamp: string;
-  actor_id: string;
-  actor_type: string;
-  action: string;
-  target_type?: string;
-  target_key?: string;
-  details?: any;
-  status: string;
-  error_message?: string;
-}
+// --- API Imports (Update Path if needed) ---
+import {
+  listAuditLogs,
+  getAuditEventTypes,
+  getAuditServiceNames,
+  ListAuditLogsRequest, // Import request type if needed elsewhere, otherwise inferred
+  AuditLog // Import the AuditLog interface from api definition
+} from "@/app/api/audit"; // Adjust path to your audit.ts
 
-// 过滤器类型
+// No need to redefine AuditLog interface here if imported
+
+// --- Filters Interface (Aligns with ListAuditLogsRequest) ---
 interface AuditFilters {
-  actor_id?: string;
-  actor_type?: string;
-  action?: string;
-  target_type?: string;
-  target_key?: string;
-  start_time?: string;
-  end_time?: string;
-  status?: string;
+  user_id?: string;
+  username?: string;
+  event_type?: string;
+  service_name?: string;
+  result?: string; // Changed from status
+  resource_type?: string; // Changed from target_type
+  resource_id?: string; // Changed from target_key
+  client_ip?: string;
+  // start_time and end_time are handled via dateRange state
 }
-export default function AuditLogs() {
+
+export default function AuditLogsPage() {
+  // Renamed component slightly
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [totalLogs, setTotalLogs] = useState(0);
@@ -70,255 +82,293 @@ export default function AuditLogs() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<AuditFilters>({});
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const pageSize = 10;
+  const [availableEventTypes, setAvailableEventTypes] = useState<string[]>([]);
+  const [availableServiceNames, setAvailableServiceNames] = useState<string[]>([]);
 
-  // 操作类型列表
-  const actionTypes = [
-    "ROLE_CREATE",
-    "ROLE_UPDATE",
-    "ROLE_DELETE",
-    "PERMISSION_CREATE",
-    "PERMISSION_UPDATE",
-    "PERMISSION_DELETE",
-    "ASSIGN_USER_ROLE",
-    "UNASSIGN_USER_ROLE",
-    "ASSIGN_ROLE_PERMISSION",
-    "UNASSIGN_ROLE_PERMISSION"
-  ];
+  const pageSize = 10; // Or make this configurable
 
-  // 目标类型列表
-  const targetTypes = ["ROLE", "PERMISSION", "USER_ROLE", "ROLE_PERMISSION"];
-  const fetchAuditLogs = async () => {
+  // --- Fetch dynamic filter options ---
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        const [eventTypesRes, serviceNamesRes] = await Promise.all([
+          getAuditEventTypes(),
+          getAuditServiceNames()
+        ]);
+        setAvailableEventTypes(eventTypesRes.event_types || []);
+        setAvailableServiceNames(serviceNamesRes.service_names || []);
+      } catch (error) {
+        console.error("Failed to fetch filter options:", error);
+        // Handle error (e.g., show toast)
+      }
+    };
+    fetchFilterOptions();
+  }, []);
+
+  // --- Fetch Audit Logs Function ---
+  const fetchAuditLogs = async (pageToFetch = currentPage) => {
     setLoading(true);
     try {
-      // 构建查询参数
-      const queryParams = {
-        page: currentPage,
+      // Build query parameters based on state
+      const requestPayload: ListAuditLogsRequest = {
+        page: pageToFetch,
         page_size: pageSize,
-        filters: { ...filters }
+        // Spread filters, ensuring empty strings become undefined
+        user_id: filters.user_id || undefined,
+        username: filters.username || undefined,
+        event_type: filters.event_type || undefined,
+        service_name: filters.service_name || undefined,
+        result: filters.result || undefined,
+        resource_type: filters.resource_type || undefined,
+        resource_id: filters.resource_id || undefined,
+        client_ip: filters.client_ip || undefined
       };
 
-      // 添加日期范围
+      // Add date range from state
       if (dateRange?.from) {
-        queryParams.filters.start_time = dateRange.from.toISOString();
+        requestPayload.start_time = dateRange.from.toISOString();
       }
       if (dateRange?.to) {
-        // 设置为当天的结束时间 (23:59:59)
         const endDate = new Date(dateRange.to);
-        endDate.setHours(23, 59, 59, 999);
-        queryParams.filters.end_time = endDate.toISOString();
+        endDate.setHours(23, 59, 59, 999); // Include the whole end day
+        requestPayload.end_time = endDate.toISOString();
       }
 
-      const response = await listAuditLogs(queryParams);
-      if (response.data) {
-        setLogs(response.data.list);
-        setTotalLogs(response.data.total);
-      }
+      // Make API call using the imported function
+      const response = await listAuditLogs(requestPayload);
+      // Assuming the request utility unwraps the { code, msg, data } structure
+      setLogs(response.list || []); // Use response directly
+      setTotalLogs(response.total || 0); // Use response directly
     } catch (error) {
+      console.error("Failed to fetch audit logs:", error);
+      // Handle error appropriately (e.g., show toast notification)
+      setLogs([]);
+      setTotalLogs(0);
     } finally {
       setLoading(false);
     }
   };
-  // 加载审计日志
-  useEffect(() => {
-    fetchAuditLogs();
-  }, [currentPage, filters, dateRange]);
 
-  // 应用过滤器
+  // --- Effect to fetch logs when dependencies change ---
+  useEffect(() => {
+    fetchAuditLogs(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]); // Only refetch on page change automatically
+
+  // --- Filter Handlers ---
+  const handleFilterChange = (key: keyof AuditFilters, value: string | undefined) => {
+    setFilters(prev => ({ ...prev, [key]: value || undefined }));
+  };
+
   const applyFilters = () => {
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when filters change
+    fetchAuditLogs(1); // Fetch with new filters immediately
     setFilterOpen(false);
   };
 
-  // 重置过滤器
   const resetFilters = () => {
     setFilters({});
     setDateRange(undefined);
-    setCurrentPage(1);
+    if (currentPage === 1) {
+      fetchAuditLogs(1); // Refetch if already on page 1
+    } else {
+      setCurrentPage(1); // Changing page will trigger refetch via useEffect
+    }
     setFilterOpen(false);
   };
 
-  // 获取操作类型的可读名称
-  const getActionName = (action: string) => {
-    const actionMap: Record<string, string> = {
-      ROLE_CREATE: "创建角色",
-      ROLE_UPDATE: "更新角色",
-      ROLE_DELETE: "删除角色",
-      PERMISSION_CREATE: "创建权限",
-      PERMISSION_UPDATE: "更新权限",
-      PERMISSION_DELETE: "删除权限",
-      ASSIGN_USER_ROLE: "分配用户角色",
-      UNASSIGN_USER_ROLE: "解除用户角色",
-      ASSIGN_ROLE_PERMISSION: "分配角色权限",
-      UNASSIGN_ROLE_PERMISSION: "解除角色权限"
-    };
-    return actionMap[action] || action;
+  // --- Refresh Handler ---
+  const handleRefresh = () => {
+    fetchAuditLogs(currentPage); // Refetch current page
   };
 
-  // 获取目标类型的可读名称
-  const getTargetTypeName = (type?: string) => {
-    if (!type) return "-";
-    const typeMap: Record<string, string> = {
-      ROLE: "角色",
-      PERMISSION: "权限",
-      USER_ROLE: "用户角色",
-      ROLE_PERMISSION: "角色权限"
-    };
-    return typeMap[type] || type;
+  // --- Helper Functions (Adapt as needed) ---
+  const getResultText = (result?: string) => {
+    if (!result) return "-";
+    return result.toLowerCase() === "success" ? "成功" : "失败";
   };
 
-  // 获取操作者类型的可读名称
-  const getActorTypeName = (type: string) => {
-    const typeMap: Record<string, string> = {
-      USER: "用户",
-      SERVICE: "服务",
-      SYSTEM: "系统"
-    };
-    return typeMap[type] || type;
-  };
-
-  // 格式化日期时间
   const formatDateTime = (dateString: string) => {
     try {
+      // Assuming the incoming string is UTC (ends with 'Z' or has offset)
       const date = new Date(dateString);
+      // Format in local time implicitly
       return format(date, "yyyy-MM-dd HH:mm:ss");
     } catch (e) {
-      return dateString;
+      console.error("Error formatting date:", dateString, e);
+      return dateString; // Return original string if formatting fails
     }
   };
 
-  // 计算总页数
+  // --- Pagination Logic ---
   const totalPages = Math.max(1, Math.ceil(totalLogs / pageSize));
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 md:p-6">
+      {" "}
+      {/* Added padding */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <h3 className="text-lg font-medium">审计日志记录</h3>
         <div className="flex space-x-2">
+          {/* --- Filter Popover --- */}
           <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="flex items-center gap-1">
                 <Filter className="h-4 w-4" />
                 筛选
-                {Object.keys(filters).length > 0 && (
+                {/* Calculate active filters excluding date range */}
+                {Object.values(filters).filter(v => v).length > 0 || dateRange?.from ? (
                   <Badge variant="secondary" className="ml-1">
-                    {Object.keys(filters).length}
+                    {Object.values(filters).filter(v => v).length + (dateRange?.from ? 1 : 0)}
                   </Badge>
-                )}
+                ) : null}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-96 p-4">
+            <PopoverContent className="w-96 p-4 max-h-[80vh] overflow-y-auto">
+              {" "}
+              {/* Added scroll */}
               <div className="space-y-4">
                 <h4 className="font-medium">筛选条件</h4>
 
-                <div className="space-y-2">
-                  <Label htmlFor="actor_type">操作者类型</Label>
-                  <Select
-                    value={filters.actor_type || ""}
-                    onValueChange={value =>
-                      setFilters({ ...filters, actor_type: value || undefined })
-                    }
-                  >
-                    <SelectTrigger id="actor_type">
-                      <SelectValue placeholder="所有操作者类型" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">所有操作者类型</SelectItem>
-                      <SelectItem value="USER">用户</SelectItem>
-                      <SelectItem value="SERVICE">服务</SelectItem>
-                      <SelectItem value="SYSTEM">系统</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="action">操作类型</Label>
-                  <Select
-                    value={filters.action || ""}
-                    onValueChange={value => setFilters({ ...filters, action: value || undefined })}
-                  >
-                    <SelectTrigger id="action">
-                      <SelectValue placeholder="所有操作类型" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">所有操作类型</SelectItem>
-                      {actionTypes.map(action => (
-                        <SelectItem key={action} value={action}>
-                          {getActionName(action)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="target_type">目标类型</Label>
-                  <Select
-                    value={filters.target_type || ""}
-                    onValueChange={value =>
-                      setFilters({ ...filters, target_type: value || undefined })
-                    }
-                  >
-                    <SelectTrigger id="target_type">
-                      <SelectValue placeholder="所有目标类型" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">所有目标类型</SelectItem>
-                      {targetTypes.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {getTargetTypeName(type)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="status">操作状态</Label>
-                  <Select
-                    value={filters.status || ""}
-                    onValueChange={value => setFilters({ ...filters, status: value || undefined })}
-                  >
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="所有状态" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">所有状态</SelectItem>
-                      <SelectItem value="SUCCESS">成功</SelectItem>
-                      <SelectItem value="FAILURE">失败</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="target_key">目标标识</Label>
-                  <Input
-                    id="target_key"
-                    placeholder="如：角色key或权限key"
-                    value={filters.target_key || ""}
-                    onChange={e =>
-                      setFilters({ ...filters, target_key: e.target.value || undefined })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="actor_id">操作者ID</Label>
-                  <Input
-                    id="actor_id"
-                    placeholder="操作者ID"
-                    value={filters.actor_id || ""}
-                    onChange={e =>
-                      setFilters({ ...filters, actor_id: e.target.value || undefined })
-                    }
-                  />
-                </div>
-
+                {/* --- Date Range Filter --- */}
                 <div className="space-y-2">
                   <Label>日期范围</Label>
-                  <DatePickerWithRange />
+                  <DatePickerWithRange
+                    date={dateRange}
+                    onDateChange={setDateRange} // Pass the setter function
+                    className="w-full" // Make picker full width
+                  />
                 </div>
 
+                {/* --- Event Type Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="event_type">事件类型</Label>
+                  <Select
+                    value={filters.event_type || ""}
+                    onValueChange={value =>
+                      handleFilterChange("event_type", value === "ALL" ? undefined : value)
+                    }
+                  >
+                    <SelectTrigger id="event_type">
+                      <SelectValue placeholder="所有事件类型" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">所有事件类型</SelectItem>
+                      {availableEventTypes.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {type} {/* Display raw event type or use a mapping function */}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* --- Service Name Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="service_name">服务名称</Label>
+                  <Select
+                    value={filters.service_name || ""}
+                    onValueChange={value =>
+                      handleFilterChange("service_name", value === "ALL" ? undefined : value)
+                    }
+                  >
+                    <SelectTrigger id="service_name">
+                      <SelectValue placeholder="所有服务" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">所有服务</SelectItem>
+                      {availableServiceNames.map(name => (
+                        <SelectItem key={name} value={name}>
+                          {name} {/* Display raw service name or use a mapping */}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* --- Result Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="result">操作结果</Label>
+                  <Select
+                    value={filters.result || ""}
+                    onValueChange={value =>
+                      handleFilterChange("result", value === "ALL" ? undefined : value)
+                    }
+                  >
+                    <SelectTrigger id="result">
+                      <SelectValue placeholder="所有结果" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">所有结果</SelectItem>
+                      <SelectItem value="success">成功</SelectItem>
+                      <SelectItem value="failure">失败</SelectItem>
+                      {/* Add other potential result values if needed */}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* --- Resource Type Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="resource_type">资源类型</Label>
+                  <Input
+                    id="resource_type"
+                    placeholder="例如：ROLE, PERMISSION"
+                    value={filters.resource_type || ""}
+                    onChange={e => handleFilterChange("resource_type", e.target.value)}
+                  />
+                </div>
+
+                {/* --- Resource ID Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="resource_id">资源ID</Label>
+                  <Input
+                    id="resource_id"
+                    placeholder="资源的唯一标识"
+                    value={filters.resource_id || ""}
+                    onChange={e => handleFilterChange("resource_id", e.target.value)}
+                  />
+                </div>
+
+                {/* --- User ID Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="user_id">用户ID</Label>
+                  <Input
+                    id="user_id"
+                    placeholder="执行操作的用户ID"
+                    value={filters.user_id || ""}
+                    onChange={e => handleFilterChange("user_id", e.target.value)}
+                  />
+                </div>
+
+                {/* --- Username Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="username">用户名</Label>
+                  <Input
+                    id="username"
+                    placeholder="执行操作的用户名"
+                    value={filters.username || ""}
+                    onChange={e => handleFilterChange("username", e.target.value)}
+                  />
+                </div>
+
+                {/* --- Client IP Filter --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="client_ip">客户端IP</Label>
+                  <Input
+                    id="client_ip"
+                    placeholder="请求来源IP地址"
+                    value={filters.client_ip || ""}
+                    onChange={e => handleFilterChange("client_ip", e.target.value)}
+                  />
+                </div>
+
+                {/* --- Filter Actions --- */}
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={resetFilters}>
                     重置
@@ -329,35 +379,37 @@ export default function AuditLogs() {
             </PopoverContent>
           </Popover>
 
+          {/* --- Refresh Button --- */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-             currentPage > 1 ? setCurrentPage(1) : fetchAuditLogs();
-            }}
+            onClick={handleRefresh}
             title="刷新"
+            disabled={loading}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </div>
-
+      {/* --- Audit Log Table --- */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">时间</TableHead>
-              <TableHead>操作</TableHead>
+              <TableHead>事件类型</TableHead>
               <TableHead>操作者</TableHead>
-              <TableHead>目标</TableHead>
-              <TableHead className="w-[80px]">状态</TableHead>
+              <TableHead>服务</TableHead>
+              <TableHead>目标资源</TableHead>
+              <TableHead className="w-[80px]">结果</TableHead>
               <TableHead className="w-[100px]">详情</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
+              // Skeleton Loading Rows
+              Array.from({ length: pageSize }).map((_, i) => (
+                <TableRow key={`skel-${i}`}>
                   <TableCell>
                     <Skeleton className="h-4 w-32" />
                   </TableCell>
@@ -368,10 +420,13 @@ export default function AuditLogs() {
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
                   <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
                     <Skeleton className="h-4 w-28" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-5 w-12 rounded" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-6 w-6 rounded-full" />
@@ -379,60 +434,82 @@ export default function AuditLogs() {
                 </TableRow>
               ))
             ) : logs.length === 0 ? (
+              // No Data Row
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-6">
+                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                   没有找到匹配的审计日志记录
                 </TableCell>
               </TableRow>
             ) : (
+              // Data Rows
               logs.map(log => (
                 <TableRow key={log.id}>
+                  {/* Timestamp */}
                   <TableCell className="font-mono text-xs">
                     <div className="flex items-center space-x-1">
                       <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                       <span>{formatDateTime(log.timestamp)}</span>
                     </div>
                   </TableCell>
+                  {/* Event Type */}
                   <TableCell>
-                    <Badge variant="outline">{getActionName(log.action)}</Badge>
+                    <Badge variant="outline">{log.event_type}</Badge>
                   </TableCell>
+                  {/* Operator (User) */}
                   <TableCell>
-                    <div className="flex flex-col">
+                    {log.user_id || log.username ? (
                       <div className="flex items-center space-x-1">
                         <User className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="font-medium">{log.actor_id}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {getActorTypeName(log.actor_type)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {log.target_type ? (
-                      <div className="flex flex-col">
-                        <div className="flex items-center space-x-1">
-                          <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="font-medium truncate max-w-[150px]">
-                            {log.target_key}
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {getTargetTypeName(log.target_type)}
+                        <span className="font-medium truncate max-w-[150px]">
+                          {log.username || log.user_id}
                         </span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
+                  {/* Service Name */}
                   <TableCell>
-                    {log.status === "SUCCESS" ? (
-                      <Badge className="bg-green-50 text-green-600 border-green-600 hover:bg-green-50">
-                        成功
-                      </Badge>
+                    {log.service_name ? (
+                      <div className="flex items-center space-x-1">
+                        <Server className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs">{log.service_name}</span>
+                      </div>
                     ) : (
-                      <Badge variant="destructive">失败</Badge>
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
+                  {/* Target Resource */}
+                  <TableCell>
+                    {log.resource_type || log.resource_id ? (
+                      <div className="flex flex-col">
+                        <div className="flex items-center space-x-1">
+                          <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="font-medium truncate max-w-[150px]">
+                            {log.resource_id}
+                          </span>
+                        </div>
+                        {log.resource_type && (
+                          <span className="text-xs text-muted-foreground">{log.resource_type}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  {/* Result */}
+                  <TableCell>
+                    {log.result.toLowerCase() === "success" ? (
+                      <Badge variant="default">
+                        {" "}
+                        {/* Use custom success variant */}
+                        {getResultText(log.result)}
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive">{getResultText(log.result)}</Badge>
+                    )}
+                  </TableCell>
+                  {/* Details */}
                   <TableCell>
                     <HoverCard>
                       <HoverCardTrigger asChild>
@@ -440,22 +517,69 @@ export default function AuditLogs() {
                           <Info className="h-4 w-4" />
                         </Button>
                       </HoverCardTrigger>
-                      <HoverCardContent className="w-80">
+                      <HoverCardContent className="w-80 max-h-[400px] overflow-y-auto">
+                        {" "}
+                        {/* Added scroll */}
                         <div className="space-y-2">
                           <h4 className="font-semibold">操作详情</h4>
-                          {log.details ? (
-                            <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-[200px]">
-                              {JSON.stringify(log.details, null, 2)}
-                            </pre>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">无详情数据</p>
+                          {/* Display basic info first */}
+                          <div className="text-xs space-y-1">
+                            <p>
+                              <strong>Event ID:</strong> {log.event_id}
+                            </p>
+                            {log.request_id && (
+                              <p>
+                                <strong>Request ID:</strong> {log.request_id}
+                              </p>
+                            )}
+                            {log.client_ip && (
+                              <p>
+                                <strong>Client IP:</strong> {log.client_ip}
+                              </p>
+                            )}
+                            {log.operation && (
+                              <p>
+                                <strong>Operation:</strong> {log.operation}
+                              </p>
+                            )}
+                            {log.request_path && (
+                              <p>
+                                <strong>Path:</strong> {log.request_method} {log.request_path}
+                              </p>
+                            )}
+                          </div>
+                          {/* Display Details JSON */}
+                          {log.details && Object.keys(log.details).length > 0 && (
+                            <div className="pt-2">
+                              <h5 className="font-semibold">附加数据</h5>
+                              <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-[200px]">
+                                {JSON.stringify(log.details, null, 2)}
+                              </pre>
+                            </div>
                           )}
+                          {/* Display Error Message */}
                           {log.error_message && (
                             <div className="pt-2">
                               <h5 className="font-semibold text-destructive">错误信息</h5>
                               <p className="text-sm text-destructive">{log.error_message}</p>
                             </div>
                           )}
+                          {/* Display User Agent */}
+                          {log.user_agent && (
+                            <div className="pt-2">
+                              <h5 className="font-semibold">User Agent</h5>
+                              <p className="text-xs text-muted-foreground break-all">
+                                {log.user_agent}
+                              </p>
+                            </div>
+                          )}
+                          {/* Fallback if no details/error */}
+                          {(!log.details || Object.keys(log.details).length === 0) &&
+                            !log.error_message && (
+                              <p className="text-sm text-muted-foreground pt-2">
+                                无附加详情或错误信息
+                              </p>
+                            )}
                         </div>
                       </HoverCardContent>
                     </HoverCard>
@@ -466,8 +590,8 @@ export default function AuditLogs() {
           </TableBody>
         </Table>
       </div>
-
-      {totalPages > 1 && (
+      {/* --- Pagination Controls --- */}
+      {totalPages > 1 && !loading && (
         <Pagination>
           <PaginationContent>
             <PaginationItem>
@@ -475,37 +599,28 @@ export default function AuditLogs() {
                 href="#"
                 onClick={e => {
                   e.preventDefault();
-                  if (currentPage > 1) {
-                    setCurrentPage(currentPage - 1);
-                  }
+                  handlePageChange(currentPage - 1);
                 }}
                 className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                aria-disabled={currentPage <= 1}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <PaginationItem key={i + 1}>
-                <PaginationLink
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    setCurrentPage(i + 1);
-                  }}
-                  isActive={currentPage === i + 1}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {/* Simple Pagination Display - Consider more advanced logic for many pages */}
+            <PaginationItem>
+              <PaginationLink isActive>
+                {currentPage} / {totalPages}
+              </PaginationLink>
+            </PaginationItem>
+            {/* You can add more complex page number rendering here if needed */}
             <PaginationItem>
               <PaginationNext
                 href="#"
                 onClick={e => {
                   e.preventDefault();
-                  if (currentPage < totalPages) {
-                    setCurrentPage(currentPage + 1);
-                  }
+                  handlePageChange(currentPage + 1);
                 }}
                 className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                aria-disabled={currentPage >= totalPages}
               />
             </PaginationItem>
           </PaginationContent>
