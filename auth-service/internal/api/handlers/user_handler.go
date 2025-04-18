@@ -68,10 +68,11 @@ func (h *UserHandler) UpdateStatus(c *gin.Context) {
 			client.EventUserStatusChange,
 			client.ResultFailure,
 			map[string]interface{}{
-				"target_user_id": req.UserID,
-				"new_status":     req.Status,
-				"error_code":     code,
-				"error_message":  err.Error(),
+				"resource_type": "user",
+				"resource_id":   req.UserID,
+				"new_status":    req.Status,
+				"error_code":    code,
+				"error_message": err.Error(),
 			},
 		)
 
@@ -85,8 +86,9 @@ func (h *UserHandler) UpdateStatus(c *gin.Context) {
 		client.EventUserStatusChange,
 		client.ResultSuccess,
 		map[string]interface{}{
-			"target_user_id": req.UserID,
-			"new_status":     req.Status,
+			"resource_type": "user",
+			"resource_id":   req.UserID,
+			"new_status":    req.Status,
 		},
 	)
 

@@ -4,7 +4,6 @@ package handlers
 import (
 	"auth-service/internal/services"
 	"auth-service/internal/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -82,6 +81,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			client.EventUserLogin,
 			client.ResultFailure,
 			map[string]interface{}{
+				"resource_type": "user",
 				"username":      req.Username,
 				"error_code":    code,
 				"error_message": err.Error(),
@@ -98,8 +98,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		client.EventUserLogin,
 		client.ResultSuccess,
 		map[string]interface{}{
-			"user_id":  user.UserID,
-			"username": user.Username,
+			"resource_type": "user",
+			"resource_id":   user.UserID,
+			"username":      user.Username,
 		},
 	)
 
@@ -126,37 +127,39 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) Verify(c *gin.Context) {
 	// 从Authorization头获取Token
 	authHeader := c.GetHeader("Authorization")
-	fmt.Print(authHeader)
+	// 1. Token 缺失 -> 返回 401
 	if authHeader == "" {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeTokenMissing, nil))
+		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.NewResponse(utils.CodeTokenMissing, "Authorization header is missing"))
 		return
 	}
 
-	// 提取Bearer Token
+	// 2. 提取Bearer Token, 格式错误 -> 返回 401
 	tokenParts := strings.Split(authHeader, " ")
 	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeTokenInvalid, nil))
+		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.NewResponse(utils.CodeTokenInvalid, "Invalid token format"))
 		return
 	}
 	tokenString := tokenParts[1]
 
-	// 验证Token
+	// 3. 验证Token
 	claims, err := h.authService.VerifyToken(tokenString)
 	if err != nil {
-		code := utils.CodeTokenInvalid
+		// 验证失败 -> 返回 401
+		errMsg := "Token validation failed"
+		responseCode := utils.CodeTokenInvalid
 		if strings.Contains(err.Error(), "用户无效或已被禁用") {
-			code = utils.CodeUserInactive
+			errMsg = "User inactive or invalid"
+			responseCode = utils.CodeUserInactive // 如果你的工具包区分了这个
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		// 返回 401
+		c.AbortWithStatusJSON(http.StatusUnauthorized, utils.NewResponse(responseCode, errMsg))
 		return
 	}
-
-	// 返回成功响应
-	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, gin.H{
-		"active":   true,
-		"user_id":  claims.UserID,
-		"username": claims.Username,
-	}))
+	c.Header("X-User-Id", claims.UserID) // UserID 应该是字符串类型
+	c.Header("X-Username", claims.Username)
+	// 4. 验证成功 -> 返回 200 OK
+	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, "Token verified successfully"))
+	// Nginx Ingress 需要配置 nginx.ingress.kubernetes.io/auth-response-headers: "X-User-Id,X-Username"
 }
 
 // Refresh 刷新访问令牌
@@ -239,8 +242,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		client.EventUserLogout,
 		client.ResultSuccess,
 		map[string]interface{}{
-			"user_id":  userID,
-			"username": username,
+			"resource_type": "user",
+			"resource_id":   userID,
+			"username":      username,
 		},
 	)
 

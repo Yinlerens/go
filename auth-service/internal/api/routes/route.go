@@ -71,7 +71,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 		// 以下路由需要内部API密钥认证
 		authProtected := auth.Group("/")
-		authProtected.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
+		//authProtected.Use(middlewares.InternalAuth(cfg.InternalAPIKeys))
 		{
 			authProtected.POST("/verify", authHandler.Verify)
 			authProtected.POST("/refresh", authHandler.Refresh)
