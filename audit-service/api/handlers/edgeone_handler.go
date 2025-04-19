@@ -5,7 +5,9 @@ import (
 	"audit-service/models"
 	"audit-service/services"
 	"audit-service/utils"
-	"log"
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -155,16 +157,31 @@ func (h *EdgeOneHandler) GetEdgeOneStatistics(c *gin.Context) {
 
 // ReceiveEdgeOneLog 接收EdgeOne推送的日志
 func (h *EdgeOneHandler) ReceiveEdgeOneLog(c *gin.Context) {
+	// 获取原始请求体并打印
+	requestBody, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		fmt.Printf("[EDGEONE ERROR] 读取请求体失败: %v\n", err)
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		return
+	}
+
+	// 打印原始请求内容
+	fmt.Printf("[EDGEONE DEBUG] 收到请求体: %s\n", string(requestBody))
+
+	// 重新设置请求体，因为前面的ReadAll会消耗Body
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 	var logEntry models.EdgeOneLogEntry
 	if err := c.ShouldBindJSON(&logEntry); err != nil {
+		fmt.Printf("[EDGEONE ERROR] JSON解析失败: %v\n", err)
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
 	// 添加生产日志
-	log.Printf("已收到腾讯云推送: RequestID=%s, Host=%s, ClientIP=%s",
+	fmt.Printf("[EDGEONE INFO] 已收到腾讯云推送: RequestID=%s, Host=%s, ClientIP=%s\n",
 		logEntry.RequestID, logEntry.RequestHost, logEntry.ClientIP)
 	// 调用服务保存日志
 	if err := h.edgeOneService.SaveLog(&logEntry); err != nil {
+		fmt.Printf("[EDGEONE ERROR] 保存日志失败: %v\n", err)
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
 		return
 	}
