@@ -43,13 +43,17 @@ func main() {
 			log.Printf("关闭MongoDB连接失败: %v", err)
 		}
 	}()
-
+	// 执行数据库迁移
+	// err = migrations.CreateEdgeOneLogsCollection(mongoClient, cfg.MongoDBName)
+	// if err != nil {
+	// 	log.Fatalf("创建EdgeOne日志集合失败: %v", err)
+	// }
 	// 创建仓库
 	auditRepo := repositories.NewMongoAuditRepository(mongoClient, cfg.MongoDBName)
-
+	edgeOneRepo := repositories.NewMongoEdgeOneLogRepository(mongoClient, cfg.MongoDBName)
 	// 创建服务
 	auditService := services.NewAuditService(auditRepo)
-
+	edgeOneService := services.NewEdgeOneLogService(edgeOneRepo)
 	// 创建RabbitMQ消费者
 	rabbitMQConsumer, err := consumers.NewRabbitMQConsumer(
 		cfg.RabbitMQURL,
@@ -73,7 +77,7 @@ func main() {
 
 	// 创建Gin路由
 	r := gin.Default()
-	routes.SetupRoutes(r, auditService)
+	routes.SetupRoutes(r, auditService, edgeOneService)
 
 	// 创建HTTP服务器
 	server := &http.Server{
