@@ -3,6 +3,7 @@ package middlewares
 
 import (
 	"compress/gzip"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
@@ -18,6 +19,7 @@ func GzipDecompressMiddleware() gin.HandlerFunc {
 
 		// 如果是gzip压缩
 		if strings.Contains(contentEncoding, "gzip") {
+			fmt.Printf("[EDGEONE ERROR] 是gzip:")
 			// 获取原始请求体
 			gzipReader, err := gzip.NewReader(c.Request.Body)
 			if err != nil {

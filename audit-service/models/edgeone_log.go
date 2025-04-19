@@ -2,7 +2,7 @@
 package models
 
 // EdgeOneLogEntry 代表一条从腾讯云 EdgeOne 推送过来的实时日志记录
-// 根据官方文档字段定义 
+// 根据官方文档字段定义
 type EdgeOneLogEntry struct {
 	// --- 通用信息 ---
 	RequestID              string `json:"RequestID,omitempty"`              // 客户端请求的唯一标识 ID
@@ -35,7 +35,7 @@ type EdgeOneLogEntry struct {
 	RemotePort            int    `json:"RemotePort,omitempty"`            // TCP 协议下客户端与节点建连端口 (若无则为?) - 文档描述为'-'，但类型为Int，接收时需注意兼容性，或用 interface{}
 	RequestSSLProtocol    string `json:"RequestSSLProtocol,omitempty"`    // 使用的 SSL/TLS 协议 (若无则为 "-")
 	RequestBodyBytes      int64  `json:"RequestBodyBytes,omitempty"`      // 请求 Body 大小 (Byte)
-	RequestStatus         int    `json:"RequestStatus,omitempty"`         // 客户端请求状态 (0:未结束, 1:正常结束, 2:WS首条, 3:WS中间条)
+	RequestStatus         string `json:"RequestStatus,omitempty"`         // 客户端请求状态 (0:未结束, 1:正常结束, 2:WS首条, 3:WS中间条)
 	RequestScheme         string `json:"RequestScheme,omitempty"`         // HTTP 协议 (HTTP, HTTPS)
 
 	// --- 响应信息 ---
