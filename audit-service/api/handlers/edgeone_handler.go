@@ -5,6 +5,7 @@ import (
 	"audit-service/models"
 	"audit-service/services"
 	"audit-service/utils"
+	"log"
 	"net/http"
 	"time"
 
@@ -154,14 +155,16 @@ func (h *EdgeOneHandler) GetEdgeOneStatistics(c *gin.Context) {
 
 // ReceiveEdgeOneLog 接收EdgeOne推送的日志
 func (h *EdgeOneHandler) ReceiveEdgeOneLog(c *gin.Context) {
-	var log models.EdgeOneLogEntry
-	if err := c.ShouldBindJSON(&log); err != nil {
+	var logEntry models.EdgeOneLogEntry
+	if err := c.ShouldBindJSON(&logEntry); err != nil {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
 		return
 	}
-
+	// 添加生产日志
+	log.Printf("已收到腾讯云推送: RequestID=%s, Host=%s, ClientIP=%s",
+		logEntry.RequestID, logEntry.RequestHost, logEntry.ClientIP)
 	// 调用服务保存日志
-	if err := h.edgeOneService.SaveLog(&log); err != nil {
+	if err := h.edgeOneService.SaveLog(&logEntry); err != nil {
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
 		return
 	}

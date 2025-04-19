@@ -41,6 +41,7 @@ func SetupRoutes(r *gin.Engine, auditService services.AuditService, edgeOneServi
 
 		// EdgeOne日志推送接口
 		webhook := edgeOne.Group("/webhook")
+		webhook.Use(middlewares.GzipDecompressMiddleware())
 		{
 			webhook.POST("/log", edgeOneHandler.ReceiveEdgeOneLog)   // 单条日志
 			webhook.POST("/logs", edgeOneHandler.ReceiveEdgeOneLogs) // 批量日志
