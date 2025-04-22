@@ -3,7 +3,7 @@ import './globals.css';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
-
+import { Analytics } from '@vercel/analytics/react';
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap'
@@ -24,6 +24,7 @@ export default function RootLayout({
       <body className={inter.className + ' h-full'}>
         <Toaster richColors position="top-center" expand={true} />
         {children}
+        <Analytics />
       </body>
       <Script src="https://unpkg.com/@antv/g2/dist/g2.min.js" />
     </html>
