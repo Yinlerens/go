@@ -2,14 +2,9 @@ import type { NextConfig } from 'next';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 const nextConfig: NextConfig = {
   /* config options here */
-  transpilePackages: ["lucide-react"], // add this,
+  transpilePackages: ['lucide-react'],
   eslint: {
     ignoreDuringBuilds: true
-  },
-  output: "standalone",
-  reactStrictMode: false,
-  experimental: {
-    taint: true
   }
 };
 
