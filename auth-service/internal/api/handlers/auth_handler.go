@@ -87,7 +87,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 				"error_message": err.Error(),
 			},
 		)
-
+		utils.Error("登录失败", err.Error())
 		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
 		return
 	}

@@ -4,12 +4,15 @@ package main
 import (
 	"auth-service/internal/api/routes"
 	"auth-service/internal/config"
+	"auth-service/internal/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
 func main() {
 	// 加载配置
+	utils.InitLogger()
+	defer utils.Sync()
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("加载配置失败: %v", err)

@@ -41,21 +41,21 @@ func LoadConfig() (*Config, error) {
 
 	// 从环境变量读取配置
 	config := &Config{
-		ServerPort:   getEnv("SERVER_PORT", "8080"),
-		Environment:  getEnv("ENVIRONMENT", "development"),
-		DBHost:       getEnv("DB_HOST", "gz-cdb-r1mv7m75.sql.tencentcdb.com"),
-		DBPort:       getEnv("DB_PORT", "22197"),
-		DBUser:       getEnv("DB_USER", "root"),
-		DBPassword:   getEnv("DB_PASSWORD", "kid@1412"),
-		DBName:       getEnv("DB_NAME", "auth_service"),
+		ServerPort:   getEnv("SERVER_PORT", ""),
+		Environment:  getEnv("ENVIRONMENT", ""),
+		DBHost:       getEnv("DB_HOST", ""),
+		DBPort:       getEnv("DB_PORT", ""),
+		DBUser:       getEnv("DB_USER", ""),
+		DBPassword:   getEnv("DB_PASSWORD", ""),
+		DBName:       getEnv("DB_NAME", ""),
 		JWTSecret:    getEnv("JWT_SECRET", ""),
 		CookieDomain: getEnv("COOKIE_DOMAIN", ""),
-		SecureCookie: getEnv("SECURE_COOKIE", "true") == "true",
+		SecureCookie: getEnv("SECURE_COOKIE", "") == "true",
 	}
 
 	// 设置令牌过期时间
-	accessExpiryMinutes := getEnv("ACCESS_TOKEN_EXPIRY_MINUTES", "15")
-	refreshExpiryDays := getEnv("REFRESH_TOKEN_EXPIRY_DAYS", "7")
+	accessExpiryMinutes := getEnv("ACCESS_TOKEN_EXPIRY_MINUTES", "")
+	refreshExpiryDays := getEnv("REFRESH_TOKEN_EXPIRY_DAYS", "")
 
 	// 尝试将字符串转换为整数，如果失败则使用默认值
 	var accessMinutes, refreshDays int
@@ -76,7 +76,7 @@ func LoadConfig() (*Config, error) {
 
 	// 初始化内部API密钥
 	config.InternalAPIKeys = make(map[string]string)
-	internalAPIKey := getEnv("INTERNAL_API_KEY", "")
+	internalAPIKey := getEnv("INTERNAL_API_KEY", "1")
 	if internalAPIKey == "" {
 		return nil, fmt.Errorf("内部API密钥未设置，请在.env文件中设置INTERNAL_API_KEY")
 	}
