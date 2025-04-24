@@ -51,7 +51,6 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 使用全局中间件
 	r.Use(middlewares.ErrorHandler())
-	r.Use(middlewares.CORS())
 	r.Use(middleware.ErrorAuditMiddleware(auditClient)) // 添加错误审计中间件
 	r.Use(middlewares.AuditMiddleware(auditClient))     // 添加审计中间件
 
