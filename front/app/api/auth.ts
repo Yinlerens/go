@@ -8,9 +8,9 @@ export interface LoginResponse {
   username: string;
   access_token: string;
 }
-export const register = (data: Request) => request.post('/auth/register', data);
+export const register = (data: Request) => request.post('/register', data);
 
-export const login = (data: Request) => request.post<LoginResponse>('/auth/login', data);
+export const login = (data: Request) => request.post<LoginResponse>('/login', data);
 
 interface ListUsersRequest {
   page?: number;
@@ -31,4 +31,4 @@ interface ListUsersResponse {
 }
 export const listUsers = (data: ListUsersRequest) => request.post<ListUsersResponse>("/users/list", data);
 
-export const logout = () => request.post('/auth/logout');
+export const logout = () => request.post('/logout');
