@@ -7,12 +7,11 @@ export interface ApiResponse<T> {
   msg: string;
   data: T;
 }
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
   timeout: 10000,
   withCredentials: true,
-  baseURL: API_URL
+  baseURL: "https://api.syuan.email/api"
 });
 
 // 请求拦截器
