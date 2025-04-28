@@ -36,7 +36,7 @@ func (h *UserMenuHandler) GetUserMenu(c *gin.Context) {
 	// 调用服务获取用户菜单
 	userMenu, err := h.userMenuService.GetUserMenu(req.UserID)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, err))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, err.Error()))
 		return
 	}
 
