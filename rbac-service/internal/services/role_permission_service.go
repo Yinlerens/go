@@ -2,8 +2,8 @@
 package services
 
 import (
-	"audit-sdk/client"
 	"errors"
+	"github.com/Yinlerens/audit-sdk/client"
 	"rbac-service/internal/models"
 	"rbac-service/internal/repositories"
 )

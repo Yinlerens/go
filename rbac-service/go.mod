@@ -1,11 +1,12 @@
 module rbac-service
 
-go 1.23.5
+go 1.23.8
 
 require (
+	github.com/Yinlerens/audit-sdk v0.1.1
 	github.com/gin-gonic/gin v1.10.0
 	gorm.io/driver/mysql v1.5.7
-	gorm.io/gorm v1.25.12
+	gorm.io/gorm v1.26.0
 )
 
 require (
@@ -13,7 +14,7 @@ require (
 	github.com/bytedance/sonic v1.13.2 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -44,9 +45,3 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// 其他依赖...
-require audit-sdk v0.0.0
-
-// 使用replace指令指向本地目录
-replace audit-sdk => ../audit-sdk

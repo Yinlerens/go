@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"audit-sdk/client"
-	"audit-sdk/middleware"
+	"github.com/Yinlerens/audit-sdk/client"
+	"github.com/Yinlerens/audit-sdk/middleware"
 )
 
 // VERSION 版本号
