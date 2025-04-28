@@ -32,7 +32,6 @@ type userMenuService struct {
 	rbacClient   RbacClient
 	cache        repositories.Cache
 	cacheExpiry  time.Duration
-	logger       *utils.Logger
 }
 
 // NewUserMenuService 创建用户菜单服务实例
@@ -42,13 +41,11 @@ func NewUserMenuService(
 	cache repositories.Cache,
 	cacheExpiry time.Duration,
 ) UserMenuService {
-	logger := utils.NewLogger("UserMenuService", false, "")
 	return &userMenuService{
 		menuItemRepo: menuItemRepo,
 		rbacClient:   rbacClient,
 		cache:        cache,
 		cacheExpiry:  cacheExpiry,
-		logger:       logger,
 	}
 }
 
@@ -63,7 +60,7 @@ func (s *userMenuService) GetUserMenu(userID string) ([]*UserMenuNode, error) {
 	// 获取所有菜单项
 	allMenuItems, err := s.menuItemRepo.FindAll()
 	if err != nil {
-		s.logger.Error("获取菜单项失败", "error", err)
+		utils.Error("获取菜单项失败", err.Error())
 		return nil, err
 	}
 
@@ -90,21 +87,19 @@ func (s *userMenuService) GetUserMenu(userID string) ([]*UserMenuNode, error) {
 		hasPermission := item.PermissionKey == "" || permissionMap[item.PermissionKey]
 		if hasPermission {
 			authorizedMenuIDs[item.ID] = true
-
 			// 对于有权限的菜单，其所有父菜单也应该显示（不管父菜单是否有权限）
 			parentID := item.ParentID
 			for parentID != "" {
 				parent, exists := menuMap[parentID]
 				if !exists {
-					s.logger.Debug("父菜单不存在", "parentID", parentID)
+					utils.Error("父菜单不存在", parentID)
 					break
 				}
 				authorizedMenuIDs[parentID] = true
 				parentID = parent.ParentID
 			}
 		} else {
-			s.logger.Debug("用户无权限访问菜单", "menuID", item.ID, "name", item.Name,
-				"permission", item.PermissionKey)
+			utils.Error("用户无权限访问菜单", "")
 		}
 	}
 	// 跟踪哪些菜单具有真实权限，而不是因为其子菜单具有权限

@@ -16,7 +16,7 @@ func ErrorHandler() gin.HandlerFunc {
 				// 记录堆栈信息
 				log.Printf("服务器内部错误: %v\n%s", err, debug.Stack())
 				// 返回统一的错误响应
-				c.JSON(200, utils.NewResponse(utils.CodeInternalServerError, nil))
+				c.JSON(200, utils.NewResponse(utils.CodeInternalServerError, err))
 				c.Abort()
 			}
 		}()
