@@ -95,11 +95,13 @@ func (c *rbacClient) CheckPermissionExists(permissionKey string) (bool, error) {
 // GetUserPermissions 获取用户权限列表
 func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	// 构建请求体
+	fmt.Printf("变量的类型是: %T\n", userID)
+	utils.Log("info", "userId", userID)
 	reqBody, err := json.Marshal(map[string]interface{}{
 		"user_id": userID,
 	})
 	if err != nil {
-		utils.Info("错误", err.Error())
+		utils.Log("info", "转换错误", err.Error())
 		return nil, err
 	}
 
@@ -107,7 +109,7 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	url := fmt.Sprintf("%s/api/v1/rbac/users/permissions", c.rbacServiceURL)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		utils.Info("错误", err.Error())
+		utils.Log("info", "请求错误", err.Error())
 		return nil, err
 	}
 
