@@ -14,12 +14,6 @@ WORKDIR /app/services/rbac-service
 # 复制服务的Go模块文件
 COPY rbac-service/go.mod rbac-service/go.sum ./
 
-# 创建相对路径的audit-sdk目录
-RUN mkdir -p ../audit-sdk
-
-# 复制SDK到正确位置
-COPY audit-sdk/ ../audit-sdk/
-
 # 下载依赖
 RUN go mod download
 
