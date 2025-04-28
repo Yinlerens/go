@@ -41,7 +41,7 @@ func NewRolePermissionHandler(rolePermissionService services.RolePermissionServi
 func (h *RolePermissionHandler) AssignPermission(c *gin.Context) {
 	var req assignPermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *RolePermissionHandler) AssignPermission(c *gin.Context) {
 		} else if strings.Contains(err.Error(), "角色已拥有该权限") {
 			code = utils.CodeRolePermExists
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *RolePermissionHandler) AssignPermission(c *gin.Context) {
 func (h *RolePermissionHandler) UnassignPermission(c *gin.Context) {
 	var req unassignPermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *RolePermissionHandler) UnassignPermission(c *gin.Context) {
 	err := h.rolePermissionService.UnassignPermissionsFromRole(req.RoleKey, req.PermissionKeys)
 	if err != nil {
 		code := utils.CodeInternalError
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -88,7 +88,7 @@ func (h *RolePermissionHandler) UnassignPermission(c *gin.Context) {
 func (h *RolePermissionHandler) GetRolePermissions(c *gin.Context) {
 	var req getRolePermissionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *RolePermissionHandler) GetRolePermissions(c *gin.Context) {
 		if strings.Contains(err.Error(), "角色不存在") {
 			code = utils.CodeRoleNotFound
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 

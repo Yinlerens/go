@@ -31,7 +31,7 @@ func NewMenuLogHandler(menuLogService services.MenuLogService) *MenuLogHandler {
 func (h *MenuLogHandler) ListMenuLogs(c *gin.Context) {
 	var req listMenuLogsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -46,7 +46,7 @@ func (h *MenuLogHandler) ListMenuLogs(c *gin.Context) {
 	// 调用服务获取菜单变更日志
 	logs, total, err := h.menuLogService.GetMenuLogs(req.Page, req.PageSize, req.Filters)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, err.Error()))
 		return
 	}
 

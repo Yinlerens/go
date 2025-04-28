@@ -41,7 +41,7 @@ func NewUserHandler(userService services.UserService, auditClient client.Client)
 func (h *UserHandler) UpdateStatus(c *gin.Context) {
 	var req updateStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *UserHandler) UpdateStatus(c *gin.Context) {
 			},
 		)
 
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -111,7 +111,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	// Call service to get users
 	users, total, err := h.userService.GetUsers(req.Page, req.PageSize, req.Username)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, err.Error()))
 		return
 	}
 
@@ -138,7 +138,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 func (h *UserHandler) ValidateUser(c *gin.Context) {
 	var req validateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -149,7 +149,7 @@ func (h *UserHandler) ValidateUser(c *gin.Context) {
 		if strings.Contains(err.Error(), "用户状态非active") {
 			code = utils.CodeUserInactive
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 

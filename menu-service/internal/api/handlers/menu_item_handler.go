@@ -59,7 +59,7 @@ func NewMenuItemHandler(menuItemService services.MenuItemService) *MenuItemHandl
 func (h *MenuItemHandler) CreateMenuItem(c *gin.Context) {
 	var req createMenuItemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *MenuItemHandler) CreateMenuItem(c *gin.Context) {
 		case strings.Contains(err.Error(), "菜单层级超出限制"):
 			code = utils.CodeMenuLevelExceeded
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -123,7 +123,7 @@ func (h *MenuItemHandler) GetMenuTree(c *gin.Context) {
 	// 调用服务获取菜单树
 	menuTree, err := h.menuItemService.GetMenuTree()
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, err.Error()))
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *MenuItemHandler) GetMenuTree(c *gin.Context) {
 func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 	var req updateMenuItemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -183,7 +183,7 @@ func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 		case strings.Contains(err.Error(), "排序冲突"):
 			code = utils.CodeOrderConflict
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -195,7 +195,7 @@ func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 func (h *MenuItemHandler) DeleteMenuItem(c *gin.Context) {
 	var req deleteMenuItemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -219,7 +219,7 @@ func (h *MenuItemHandler) DeleteMenuItem(c *gin.Context) {
 		case strings.Contains(err.Error(), "存在子菜单"):
 			code = utils.CodeHasChildrenMenu
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -231,7 +231,7 @@ func (h *MenuItemHandler) DeleteMenuItem(c *gin.Context) {
 func (h *MenuItemHandler) UpdateMenuPermission(c *gin.Context) {
 	var req updateMenuPermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -255,7 +255,7 @@ func (h *MenuItemHandler) UpdateMenuPermission(c *gin.Context) {
 		case strings.Contains(err.Error(), "权限标识不存在"):
 			code = utils.CodePermissionNotFound
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 

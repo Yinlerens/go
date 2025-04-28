@@ -119,7 +119,7 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	var req updateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		if strings.Contains(err.Error(), "角色不存在") {
 			code = utils.CodeRoleNotFound
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -142,7 +142,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	var req deleteRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 	// 调用服务删除角色
@@ -152,7 +152,7 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 		if strings.Contains(err.Error(), "角色不存在") {
 			code = utils.CodeRoleNotFound
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 

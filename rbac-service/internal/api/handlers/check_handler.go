@@ -36,14 +36,14 @@ func NewCheckHandler(checkService services.CheckService) *CheckHandler {
 func (h *CheckHandler) CheckPermission(c *gin.Context) {
 	var req checkPermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
 	// 调用服务检查权限
 	allowed, err := h.checkService.CheckPermission(req.UserID, req.PermissionKey)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, err.Error()))
 		return
 	}
 
@@ -68,14 +68,14 @@ func (h *CheckHandler) CheckPermission(c *gin.Context) {
 func (h *CheckHandler) GetUserPermissions(c *gin.Context) {
 	var req getUserPermissionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
 	// 调用服务获取用户权限
 	permissions, err := h.checkService.GetUserPermissions(req.UserID, req.Type)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, err.Error()))
 		return
 	}
 

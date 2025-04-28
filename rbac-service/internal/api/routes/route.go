@@ -22,13 +22,11 @@ const VERSION = "v1.0.0"
 // SetupRoutes 设置API路由
 func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// 初始化审计客户端
-	auditClient, err := client.NewKafkaClient([]string{"111.230.105.184:9092"}, "audit-logs", "rbac-service")
+	auditClient, err := client.NewClient("auth-service")
 	if err != nil {
 		log.Printf("初始化审计客户端失败: %v, 将使用内存客户端", err)
 		auditClient = client.NewMemoryClient("rbac-service")
 	}
-	defer auditClient.Close()
-
 	// 创建仓库
 	roleRepo := repositories.NewRoleRepository(db)
 	permRepo := repositories.NewPermissionRepository(db)
@@ -89,7 +87,6 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 使用全局中间件
 	r.Use(middlewares.ErrorHandler())
-	r.Use(middlewares.CORS())
 	r.Use(middleware.ErrorAuditMiddleware(auditClient)) // 添加错误审计中间件
 	r.Use(middlewares.AuditMiddleware(auditClient))     // 添加审计中间件
 

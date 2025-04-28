@@ -51,7 +51,7 @@ func NewPermissionHandler(permissionService services.PermissionService) *Permiss
 func (h *PermissionHandler) CreatePermission(c *gin.Context) {
 	var req createPermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 	// 调用服务创建权限
@@ -63,7 +63,7 @@ func (h *PermissionHandler) CreatePermission(c *gin.Context) {
 		} else if strings.Contains(err.Error(), "权限Key格式无效") {
 			code = utils.CodeInvalidParams
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h *PermissionHandler) ListPermissions(c *gin.Context) {
 	// 调用服务获取权限列表
 	permissions, total, err := h.permissionService.GetPermissions(req.Page, req.PageSize, req.Type)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, err.Error()))
 		return
 	}
 
@@ -122,7 +122,7 @@ func (h *PermissionHandler) ListPermissions(c *gin.Context) {
 func (h *PermissionHandler) UpdatePermission(c *gin.Context) {
 	var req updatePermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h *PermissionHandler) UpdatePermission(c *gin.Context) {
 		if strings.Contains(err.Error(), "权限不存在") {
 			code = utils.CodePermissionNotFound
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -145,7 +145,7 @@ func (h *PermissionHandler) UpdatePermission(c *gin.Context) {
 func (h *PermissionHandler) DeletePermission(c *gin.Context) {
 	var req deletePermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -156,7 +156,7 @@ func (h *PermissionHandler) DeletePermission(c *gin.Context) {
 		if strings.Contains(err.Error(), "权限不存在") {
 			code = utils.CodePermissionNotFound
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 

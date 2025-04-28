@@ -56,7 +56,7 @@ func NewAuthHandler(
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -88,7 +88,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			},
 		)
 		utils.Info("登录失败", err.Error())
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -167,7 +167,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	// 从Cookie获取刷新令牌
 	refreshToken, err := c.Cookie("refresh_auth_token")
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeTokenMissing, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeTokenMissing, err.Error()))
 		return
 	}
 
@@ -178,7 +178,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		if strings.Contains(err.Error(), "用户无效或已被禁用") {
 			code = utils.CodeUserInactive
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -221,7 +221,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		if len(tokenParts) == 2 && tokenParts[0] == "Bearer" {
 			_, err := h.authService.VerifyToken(tokenParts[1])
 			if err != nil && !strings.Contains(err.Error(), "用户无效或已被禁用") {
-				c.JSON(http.StatusOK, utils.NewResponse(utils.CodeTokenInvalid, nil))
+				c.JSON(http.StatusOK, utils.NewResponse(utils.CodeTokenInvalid, err.Error()))
 				return
 			}
 		}
@@ -232,7 +232,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	// 调用服务进行登出
 	if err := h.authService.Logout(refreshToken); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalServerError, err.Error()))
 		return
 	}
 
@@ -278,7 +278,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req registerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -295,7 +295,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		case strings.Contains(err.Error(), "用户名已被注册"):
 			code = utils.CodeUsernameExists
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 

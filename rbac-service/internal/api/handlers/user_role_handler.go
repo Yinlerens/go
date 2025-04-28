@@ -46,7 +46,7 @@ func NewUserRoleHandler(userRoleService services.UserRoleService) *UserRoleHandl
 func (h *UserRoleHandler) AssignRole(c *gin.Context) {
 	var req assignRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 	// 调用服务分配角色
@@ -60,7 +60,7 @@ func (h *UserRoleHandler) AssignRole(c *gin.Context) {
 		} else if strings.Contains(err.Error(), "用户已拥有该角色") {
 			code = utils.CodeUserRoleExists
 		}
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *UserRoleHandler) AssignRole(c *gin.Context) {
 func (h *UserRoleHandler) UnassignRole(c *gin.Context) {
 	var req unassignRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *UserRoleHandler) UnassignRole(c *gin.Context) {
 	err := h.userRoleService.UnassignRolesFromUser(req.UserID, req.RoleKeys)
 	if err != nil {
 		code := utils.CodeInternalError
-		c.JSON(http.StatusOK, utils.NewResponse(code, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(code, err.Error()))
 		return
 	}
 
@@ -92,14 +92,14 @@ func (h *UserRoleHandler) UnassignRole(c *gin.Context) {
 func (h *UserRoleHandler) GetUserRoles(c *gin.Context) {
 	var req getUserRolesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
 	// 调用服务获取用户角色
 	roles, err := h.userRoleService.GetUserRoles(req.UserID)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, err.Error()))
 		return
 	}
 
@@ -113,14 +113,14 @@ func (h *UserRoleHandler) GetUserRoles(c *gin.Context) {
 func (h *UserRoleHandler) GetBatchUserRoles(c *gin.Context) {
 	var req getBatchUserRolesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
 	// 调用服务批量获取用户角色
 	rolesMap, err := h.userRoleService.GetBatchUserRoles(req.UserIDs)
 	if err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, nil))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, err.Error()))
 		return
 	}
 

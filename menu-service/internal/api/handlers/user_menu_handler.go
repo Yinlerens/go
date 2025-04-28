@@ -29,7 +29,7 @@ func NewUserMenuHandler(userMenuService services.UserMenuService) *UserMenuHandl
 func (h *UserMenuHandler) GetUserMenu(c *gin.Context) {
 	var req getUserMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err))
+		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
 
