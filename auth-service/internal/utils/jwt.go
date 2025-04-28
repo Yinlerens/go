@@ -15,6 +15,7 @@ import (
 type JWTClaims struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
+	Key      string `json:"key"`
 	jwt.RegisteredClaims
 }
 
@@ -24,6 +25,7 @@ func GenerateJWT(userID, username, secret string, expiry time.Duration) (string,
 	claims := JWTClaims{
 		UserID:   userID,
 		Username: username,
+		Key:      "auth-service",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -31,7 +33,7 @@ func GenerateJWT(userID, username, secret string, expiry time.Duration) (string,
 			Issuer:    "auth-service",
 		},
 	}
-
+	Info("secret", secret)
 	// 创建token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
