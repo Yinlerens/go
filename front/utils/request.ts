@@ -41,10 +41,9 @@ service.interceptors.response.use(
   },
   error => {
     if (error.response) {
-      toast.error(error.response.data.error);
       switch (error.response.status) {
         case 401:
-          console.error("401");
+          toast.error(error.response.data.message);
           break;
         case 403:
           console.error("Forbidden");

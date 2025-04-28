@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"menu-service/internal/utils"
 	"net/http"
 )
 
@@ -98,6 +99,7 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 		"user_id": userID,
 	})
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 
@@ -105,6 +107,7 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	url := fmt.Sprintf("%s/api/v1/rbac/users/permissions", c.rbacServiceURL)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 
@@ -115,6 +118,7 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	// 发送请求
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -122,6 +126,7 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	// 解析响应
 	var rbacResp rbacResponse
 	if err := json.NewDecoder(resp.Body).Decode(&rbacResp); err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 
