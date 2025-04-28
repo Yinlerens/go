@@ -68,6 +68,7 @@ func (h *CheckHandler) CheckPermission(c *gin.Context) {
 func (h *CheckHandler) GetUserPermissions(c *gin.Context) {
 	var req getUserPermissionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Info("错误", err.Error())
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInvalidParams, err.Error()))
 		return
 	}
@@ -75,6 +76,7 @@ func (h *CheckHandler) GetUserPermissions(c *gin.Context) {
 	// 调用服务获取用户权限
 	permissions, err := h.checkService.GetUserPermissions(req.UserID, req.Type)
 	if err != nil {
+		utils.Info("错误", err.Error())
 		c.JSON(http.StatusOK, utils.NewResponse(utils.CodeInternalError, err.Error()))
 		return
 	}

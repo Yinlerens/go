@@ -3,6 +3,7 @@ package services
 
 import (
 	"rbac-service/internal/repositories"
+	"rbac-service/internal/utils"
 	"time"
 )
 
@@ -50,6 +51,7 @@ func (s *checkService) getUserPermissionKeys(userID string) ([]string, error) {
 	// 获取用户的所有角色
 	roleKeys, err := s.userRoleRepo.FindRoleKeysByUserID(userID)
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 
@@ -61,6 +63,7 @@ func (s *checkService) getUserPermissionKeys(userID string) ([]string, error) {
 	// 获取这些角色拥有的所有权限
 	permKeys, err := s.rolePermRepo.FindPermissionKeysByRoleKeys(roleKeys)
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 
@@ -75,6 +78,7 @@ func (s *checkService) CheckPermission(userID, permissionKey string) (bool, erro
 	// 获取用户所有权限
 	permKeys, err := s.getUserPermissionKeys(userID)
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return false, err
 	}
 
@@ -93,6 +97,7 @@ func (s *checkService) GetUserPermissions(userID, permissionType string) ([]map[
 	// 获取用户所有权限的Key
 	permKeys, err := s.getUserPermissionKeys(userID)
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 
@@ -104,6 +109,7 @@ func (s *checkService) GetUserPermissions(userID, permissionType string) ([]map[
 	// 获取权限详细信息
 	permissions, err := s.permissionRepo.FindByKeys(permKeys, permissionType)
 	if err != nil {
+		utils.Info("错误", err.Error())
 		return nil, err
 	}
 
