@@ -120,7 +120,7 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	// 发送请求
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		utils.Info("错误", err.Error())
+		utils.Log("info", "httpClient请求错误", err.Error())
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -128,7 +128,9 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	// 解析响应
 	var rbacResp rbacResponse
 	if err := json.NewDecoder(resp.Body).Decode(&rbacResp); err != nil {
-		utils.Info("错误", err.Error())
+		utils.Log("info", "resp.Body", resp.Body)
+		utils.Log("info", "rbacResp", rbacResp)
+		utils.Log("info", "解析响应错误", err.Error())
 		return nil, err
 	}
 
