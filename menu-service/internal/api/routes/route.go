@@ -12,8 +12,8 @@ import (
 	"menu-service/internal/utils"
 	"time"
 
-	"audit-sdk/client"
-	"audit-sdk/middleware"
+	"github.com/Yinlerens/audit-sdk/client"
+	"github.com/Yinlerens/audit-sdk/middleware"
 )
 
 // VERSION 版本号

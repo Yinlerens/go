@@ -2,8 +2,8 @@
 package services
 
 import (
-	"audit-sdk/client"
 	"errors"
+	"github.com/Yinlerens/audit-sdk/client"
 	"menu-service/internal/models"
 	"menu-service/internal/repositories"
 	"menu-service/internal/utils"
@@ -457,12 +457,12 @@ func (s *menuItemService) UpdateMenuItem(id, name, path, icon, permissionKey, pa
 		}
 	}
 	// 验证权限标识存在性
-	//if permissionKey != oldMenuItem.PermissionKey && permissionKey != "" {
+	// if permissionKey != oldMenuItem.PermissionKey && permissionKey != "" {
 	//	exists, err := s.rbacClient.CheckPermissionExists(permissionKey)
 	//	if err != nil || !exists {
 	//		return errors.New("权限标识不存在于RBAC系统")
 	//	}
-	//}
+	// }
 	// 更新菜单项
 	oldMenuItem.Name = name
 	oldMenuItem.Path = path
