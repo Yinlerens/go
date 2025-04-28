@@ -76,7 +76,17 @@ func main() {
 	}
 
 	// 创建Gin路由
-	r := gin.Default()
+	r := gin.New()
+	// 创建 Logger 配置
+	logConfig := gin.LoggerConfig{
+		// 可以自定义日志格式 (可选)
+		// Format: `[GIN] ${time.RFC3339} | ${status} | ${latency} | ${clientIP} | ${method} ${path} ${queryParams}\n`,
+		SkipPaths: []string{"/health"}, // <--- 在这里添加要跳过的路径
+	}
+	// 使用配置好的 Logger 中间件
+	r.Use(gin.LoggerWithConfig(logConfig))
+	// 不要忘记添加 Recovery 中间件，gin.Default() 会自动添加
+	r.Use(gin.Recovery())
 	routes.SetupRoutes(r, auditService, edgeOneService)
 
 	// 创建HTTP服务器
