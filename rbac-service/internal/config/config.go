@@ -2,13 +2,14 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"os"
-	"strconv"
-	"time"
-
+	"github.com/joho/godotenv" // 导入库
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
+	"os"
+	"time"
 )
 
 // Config 应用配置结构
@@ -36,30 +37,33 @@ type Config struct {
 
 // LoadConfig 从环境变量加载配置
 func LoadConfig() (*Config, error) {
-
+	err := godotenv.Load() // 默认查找当前目录或父目录的 .env
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			log.Println("信息: .env 文件未找到, 将完全依赖实际环境变量 (部署环境预期行为)")
+		} else {
+			log.Printf("警告: 加载 .env 文件时遇到非预期的错误: %v", err)
+		}
+	} else {
+		log.Println("信息: 已成功加载 .env 文件中的环境变量 (本地环境)")
+	}
 	// 从环境变量读取配置
 	config := &Config{
-		ServerPort:     getEnv("RBAC_SERVER_PORT", "8081"),
-		Environment:    getEnv("ENVIRONMENT", "development"),
-		DBHost:         getEnv("DB_HOST", "localhost"),
-		DBPort:         getEnv("DB_PORT", "3306"),
-		DBUser:         getEnv("DB_USER", "root"),
-		DBPassword:     getEnv("DB_PASSWORD", ""),
-		DBName:         getEnv("DB_NAME", "rbac_service"),
-		AuthServiceURL: getEnv("AUTH_SERVICE_URL", "http://localhost:8080"),
+		ServerPort:     getEnv("RBAC_SERVER_PORT"),
+		Environment:    getEnv("ENVIRONMENT"),
+		DBHost:         getEnv("DB_HOST"),
+		DBPort:         getEnv("DB_PORT"),
+		DBUser:         getEnv("DB_USER"),
+		DBPassword:     getEnv("DB_PASSWORD"),
+		DBName:         getEnv("DB_NAME"),
+		AuthServiceURL: getEnv("AUTH_SERVICE_URL"),
 	}
 
-	// 设置缓存过期时间
-	cacheMinutes := getEnv("CACHE_EXPIRY_MINUTES", "5")
-	minutes, err := strconv.Atoi(cacheMinutes)
-	if err != nil {
-		minutes = 5
-	}
-	config.CacheExpiry = time.Duration(minutes) * time.Minute
+	config.CacheExpiry = time.Duration(5) * time.Minute
 
 	// 初始化内部API密钥
 	config.InternalAPIKeys = make(map[string]string)
-	internalAPIKey := getEnv("INTERNAL_API_KEY", "")
+	internalAPIKey := getEnv("INTERNAL_API_KEY")
 	if internalAPIKey == "" {
 		return nil, fmt.Errorf("内部API密钥未设置，请在.env文件中设置INTERNAL_API_KEY")
 	}
@@ -82,10 +86,7 @@ func InitDB(cfg *Config) (*gorm.DB, error) {
 }
 
 // getEnv 获取环境变量，如果不存在则返回默认值
-func getEnv(key, defaultValue string) string {
+func getEnv(key string) string {
 	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
 	return value
 }

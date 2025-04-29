@@ -53,7 +53,6 @@ func NewUserMenuService(
 func (s *userMenuService) GetUserMenu(userID string) ([]*UserMenuNode, error) {
 	// 获取用户权限列表
 	userPermissions, err := s.rbacClient.GetUserPermissions(userID)
-	utils.Log("info", "GetUserPermissions: ", err.Error())
 	if err != nil {
 		return nil, err
 	}

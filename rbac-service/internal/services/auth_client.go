@@ -48,7 +48,7 @@ func (c *authClient) ValidateUser(userID string) (bool, error) {
 	}
 
 	// 创建HTTP请求
-	url := fmt.Sprintf("%s/api/v1/users/validate", c.authServiceURL)
+	url := fmt.Sprintf("%s/api/users/validate", c.authServiceURL)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return false, err

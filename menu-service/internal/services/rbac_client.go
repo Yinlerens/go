@@ -50,7 +50,7 @@ func (c *rbacClient) CheckPermissionExists(permissionKey string) (bool, error) {
 	}
 
 	// 创建HTTP请求
-	url := fmt.Sprintf("%s/api/v1/rbac/permissions/exists", c.rbacServiceURL)
+	url := fmt.Sprintf("%s/api/rbac/permissions/exists", c.rbacServiceURL)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return false, err
@@ -95,18 +95,17 @@ func (c *rbacClient) CheckPermissionExists(permissionKey string) (bool, error) {
 // GetUserPermissions 获取用户权限列表
 func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	// 构建请求体
-	fmt.Printf("变量的类型是: %T\n", userID)
-	utils.Log("info", "userId", userID)
 	reqBody, err := json.Marshal(map[string]interface{}{
 		"user_id": userID,
 	})
+
 	if err != nil {
 		utils.Log("info", "转换错误", err.Error())
 		return nil, err
 	}
 
 	// 创建HTTP请求
-	url := fmt.Sprintf("%s/api/v1/rbac/users/permissions", c.rbacServiceURL)
+	url := fmt.Sprintf("%s/api/rbac/users/permissions", c.rbacServiceURL)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		utils.Log("info", "请求错误", err.Error())
@@ -128,8 +127,6 @@ func (c *rbacClient) GetUserPermissions(userID string) ([]string, error) {
 	// 解析响应
 	var rbacResp rbacResponse
 	if err := json.NewDecoder(resp.Body).Decode(&rbacResp); err != nil {
-		utils.Log("info", "resp.Body", resp.Body)
-		utils.Log("info", "rbacResp", rbacResp)
 		utils.Log("info", "解析响应错误", err.Error())
 		return nil, err
 	}

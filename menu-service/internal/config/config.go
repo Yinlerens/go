@@ -2,13 +2,15 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"github.com/joho/godotenv" // 导入库
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"log"
 	"os"
 	"strconv"
 	"time"
-
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 // Config 应用配置结构
@@ -38,18 +40,28 @@ type Config struct {
 // LoadConfig 从环境变量加载配置
 func LoadConfig() (*Config, error) {
 	// 优先从.env文件加载环境变
-
+	err := godotenv.Load() // 默认查找当前目录或父目录的 .env
+	// 处理加载错误 - 关键步骤
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			log.Println("信息: .env 文件未找到, 将完全依赖实际环境变量 (部署环境预期行为)")
+		} else {
+			log.Printf("警告: 加载 .env 文件时遇到非预期的错误: %v", err)
+		}
+	} else {
+		log.Println("信息: 已成功加载 .env 文件中的环境变量 (本地环境)")
+	}
 	// 从环境变量读取配置
 	config := &Config{
-		ServerPort:     getEnv("MENU_SERVER_PORT", "8082"),
-		Environment:    getEnv("ENVIRONMENT", "development"),
-		DBHost:         getEnv("DB_HOST", "localhost"),
-		DBPort:         getEnv("DB_PORT", "3306"),
-		DBUser:         getEnv("DB_USER", "root"),
+		ServerPort:     getEnv("MENU_SERVER_PORT", ""),
+		Environment:    getEnv("ENVIRONMENT", ""),
+		DBHost:         getEnv("DB_HOST", ""),
+		DBPort:         getEnv("DB_PORT", ""),
+		DBUser:         getEnv("DB_USER", ""),
 		DBPassword:     getEnv("DB_PASSWORD", ""),
-		DBName:         getEnv("DB_NAME", "menu_service"),
-		AuthServiceURL: getEnv("AUTH_SERVICE_URL", "http://localhost:8080"),
-		RbacServiceURL: getEnv("RBAC_SERVICE_URL", "http://localhost:8081"),
+		DBName:         getEnv("DB_NAME", ""),
+		AuthServiceURL: getEnv("AUTH_SERVICE_URL", ""),
+		RbacServiceURL: getEnv("RBAC_SERVICE_URL", ""),
 	}
 
 	// 设置缓存过期时间
