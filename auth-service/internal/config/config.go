@@ -2,6 +2,7 @@
 package config
 
 import (
+	"auth-service/internal/utils"
 	"fmt"
 	"os"
 	"time"
@@ -56,7 +57,7 @@ func LoadConfig() (*Config, error) {
 	// 设置令牌过期时间
 	accessExpiryMinutes := getEnv("ACCESS_TOKEN_EXPIRY_MINUTES", "")
 	refreshExpiryDays := getEnv("REFRESH_TOKEN_EXPIRY_DAYS", "")
-
+	utils.Log("info", "accessExpiryMinutes", accessExpiryMinutes)
 	// 尝试将字符串转换为整数，如果失败则使用默认值
 	var accessMinutes, refreshDays int
 	if _, err := fmt.Sscanf(accessExpiryMinutes, "%d", &accessMinutes); err != nil {
@@ -65,6 +66,7 @@ func LoadConfig() (*Config, error) {
 	if _, err := fmt.Sscanf(refreshExpiryDays, "%d", &refreshDays); err != nil {
 		refreshDays = 7
 	}
+	utils.Log("info", "accessMinutes", accessMinutes)
 
 	config.AccessTokenExpiry = time.Duration(accessMinutes) * time.Minute
 	config.RefreshTokenExpiry = time.Duration(refreshDays) * 24 * time.Hour
