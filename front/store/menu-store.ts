@@ -12,7 +12,7 @@ interface MenuState {
   // 错误信息 (不持久化)
   error: string | null;
   // 获取菜单的方法
-  fetchMenu: (userId: string) => Promise<void>;
+  fetchMenu: (userId: string) => Promise<boolean>;
   // 重置菜单状态 (会清除持久化的 menuItems)
   resetMenu: () => void;
 }
@@ -38,11 +38,11 @@ export const useMenuStore = create<MenuState>()(
           if (response.code === 0 && response.data) {
             // 成功获取数据，更新 menuItems - 这会被 persist 中间件自动保存
             set({ menuItems: response.data.items, loading: false });
+            return true;
           } else {
-            // 获取失败，设置错误信息
-            // 你可以选择在这里清除 menuItems，或者保留可能过时的数据供 UI 显示错误时参考
             // set({ menuItems: [], error: response.msg || "获取菜单失败", loading: false }); // 选项1: 出错时清除
             set({ error: response.msg || "获取菜单失败", loading: false }); // 选项2: 保留旧数据
+            return false;
           }
         } catch (error) {
           // 捕获到异常，设置错误信息
@@ -52,6 +52,7 @@ export const useMenuStore = create<MenuState>()(
             error: error instanceof Error ? error.message : "获取菜单失败",
             loading: false
           }); // 选项2: 保留旧数据
+          return false;
         }
       },
 

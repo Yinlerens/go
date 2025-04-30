@@ -63,11 +63,11 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	v1.POST("/register", authHandler.Register)
 	v1.POST("/login", authHandler.Login)
 	v1.POST("/logout", authHandler.Logout)
+	v1.POST("/refresh", authHandler.Refresh)
 	// 认证相关路由组
 	auth := v1.Group("/auth")
 	{
 		auth.POST("/verify", authHandler.Verify)
-		auth.POST("/refresh", authHandler.Refresh)
 	}
 
 	// 用户相关路由组

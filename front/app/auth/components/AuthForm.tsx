@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,8 +63,9 @@ const buttonVariants = {
 };
 
 export function AuthForm() {
+  const [loading, setLoading] = useState(false);
   const { fetchMenu } = useMenuStore();
-  const { login, loading, register } = useAuthStore();
+  const { login, register } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -89,10 +90,19 @@ export function AuthForm() {
     setMode(mode === "login" ? "register" : "login");
   };
   const onLoginSubmit = async (value: LoginFormData) => {
-    const user_id = await login(value);
-    if (user_id) {
-      fetchMenu(user_id);
-      router.push("/dashboard");
+    setLoading(true);
+    try {
+      const user_id = await login(value);
+      if (user_id) {
+        const res = await fetchMenu(user_id);
+        if (res) {
+          loginForm.reset();
+          router.push("/dashboard");
+        }
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,7 +113,9 @@ export function AuthForm() {
       setMode("login");
     }
   };
-
+  useEffect(() => {
+    router.prefetch("/home");
+  }, [router]);
   return (
     <AnimatePresence mode="wait">
       {mode === "login" ? (
@@ -139,6 +151,7 @@ export function AuthForm() {
                             <div className="relative">
                               <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
+                                autoComplete="username"
                                 placeholder="admin"
                                 className="pl-10 rounded-xl input-focus-ring h-12"
                                 {...field}
@@ -166,6 +179,7 @@ export function AuthForm() {
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
+                                autoComplete="current-password"
                                 type={showPassword ? "text" : "password"}
                                 placeholder="请输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
@@ -261,6 +275,7 @@ export function AuthForm() {
                             <div className="relative">
                               <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
+                                autoComplete="username"
                                 placeholder="admin"
                                 className="pl-10 rounded-xl input-focus-ring h-12"
                                 {...field}
@@ -288,6 +303,7 @@ export function AuthForm() {
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
+                                autoComplete="new-password"
                                 type={showPassword ? "text" : "password"}
                                 placeholder="请输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"
@@ -328,6 +344,7 @@ export function AuthForm() {
                             <div className="relative">
                               <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                               <Input
+                                autoComplete="new-password"
                                 type={showPassword ? "text" : "password"}
                                 placeholder="请重复输入密码"
                                 className="pl-10 pr-10 rounded-xl input-focus-ring h-12"

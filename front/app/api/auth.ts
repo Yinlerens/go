@@ -29,6 +29,6 @@ interface ListUsersResponse {
   list: User[];
   total: number;
 }
-export const listUsers = (data: ListUsersRequest) => request.post<ListUsersResponse>("/users/list", data);
+export const listUsers = (data: ListUsersRequest) => request.post<ListUsersResponse>("/auth/users/list", data);
 
 export const logout = () => request.post('/logout');
