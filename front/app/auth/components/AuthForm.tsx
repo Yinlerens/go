@@ -114,7 +114,7 @@ export function AuthForm() {
     }
   };
   useEffect(() => {
-    router.prefetch("/home");
+    router.prefetch("/dashboard");
   }, [router]);
   return (
     <AnimatePresence mode="wait">
