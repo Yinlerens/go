@@ -34,16 +34,15 @@ const processQueue = (error: any, token: string | null = null) => {
 const refreshToken = async (): Promise<string> => {
   try {
     const refreshAxios = axios.create({
-      baseURL: "https://api.syuan.email/api", // 保持 baseURL 一致可能更好
+      baseURL: "/api", // 保持 baseURL 一致可能更好
       withCredentials: true // 明确设置以确保发送 Cookie
     });
-    const response = await refreshAxios.post<{ access_token: string }>(
-      "/refresh",
-      {}
-    );
+    const response = await refreshAxios.post<{ access_token: string }>("/refresh", {});
+    console.log("%c [ response ]-41", "font-size:13px; background:pink; color:#bf2c9f;", response);
+
     const newAccessToken = response.data.access_token;
     const state = useAuthStore.getState();
-    state.setAccessToken(newAccessToken); 
+    state.setAccessToken(newAccessToken);
     console.log("Token成功刷新.");
     return newAccessToken;
   } catch (error) {
@@ -59,13 +58,14 @@ const refreshToken = async (): Promise<string> => {
 const service: AxiosInstance = axios.create({
   timeout: 10000,
   withCredentials: true,
-  baseURL: "https://api.syuan.email/api"
+  baseURL: "/api"
 });
 
 // 请求拦截器 (保持不变)
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const state = useAuthStore.getState();
+    console.log('%c [ state ]-68', 'font-size:13px; background:pink; color:#bf2c9f;', state)
     const token = state.access_token;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
