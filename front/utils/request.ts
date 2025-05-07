@@ -30,26 +30,69 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = []; // 清空队列
 };
 
-// --- 刷新 Token 的函数 (需要根据你的 API 实现) ---
+// --- 刷新 Token 的函数---
 const refreshToken = async (): Promise<string> => {
+  const state = useAuthStore.getState(); // 将 state 获取提前，方便错误处理时调用 logout
   try {
     const refreshAxios = axios.create({
-      baseURL: "/api", // 保持 baseURL 一致可能更好
-      withCredentials: true // 明确设置以确保发送 Cookie
+      baseURL: "/api",
+      withCredentials: true
     });
+    // 注意：refreshAxios.post 的响应类型应该符合 ApiResponse 结构
     const response = await refreshAxios.post("/refresh", {});
 
-    const newAccessToken = response.data.data.access_token;
-    const state = useAuthStore.getState();
-    state.setAccessToken(newAccessToken);
-    console.log("Token成功刷新.");
-    return newAccessToken;
-  } catch (error) {
-    console.error("token刷新失败:", error);
-    const state = useAuthStore.getState();
-    state.logout(); // 清理状态
-    toast.error("状态过期，请重新登录");
-    throw error;
+    // 检查业务状态码 code
+    if (response.data?.data && response.data.data.code === 0) {
+      const newAccessToken = response.data.data.access_token;
+      if (!newAccessToken) {
+        // 如果 code 为 0 但没有 token，也视为刷新失败
+        console.error("Token刷新失败：响应成功但未返回access_token。响应:", response.data);
+        state.logout();
+        toast.error(response.data.msg || "刷新凭证失败，请重新登录");
+        throw new Error(response.data.msg || "刷新凭证失败，响应中未包含新的access_token");
+      }
+      state.setAccessToken(newAccessToken);
+      console.log("Token成功刷新.");
+      return newAccessToken;
+    } else {
+      // 当 HTTP 状态码为 2xx 但业务 code 不为 0
+      const errorMessage = response.data?.msg || "Token刷新失败，请重新登录";
+      console.error("Token刷新失败，业务状态码非0:", response.data);
+      state.logout(); // 清理状态
+      toast.error(errorMessage);
+      // 抛出错误，以便调用 refreshToken 的地方能捕获到刷新失败
+      throw new Error(`Token刷新失败: ${errorMessage} (code: ${response.data?.code})`);
+    }
+  } catch (error: any) {
+    // 这个 catch 块会捕获 refreshAxios.post 请求本身的错误 (如网络错误，5xx 错误)
+    // 或者上面 throw new Error 的情况
+    console.error("Token刷新请求异常或处理失败:", error);
+    state.logout(); // 确保在任何刷新失败的情况下都登出
+
+    // 如果错误是 Error 实例并且有 message，优先使用它的 message
+    // 否则，如果是 axios 错误且有后端返回的 msg，尝试使用
+    let toastMessage = "状态过期，请重新登录";
+    if (error instanceof Error && error.message && !error.message.startsWith("Token刷新失败:")) {
+      // 如果不是我们自定义的 "Token刷新失败:" 开头的错误，可能是网络层或其他axios错误
+      // 对于我们自定义的错误，toast已经在上面处理过了
+    } else if (error.response?.data?.msg) {
+      toastMessage = error.response.data.msg;
+    } else if (error.message) {
+      // 捕获我们自定义的 throw new Error 的信息
+      toastMessage = error.message;
+    }
+
+    // 避免重复 toast 由上面  if (response.data && response.data.code === 0) else 分支已弹出的信息
+    if (!toastMessage.includes("Token刷新失败:")) {
+      toast.error(toastMessage);
+    }
+
+    // 确保抛出的是一个 Error 对象，以便上层拦截器可以正确处理
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(String(error) || "未知的Token刷新错误");
+    }
   }
 };
 
@@ -60,7 +103,7 @@ const service: AxiosInstance = axios.create({
   baseURL: "/api"
 });
 
-// 请求拦截器 (保持不变)
+// 请求拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const state = useAuthStore.getState();
@@ -71,120 +114,101 @@ service.interceptors.request.use(
     return config;
   },
   error => {
-    console.error("Request error:", error);
+    console.error("请求错误:", error);
     return Promise.reject(error);
   }
 );
 
-// 响应拦截器 (修改错误处理逻辑)
+// 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<any>>) => {
     const res: any = response.data;
-    // 假设 code 为 0 代表成功
     if (res.code !== 0) {
-      toast.error(res.msg || "Request failed"); // 使用 res.msg，如果没有提供则显示默认消息
+      toast.error(res.msg || "请求失败");
     }
-    // 注意：调用者需要检查 res.code 来判断业务是否成功
     return res;
   },
   async error => {
-    // 将错误处理函数标记为 async
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }; // 获取原始请求配置，并添加重试标记类型
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // 检查是否是 401 错误，并且不是刷新 token 请求本身失败 (如果刷新 API 也可能返回 401)
-    // 同时检查请求是否已经是重试请求，防止无限循环
     if (
       error.response?.status === 401 &&
       originalRequest.url !== "/refresh" &&
       !originalRequest._retry
     ) {
       if (isRefreshing) {
-        // 如果正在刷新 token，将当前失败的请求加入队列等待
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then(token => {
-            // 等待刷新成功后，用新的 token 重试请求
             if (originalRequest.headers) {
               originalRequest.headers["Authorization"] = `Bearer ${token}`;
             }
-            originalRequest._retry = true; // 标记为重试请求
-            return service(originalRequest); // 使用 service 重新发起请求
+            originalRequest._retry = true;
+            return service(originalRequest);
           })
           .catch(err => {
-            // 如果等待过程中刷新失败了，返回错误
             return Promise.reject(err);
           });
       }
 
-      // 标记正在刷新
       isRefreshing = true;
-      originalRequest._retry = true; // 标记为重试请求，防止因网络波动等原因导致死循环刷新
+      originalRequest._retry = true;
 
       try {
-        const newAccessToken = await refreshToken(); // 调用刷新 token 的函数
-        processQueue(null, newAccessToken); // 刷新成功，处理队列中的请求
+        const newAccessToken = await refreshToken();
+        processQueue(null, newAccessToken);
 
-        // 更新当前失败请求的 token 并重试
         if (originalRequest.headers) {
           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         }
-        return service(originalRequest); // 使用 service 重新发起请求
+        return service(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null); // 刷新失败，拒绝队列中的所有请求
-        // logout() 应该在 refreshToken 内部处理了
-        return Promise.reject(refreshError); // 返回刷新失败的错误
+        processQueue(refreshError, null);
+        return Promise.reject(refreshError);
       } finally {
-        isRefreshing = false; // 重置刷新状态
+        isRefreshing = false;
       }
     } else if (error.response) {
-      // 处理其他 HTTP 错误 (如 403, 404, 500 等)
       const data = error.response.data;
       const status = error.response.status;
-      const message = data?.message || data?.msg || error.message; // 尝试获取后端错误信息
+      const message = data?.message || data?.msg || error.message;
 
       switch (status) {
-        // 401 错误如果不是因为 token 过期（例如，直接访问未授权资源），或者刷新失败后，最终会走到这里
         case 401:
-          // 可能是刷新失败后被 reject，或者是不应该刷新的 401
-          toast.error(message || "Unauthorized access or session expired.");
-          // 可以在这里触发登出逻辑（如果 refreshToken 函数没处理的话）
-          // useAuthStore.getState().logout();
+          toast.error(message || "未授权访问或会话已过期。"); // 修改点
+          // useAuthStore.getState().logout(); // 根据需要取消注释
           break;
         case 403:
-          toast.error(message || "Forbidden.");
-          console.error("Forbidden", error.response);
+          toast.error(message || "禁止访问。"); // 修改点
+          console.error("禁止访问:", error.response); // 修改点
           break;
         case 404:
-          toast.error(message || "Resource not found.");
-          console.error("Not Found", error.response);
+          toast.error(message || "未找到资源。"); // 修改点
+          console.error("未找到:", error.response); // 修改点
           break;
         case 500:
-          toast.error(message || "Server Error.");
-          console.error("Server Error", error.response);
+          toast.error(message || "服务器错误。"); // 修改点
+          console.error("服务器错误:", error.response); // 修改点
           break;
         default:
-          toast.error(message || `Error: ${status}`);
-          console.error(`Unhandled HTTP Error ${status}`, error.response);
+          toast.error(message || `错误: ${status}`); // 修改点
+          console.error(`未处理的 HTTP 错误 ${status}:`, error.response); // 修改点
       }
-      // 返回原始错误，让调用方也能 catch 到
       return Promise.reject(error);
     } else if (error.request) {
-      // 请求已发出，但没有收到响应 (例如网络错误)
-      toast.error("Network Error: No response received.");
-      console.error("Network Error:", error.request);
+      toast.error("网络错误：未收到响应。"); // 修改点
+      console.error("网络错误:", error.request); // 修改点
     } else {
-      // 设置请求时触发了一个错误
-      toast.error("Request Setup Error");
-      console.error("Request Setup Error:", error.message);
+      toast.error("请求设置错误。"); // 修改点
+      console.error("请求设置错误:", error.message); // 修改点
     }
 
-    // 对于非 HTTP 响应错误（网络错误、请求设置错误）或未处理的 HTTP 错误，也 reject
     return Promise.reject(error);
   }
 );
 
-// 封装请求方法 (保持不变)
+// 封装请求方法
 const request = {
   get: <T>(url: string, params?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
     return service.get(url, { params, ...config });
