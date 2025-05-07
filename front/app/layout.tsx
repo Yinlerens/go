@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
-import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap"
-});
+import Polling from "./polling";
 
 export const metadata: Metadata = {
-  title: "Yinleren",
+  title: "Yinleren1",
   description: "Yinleren"
 };
 
@@ -21,8 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh" className="h-full">
-      <body className={inter.className + " h-full"}>
+      <body className={" h-full"}>
         <Toaster richColors position="top-center" expand={true} />
+        <Polling />
         {children}
         <Analytics />
       </body>

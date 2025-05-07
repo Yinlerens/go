@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from "@/schemas/auth";
 import { AuthMode } from "@/types/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMenuStore } from "@/store/menu-store";
 import { useAuthStore } from "@/store/user-store";
 
@@ -63,6 +63,8 @@ const buttonVariants = {
 };
 
 export function AuthForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [loading, setLoading] = useState(false);
   const { fetchMenu } = useMenuStore();
   const { login, register } = useAuthStore();
@@ -97,7 +99,7 @@ export function AuthForm() {
         const res = await fetchMenu(user_id);
         if (res) {
           loginForm.reset();
-          router.push("/dashboard");
+          router.push(callbackUrl);
         }
       }
     } catch (error) {

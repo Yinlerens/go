@@ -11,7 +11,7 @@ interface UserState {
   login: (value: Request) => Promise<string>;
   logout: () => Promise<void>;
   register: (value: Request) => Promise<boolean>;
-  setAccessToken: (token: string ) => void;
+  setAccessToken: (token: string) => void;
 }
 
 export const useAuthStore = create<UserState>()(
@@ -46,27 +46,15 @@ export const useAuthStore = create<UserState>()(
         }
       },
       logout: async () => {
-        set({ loading: true, error: null });
-        try {
-          const { code, msg } = await logout();
-          if (code === 0) {
-            set({
-              user: {
-                user_id: "",
-                username: "",
-                access_token: ""
-              },
-              loading: false
-            });
-          } else {
-            set({ error: msg, loading: false });
-          }
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : "发生错误",
-            loading: false
-          });
-        }
+        set({
+          user: {
+            user_id: "",
+            username: "",
+            access_token: ""
+          },
+          loading: false,
+          access_token: ""
+        });
       },
       register: async value => {
         set({ loading: true, error: null });

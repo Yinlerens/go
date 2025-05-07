@@ -40,9 +40,8 @@ const refreshToken = async (): Promise<string> => {
     });
     // 注意：refreshAxios.post 的响应类型应该符合 ApiResponse 结构
     const response = await refreshAxios.post("/refresh", {});
-
     // 检查业务状态码 code
-    if (response.data?.data && response.data.data.code === 0) {
+    if (response.data && response.data.code === 0) {
       const newAccessToken = response.data.data.access_token;
       if (!newAccessToken) {
         // 如果 code 为 0 但没有 token，也视为刷新失败
