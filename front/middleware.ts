@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
+   if (process.env.NODE_ENV === "development") {
+     // 在开发环境中直接返回，不执行中间件逻辑
+     return NextResponse.next();
+   }
   // 获取认证令牌
   const authToken = request.cookies.get("refresh_auth_token")?.value;
   // 如果用户未登录，重定向到登录页面

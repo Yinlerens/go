@@ -237,18 +237,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 			"username":      username,
 		},
 	)
-
-	// 清除Cookie: auth_token
-	c.SetCookie(
-		"auth_token",
-		"",
-		-1,
-		"/",
-		h.cookieDomain,
-		h.secureCookie,
-		true,
-	)
-
 	// 清除Cookie: refresh_auth_token
 	c.SetCookie(
 		"refresh_auth_token",
@@ -259,7 +247,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		h.secureCookie,
 		true,
 	)
-
 	// 返回成功响应
 	c.JSON(http.StatusOK, utils.NewResponse(utils.CodeSuccess, nil))
 }
