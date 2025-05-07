@@ -37,10 +37,9 @@ const refreshToken = async (): Promise<string> => {
       baseURL: "/api", // 保持 baseURL 一致可能更好
       withCredentials: true // 明确设置以确保发送 Cookie
     });
-    const response = await refreshAxios.post<{ access_token: string }>("/refresh", {});
-    console.log("%c [ response ]-41", "font-size:13px; background:pink; color:#bf2c9f;", response);
+    const response = await refreshAxios.post("/refresh", {});
 
-    const newAccessToken = response.data.access_token;
+    const newAccessToken = response.data.data.access_token;
     const state = useAuthStore.getState();
     state.setAccessToken(newAccessToken);
     console.log("Token成功刷新.");
@@ -65,7 +64,6 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const state = useAuthStore.getState();
-    console.log('%c [ state ]-68', 'font-size:13px; background:pink; color:#bf2c9f;', state)
     const token = state.access_token;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
