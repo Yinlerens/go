@@ -1,4 +1,5 @@
 'use client';
+import "@ant-design/v5-patch-for-react-19";
 import { motion } from 'framer-motion';
 import { Logo } from '@/components/branding/Logo';
 import { AnimatedBackground } from '@/components/animated-background';
@@ -45,7 +46,7 @@ const Index = () => {
           >
             <Link href="/auth">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="auth-button text-lg font-medium px-8 py-6 h-auto">
+                <Button className="auth-button text-lg font-medium px-8 py-6 h-auto " type={"primary"} size='large'>
                   登录系统
                 </Button>
               </motion.div>

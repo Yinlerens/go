@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  username        String?   @unique
+  hashedPassword  String
+  emailVerified   DateTime?
+  image           String?
+  lastLoginAt     DateTime?
+  isActive        Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? //软删除
+
+  roles UserRole[]
+
+  @@index([deletedAt]) 
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  action      String
+  resource    String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles       RolePermission[]
+
+  @@unique([action, resource])
+}
+
+model UserRole {
+  userId String
+  roleId String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 如果 User 被物理删除，关联会级联删除。软删除 User 不会触发。
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade) // 如果 Role 被物理删除，关联会级联删除。
+
+  @@id([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  assignedAt   DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)       // 如果 Role 被物理删除，关联会级联删除。
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade) // 如果 Permission 被物理删除，关联会级联删除。
+
+  @@id([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}

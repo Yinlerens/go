@@ -59,7 +59,7 @@ const AuthPage = () => {
 
             <div className="flex-1 w-full max-w-md">
               <Suspense>
-                {/* <AuthForm /> */}
+                <AuthForm />
               </Suspense>
             </div>
           </div>
