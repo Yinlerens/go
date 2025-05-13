@@ -8,7 +8,7 @@ export function AnimatedBackground() {
       <div className="absolute inset-0 bg-linear-to-b from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800" />
       
       <motion.div 
-        className="absolute top-[10%] -left-[5%] w-72 h-72 rounded-full bg-blue-300/10 backdrop-blur-3xl"
+        className="absolute top-[10%] -left-[5%] w-72 h-ded-full bg-blue-300/10 backdrop-blur-3xl"
         animate={{
           x: [0, 50, 0],
           y: [0, 30, 0],

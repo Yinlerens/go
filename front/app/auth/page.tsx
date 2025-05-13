@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { AuthForm } from './components/AuthForm';
 import { Logo } from '@/components/branding/Logo';
-import { AnimatedBackground } from '@/components/ui/animated-background';
+import { AnimatedBackground } from '@/components/animated-background';
 import { Suspense } from 'react';
 
 const AuthPage = () => {
@@ -59,7 +59,7 @@ const AuthPage = () => {
 
             <div className="flex-1 w-full max-w-md">
               <Suspense>
-                <AuthForm />
+                {/* <AuthForm /> */}
               </Suspense>
             </div>
           </div>

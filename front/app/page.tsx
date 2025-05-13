@@ -1,10 +1,9 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/branding/Logo';
-import { AnimatedBackground } from '@/components/ui/animated-background';
+import { AnimatedBackground } from '@/components/animated-background';
 import Link from 'next/link';
-
+import { Button } from "antd";
 const Index = () => {
   return (
     <>
