@@ -1,3 +1,113 @@
+# Next.js 15 & React Query v5 项目
+
+本项目使用 Next.js 15 和 React Query v5 构建，封装了简洁易用的请求函数。
+
+## 封装的 API 请求工具
+
+项目中封装了基于 React Query v5 的 API 请求工具，提供了以下功能：
+
+### 基础请求函数 (lib/request.ts)
+
+```typescript
+// 基本用法
+import { request } from '@/lib/request';
+
+// GET 请求
+const data = await request<UserType>('/api/users');
+
+// POST 请求
+const result = await request<ResponseType>('/api/users', { 
+  data: { name: 'John', email: 'john@example.com' }
+});
+
+// 自定义配置
+const data = await request<DataType>('/api/resource', {
+  method: 'PUT',
+  headers: { 'Authorization': `Bearer ${token}` },
+  data: { id: 1, value: 'updated' }
+});
+```
+
+### React Query 钩子 (lib/react-query.tsx)
+
+```typescript
+import { useQueryApi, useMutationApi } from '@/lib/react-query';
+
+// 数据查询
+function UserList() {
+  const { data, isLoading, error } = useQueryApi(
+    ['users'],
+    '/api/users',
+    {
+      params: { page: 1, limit: 10 }
+    }
+  );
+  
+  if (isLoading) return <div>加载中...</div>;
+  if (error) return <div>出错了: {error.message}</div>;
+  
+  return (
+    <ul>
+      {data?.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// 数据变更
+function CreateUserForm() {
+  const { mutate, isPending } = useMutationApi('/api/users');
+  
+  const handleSubmit = (userData) => {
+    mutate(userData, {
+      onSuccess: (data) => {
+        console.log('创建成功:', data);
+      }
+    });
+  };
+  
+  return (
+    <form onSubmit={...}>
+      {/* 表单内容 */}
+      <button disabled={isPending}>
+        {isPending ? '提交中...' : '创建用户'}
+      </button>
+    </form>
+  );
+}
+```
+
+## 全局配置
+
+在 `app/providers.tsx` 文件中配置了 React Query 和其他全局提供者:
+
+```tsx
+import { ReactQueryProvider } from '@/lib/react-query';
+
+export function Providers({ children }) {
+  return (
+    <ConfigProvider locale={zhCN} theme={...}>
+      <ReactQueryProvider>
+        {children}
+        <Toaster />
+        <Analytics />
+        <SpeedInsights />
+      </ReactQueryProvider>
+    </ConfigProvider>
+  );
+}
+```
+
+## 技术栈
+
+- Next.js 15
+- React 19
+- React Query v5
+- TypeScript
+- Ant Design v5
+- Tailwind CSS 4
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

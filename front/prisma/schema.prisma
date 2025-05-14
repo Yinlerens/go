@@ -9,30 +9,30 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  username        String?   @unique
-  hashedPassword  String
-  emailVerified   DateTime?
-  image           String?
-  lastLoginAt     DateTime?
-  isActive        Boolean   @default(true)
+  id             String    @id @default(cuid())
+  email          String    @unique
+  username       String?   @unique
+  hashedPassword String
+  emailVerified  DateTime?
+  image          String?
+  lastLoginAt    DateTime?
+  isActive       Boolean   @default(true)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime? //软删除
 
   roles UserRole[]
 
-  @@index([deletedAt]) 
+  @@index([deletedAt])
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
+  id         String   @id @default(cuid())
+  identifier String   @unique // 邮箱地址，设置为唯一键
+  token      String // 验证码本身，不需要全局唯一，但对于一个identifier是唯一的
+  expires    DateTime // 验证码的过期时间
+  createdAt  DateTime @default(now()) // 记录验证码创建（即发送）的时间
 }
 
 model Role {
@@ -54,14 +54,14 @@ model Permission {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  roles       RolePermission[]
+  roles RolePermission[]
 
   @@unique([action, resource])
 }
 
 model UserRole {
-  userId String
-  roleId String
+  userId     String
+  roleId     String
   assignedAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 如果 User 被物理删除，关联会级联删除。软删除 User 不会触发。
@@ -77,7 +77,7 @@ model RolePermission {
   permissionId String
   assignedAt   DateTime @default(now())
 
-  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)       // 如果 Role 被物理删除，关联会级联删除。
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade) // 如果 Role 被物理删除，关联会级联删除。
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade) // 如果 Permission 被物理删除，关联会级联删除。
 
   @@id([roleId, permissionId])

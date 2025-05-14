@@ -1,6 +1,6 @@
 "use client";
 import "@ant-design/v5-patch-for-react-19";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from "@/schemas/auth";
 import { AuthMode } from "@/types/auth";
@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 // import { useAuthStore } from "@/store/user-store";
 import { Button, Card, Checkbox, Flex, Form, Input } from "antd";
 import { Lock, Mail, ShieldCheck, User } from "lucide-react";
+import { toast } from "sonner";
 const { Search, Password } = Input;
 const formVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -51,22 +52,97 @@ const buttonVariants = {
 };
 
 export function AuthForm() {
+  const [form] = Form.useForm();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [loading, setLoading] = useState(false);
+  const [sendCodeLoading, setSendCodeLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0); // 用于倒计时的 state
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null); // 用于存储 interval ID
+
   // const { fetchMenu } = useMenuStore();
   // const { login, register } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>("login");
   const router = useRouter();
+  // 清理 interval 的 effect
+  useEffect(() => {
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, []);
+  const startCountdown = (seconds: number) => {
+    setCountdown(seconds);
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownIntervalRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+  const handleSendCode = async () => {
+    if (countdown > 0) return; // 如果正在倒计时，则不执行
+    try {
+      const { email } = await form.validateFields(["email"]);
 
+      setSendCodeLoading(true);
+      const response = await fetch("/api/auth/verification", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      const result = await response.json();
+
+      if (result.code === "0") {
+        toast.success(result.msg || "验证码已发送，请检查您的邮箱。");
+        startCountdown(60); // 发送成功后开始60秒倒计时
+      } else {
+        toast.error(result.msg || "发送验证码失败。");
+        if (result.msg && result.msg.includes("秒后重试")) {
+          const match = result.msg.match(/(\d+)\s*秒后重试/);
+          if (match && match[1]) {
+            startCountdown(parseInt(match[1], 10));
+          }
+        }
+      }
+    } catch (errorInfo) {
+      // ...
+    } finally {
+      setSendCodeLoading(false);
+    }
+  };
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
   };
-  const sendCode = (e: any) => {
-    console.log("%c [ e ]-105", "font-size:13px; background:pink; color:#bf2c9f;", e);
-  };
-  const register = (e: any) => {
-    console.log("%c [ e ]-109", "font-size:13px; background:pink; color:#bf2c9f;", e);
+  const register = async (value: any) => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify(value),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      const { code, msg } = await response.json();
+      if (code == 200) {
+        toast.success(msg);
+        form.resetFields();
+        setMode("login");
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => {
     router.prefetch("/dashboard");
@@ -169,7 +245,7 @@ export function AuthForm() {
               </div>
             ]}
           >
-            <Form name="register" onFinish={register} className="w-full">
+            <Form name="register" onFinish={register} className="w-full" form={form}>
               <Form.Item
                 name="username"
                 rules={[
@@ -233,7 +309,8 @@ export function AuthForm() {
                 rules={[
                   {
                     required: true,
-                    message: "请输入邮箱"
+                    type: "email",
+                    message: "请输入有效邮箱地址"
                   }
                 ]}
               >
@@ -251,8 +328,16 @@ export function AuthForm() {
                 <Search
                   prefix={<ShieldCheck size="20" />}
                   placeholder="请输入验证码"
-                  enterButton="发送验证码"
-                  onSearch={sendCode}
+                  enterButton={
+                    <Button
+                      type="primary"
+                      loading={sendCodeLoading}
+                      disabled={countdown > 0 || sendCodeLoading} // 倒计时期间或加载中禁用按钮
+                    >
+                      {countdown > 0 ? `${countdown}秒后重发` : "发送验证码"}
+                    </Button>
+                  }
+                  onSearch={handleSendCode}
                   type="number"
                 />
               </Form.Item>
