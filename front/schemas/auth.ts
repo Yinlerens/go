@@ -21,7 +21,8 @@ export const registerSchema = z
         message: '用户名格式错误,字母数字下划线'
       }),
     password: z.string().min(6, { message: '密码格式错误' }),
-    confirmPassword: z.string()
+    confirmPassword: z.string(),
+    email:z.string().email({ message: '邮箱格式错误' })
   })
   .refine(data => data.password === data.confirmPassword, {
     message: '两次密码不一致',

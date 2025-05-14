@@ -19,6 +19,7 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "antd": "^5.25.1",
+    "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.4.10",
     "lucide-react": "^0.487.0",
@@ -30,6 +31,7 @@
     "swr": "^2.3.3",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "tencentcloud-sdk-nodejs-ses": "^4.1.29",
     "tsx": "^4.19.4",
     "zod": "^3.24.2",
     "zustand": "^5.0.4"

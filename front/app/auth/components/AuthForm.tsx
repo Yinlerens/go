@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 // import { useAuthStore } from "@/store/user-store";
 import { Button, Card, Checkbox, Flex, Form, Input } from "antd";
 import { Lock, Mail, ShieldCheck, User } from "lucide-react";
-const { Search } = Input;
+const { Search, Password } = Input;
 const formVariants = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: {
@@ -57,50 +57,17 @@ export function AuthForm() {
   // const { fetchMenu } = useMenuStore();
   // const { login, register } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>("login");
-  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  // const loginForm = useForm<LoginFormData>({
-  //   resolver: zodResolver(loginSchema),
-  //   defaultValues: {
-  //     username: "",
-  //     password: ""
-  //   }
-  // });
-
-  // const registerForm = useForm<RegisterFormData>({
-  //   resolver: zodResolver(registerSchema),
-  //   defaultValues: {
-  //     username: "",
-  //     password: "",
-  //     confirmPassword: ""
-  //   }
-  // });
 
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
   };
-  // const onLoginSubmit = async (value: LoginFormData) => {
-  //   setLoading(true);
-  //   try {
-  //     const user_id = await login(value);
-  //     if (user_id) {
-  //       const res = await fetchMenu(user_id);
-  //       if (res) {
-  //         router.push(callbackUrl);
-  //       }
-  //     }
-  //   } catch (error) {
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const onRegisterSubmit = async (value: RegisterFormData) => {
-  //   const res = await register(value);
-  //   if (res) {
-  //     setMode("login");
-  //   }
-  // };
+  const sendCode = (e: any) => {
+    console.log("%c [ e ]-105", "font-size:13px; background:pink; color:#bf2c9f;", e);
+  };
+  const register = (e: any) => {
+    console.log("%c [ e ]-109", "font-size:13px; background:pink; color:#bf2c9f;", e);
+  };
   useEffect(() => {
     router.prefetch("/dashboard");
   }, [router]);
@@ -202,34 +169,96 @@ export function AuthForm() {
               </div>
             ]}
           >
-            <Form
-              name="login"
-              initialValues={{ remember: true }}
-              onFinish={() => {}}
-              className="w-full"
-            >
-              <Form.Item name="username" rules={[{ required: true, message: "请输入用户名!" }]}>
-                <Input prefix={<User size="20" />} placeholder="请输入用户名" />
+            <Form name="register" onFinish={register} className="w-full">
+              <Form.Item
+                name="username"
+                rules={[
+                  {
+                    required: true,
+                    message: "请输入用户名",
+                    whitespace: true
+                  }
+                ]}
+              >
+                <Input
+                  prefix={<User size="20" />}
+                  placeholder="请输入用户名"
+                  autoComplete="username"
+                />
               </Form.Item>
-              <Form.Item name="password" rules={[{ required: true, message: "请输入密码!" }]}>
-                <Input prefix={<Lock size="20" />} type="password" placeholder="请输入密码" />
+              <Form.Item
+                name="password"
+                rules={[
+                  {
+                    required: true,
+                    message: "请输入密码",
+                    whitespace: true
+                  }
+                ]}
+              >
+                <Password
+                  prefix={<Lock size="20" />}
+                  type="password"
+                  placeholder="请输入密码"
+                  autoComplete="new-password"
+                />
               </Form.Item>
-              <Form.Item name="password" rules={[{ required: true, message: "请再次输入密码!" }]}>
-                <Input prefix={<Lock size="20" />} type="password" placeholder="请再次输入密码" />
+              <Form.Item
+                name="confirmPassword"
+                rules={[
+                  {
+                    required: true,
+                    message: "请再次输入密码",
+                    whitespace: true
+                  },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue("password") === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("两次密码不一致"));
+                    }
+                  })
+                ]}
+              >
+                <Password
+                  prefix={<Lock size="20" />}
+                  type="password"
+                  placeholder="请再次输入密码"
+                  autoComplete="new-password"
+                />
               </Form.Item>
-              <Form.Item name="password" rules={[{ required: true, message: "请输入邮箱地址!" }]}>
-                <Input prefix={<Mail size="20" />} type="password" placeholder="请输入邮箱地址" />
+              <Form.Item
+                name="email"
+                rules={[
+                  {
+                    required: true,
+                    message: "请输入邮箱"
+                  }
+                ]}
+              >
+                <Input prefix={<Mail size="20" />} type="email" placeholder="请输入邮箱地址" />
               </Form.Item>
-              <Form.Item name="email" rules={[{ required: true, message: "请输入验证码!" }]}>
+              <Form.Item
+                name="code"
+                rules={[
+                  {
+                    required: true,
+                    message: "请输入验证码"
+                  }
+                ]}
+              >
                 <Search
                   prefix={<ShieldCheck size="20" />}
                   placeholder="请输入验证码"
                   enterButton="发送验证码"
+                  onSearch={sendCode}
+                  type="number"
                 />
               </Form.Item>
               <Form.Item>
                 <Button block type="primary" htmlType="submit">
-                  登录
+                  注册
                 </Button>
               </Form.Item>
             </Form>
