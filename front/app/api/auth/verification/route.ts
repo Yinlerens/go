@@ -12,7 +12,7 @@ interface ApiResponse<T = any> {
 
 // 自定义内部状态码
 const CustomResponseCodes = {
-  SUCCESS: "0", // 操作成功
+  SUCCESS: "200", // 操作成功
   ERROR: "500" // 请求参数校验失败
 };
 
