@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
   output   = "../app/generated/prisma"
@@ -8,79 +11,340 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ====================================
+// 1. 用户认证系统模型
+// ====================================
+
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  username       String?   @unique
-  hashedPassword String
-  emailVerified  DateTime?
-  image          String?
-  lastLoginAt    DateTime?
-  isActive       Boolean   @default(true)
+  id       String @id @default(cuid())
+  email    String @unique @db.VarChar(255)
+  password String @db.VarChar(255) // 存储哈希后的密码
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime? //软删除
+  // 用户基本信息（注册后可选设置）
+  nickname String? @db.VarChar(50) // 昵称，可后续设置
+  avatar   String? @db.VarChar(500) // 头像URL，可后续设置
+  phone    String? @db.VarChar(20)
+  bio      String? @db.VarChar(500) // 个人简介
 
-  roles UserRole[]
+  // 用户状态管理
+  status   UserStatus @default(ACTIVE) // 注册成功默认为活跃状态
+  isActive Boolean    @default(true)
 
-  @@index([deletedAt])
+  // 注册和登录信息
+  registeredAt DateTime  @default(now()) // 注册时间
+  lastLoginAt  DateTime? // 最后登录时间
+  lastLoginIp  String?   @db.VarChar(45) // 最后登录IP
+  loginCount   Int       @default(0) // 登录次数
+
+  // 个人资料完善状态
+  profileCompleted   Boolean   @default(false) // 是否完善了个人资料（昵称、头像等）
+  profileCompletedAt DateTime? // 个人资料完善时间
+
+  // 软删除
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  refreshTokens      RefreshToken[]
+  verificationTokens VerificationToken[]
+  userRoles          UserRole[]
+
+  @@index([email])
+  @@index([status])
+  @@index([isDeleted])
+  @@index([profileCompleted])
+  @@map("users")
 }
 
 model VerificationToken {
-  id         String   @id @default(cuid())
-  identifier String   @unique // 邮箱地址，设置为唯一键
-  token      String // 验证码本身，不需要全局唯一，但对于一个identifier是唯一的
-  expires    DateTime // 验证码的过期时间
-  createdAt  DateTime @default(now()) // 记录验证码创建（即发送）的时间
+  id     String  @id @default(cuid())
+  email  String  @db.VarChar(255) // 直接关联邮箱，支持未注册用户验证
+  userId String? // 可选，已注册用户的ID
+  code   String  @db.VarChar(10) // 验证码（通常是6位数字）
+  token  String  @unique @db.VarChar(255) // 用于API验证的token
+
+  // 验证码有效期和使用状态
+  expiresAt DateTime // 验证码过期时间（通常5-15分钟）
+  isUsed    Boolean   @default(false)
+  usedAt    DateTime?
+
+  // 发送信息
+  sentAt    DateTime @default(now()) // 发送时间
+  ipAddress String?  @db.VarChar(45) // 请求IP
+  userAgent String?  @db.Text // 用户代理
+
+  // 重试控制
+  attempts    Int @default(0) // 尝试次数
+  maxAttempts Int @default(3) // 最大尝试次数
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([code])
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("verification_tokens")
 }
+
+model RefreshToken {
+  id     String @id @default(cuid())
+  userId String
+  token  String @unique @db.VarChar(500)
+
+  // 令牌信息
+  expiresAt DateTime
+  isRevoked Boolean   @default(false)
+  revokedAt DateTime?
+
+  // 设备信息
+  deviceInfo String? @db.VarChar(500)
+  ipAddress  String? @db.VarChar(45)
+  userAgent  String? @db.Text
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ====================================
+// 2. 菜单管理系统模型
+// ====================================
+
+model Menu {
+  id        String  @id @default(cuid())
+  name      String  @db.VarChar(100)
+  path      String? @db.VarChar(255) // 路由路径
+  component String? @db.VarChar(255) // 组件路径
+
+  // 菜单显示信息
+  icon     String? @db.VarChar(100) // 图标名称或图标组件
+  title    String  @db.VarChar(100) // 菜单标题
+  subtitle String? @db.VarChar(200) // 菜单副标题
+
+  // 菜单层级结构
+  parentId String?
+  level    Int     @default(1) // 菜单层级
+  sort     Int     @default(0) // 排序字段
+
+  // 菜单配置
+  type   MenuType   @default(MENU) // 菜单类型
+  target MenuTarget @default(SELF) // 打开方式
+
+  // 显示控制
+  isVisible Boolean @default(true) // 是否显示
+  isEnabled Boolean @default(true) // 是否启用
+
+  // 权限控制
+  requireAuth Boolean  @default(true) // 是否需要认证
+  permissions String[] @default([]) // 需要的权限代码数组
+
+  // 软删除
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  parent   Menu?  @relation("MenuHierarchy", fields: [parentId], references: [id])
+  children Menu[] @relation("MenuHierarchy")
+
+  @@index([parentId])
+  @@index([sort])
+  @@index([level])
+  @@index([isVisible])
+  @@index([isDeleted])
+  @@map("menus")
+}
+
+// ====================================
+// 3. 角色管理系统模型
+// ====================================
 
 model Role {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String  @id @default(cuid())
+  name        String  @unique @db.VarChar(100)
+  code        String  @unique @db.VarChar(50) // 角色代码，用于程序中判断
+  description String? @db.VarChar(500)
 
-  users       UserRole[]
-  permissions RolePermission[]
-}
+  // 系统角色标识
+  isSystem  Boolean @default(false) // 是否为系统内置角色
+  isDefault Boolean @default(false) // 是否为默认角色
 
-model Permission {
-  id          String   @id @default(cuid())
-  action      String
-  resource    String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // 角色状态
+  isActive Boolean @default(true)
 
-  roles RolePermission[]
+  // 软删除
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
 
-  @@unique([action, resource])
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@index([code])
+  @@index([isActive])
+  @@index([isDeleted])
+  @@map("roles")
 }
 
 model UserRole {
-  userId     String
-  roleId     String
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+
+  // 分配信息
+  assignedBy String? // 分配者ID
   assignedAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 如果 User 被物理删除，关联会级联删除。软删除 User 不会触发。
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade) // 如果 Role 被物理删除，关联会级联删除。
+  // 有效期
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
 
-  @@id([userId, roleId])
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
   @@index([userId])
   @@index([roleId])
+  @@index([isActive])
+  @@map("user_roles")
+}
+
+// ====================================
+// 4. 权限管理系统模型
+// ====================================
+
+model Permission {
+  id          String  @id @default(cuid())
+  name        String  @db.VarChar(100)
+  code        String  @unique @db.VarChar(100) // 权限代码，如 "user:create"
+  description String? @db.VarChar(500)
+
+  // 权限分类
+  resource String             @db.VarChar(50) // 资源名称，如 "user", "role", "menu"
+  action   String             @db.VarChar(50) // 操作名称，如 "create", "read", "update", "delete"
+  category PermissionCategory @default(BUSINESS) // 权限分类
+
+  // 权限层级
+  parentId String?
+  level    Int     @default(1)
+
+  // 系统权限标识
+  isSystem Boolean @default(false) // 是否为系统内置权限
+
+  // 权限状态
+  isActive Boolean @default(true)
+
+  // 软删除
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  parent          Permission?      @relation("PermissionHierarchy", fields: [parentId], references: [id])
+  children        Permission[]     @relation("PermissionHierarchy")
+  rolePermissions RolePermission[]
+
+  @@index([code])
+  @@index([resource])
+  @@index([action])
+  @@index([category])
+  @@index([parentId])
+  @@index([isActive])
+  @@index([isDeleted])
+  @@map("permissions")
 }
 
 model RolePermission {
+  id           String @id @default(cuid())
   roleId       String
   permissionId String
-  assignedAt   DateTime @default(now())
 
-  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade) // 如果 Role 被物理删除，关联会级联删除。
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade) // 如果 Permission 被物理删除，关联会级联删除。
+  // 分配信息
+  assignedBy String? // 分配者ID
+  assignedAt DateTime @default(now())
 
-  @@id([roleId, permissionId])
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关系
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
   @@index([roleId])
   @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// ====================================
+// 5. 枚举定义
+// ====================================
+
+enum UserStatus {
+  ACTIVE // 活跃（注册成功默认状态）
+  INACTIVE // 非活跃
+  SUSPENDED // 暂停
+  BANNED // 禁用
+}
+
+enum VerificationType {
+  EMAIL_REGISTRATION // 邮箱注册验证
+  PASSWORD_RESET // 密码重置
+  EMAIL_CHANGE // 邮箱变更验证
+  LOGIN_VERIFICATION // 登录验证（可选的二次验证）
+}
+
+enum MenuType {
+  MENU // 菜单
+  BUTTON // 按钮
+  IFRAME // 内嵌页面
+  EXTERNAL // 外部链接
+}
+
+enum MenuTarget {
+  SELF // 当前窗口
+  BLANK // 新窗口
+  PARENT // 父窗口
+  TOP // 顶级窗口
+}
+
+enum PermissionCategory {
+  SYSTEM // 系统权限
+  BUSINESS // 业务权限
+  DATA // 数据权限
+  OPERATION // 操作权限
 }
