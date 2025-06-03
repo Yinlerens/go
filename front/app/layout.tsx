@@ -2,7 +2,7 @@ import "@ant-design/v5-patch-for-react-19";
 import type { Metadata } from "next";
 import "./globals.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { Providers } from "./providers";
+import { QueryProvider } from "./providers";
 
 export const metadata: Metadata = {
   title: "Yinleren1",
@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="zh" className="h-full">
       <body className="h-full">
         <AntdRegistry>
-          <Providers>{children}</Providers>
+          <QueryProvider>{children}</QueryProvider>
         </AntdRegistry>
       </body>
     </html>

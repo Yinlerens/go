@@ -1,15 +1,21 @@
-'use client';
+"use client";
 
-import { ReactQueryProvider } from '@/lib/react-query';
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/next';
-import { Toaster } from 'sonner';
+import { ConfigProvider } from "antd";
+import zhCN from "antd/locale/zh_CN";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { queryClient } from "@/lib/query-client";
+import { ReactNode } from "react";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+interface QueryProviderProps {
+  children: ReactNode;
+}
+export function QueryProvider({ children }: QueryProviderProps) {
   return (
-    <ConfigProvider 
+    <ConfigProvider
       locale={zhCN}
       theme={{
         cssVar: true,
@@ -18,12 +24,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }
       }}
     >
-      <ReactQueryProvider>
+      <QueryClientProvider client={queryClient}>
         {children}
         <Toaster position="top-right" richColors expand={true} />
         <Analytics />
         <SpeedInsights />
-      </ReactQueryProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
     </ConfigProvider>
   );
 }

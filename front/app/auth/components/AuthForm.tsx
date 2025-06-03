@@ -2,14 +2,13 @@
 import "@ant-design/v5-patch-for-react-19";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from "@/schemas/auth";
 import { AuthMode } from "@/types/auth";
 import { useRouter, useSearchParams } from "next/navigation";
-// import { useMenuStore } from "@/store/menu-store";
-// import { useAuthStore } from "@/store/user-store";
-import { Button, Card, Checkbox, Flex, Form, Input } from "antd";
+import { Button, Card, Form, Input } from "antd";
 import { Lock, Mail, ShieldCheck, User } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/authStore";
+import { authApi } from "@/services/api/auth";
 const { Search, Password } = Input;
 const formVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -32,25 +31,6 @@ const formVariants = {
   }
 };
 
-const inputVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (custom: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: custom * 0.1,
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1]
-    }
-  })
-};
-
-const buttonVariants = {
-  rest: { scale: 1 },
-  hover: { scale: 1.03 },
-  tap: { scale: 0.97 }
-};
-
 export function AuthForm() {
   const [form] = Form.useForm();
   const searchParams = useSearchParams();
@@ -60,8 +40,8 @@ export function AuthForm() {
   const [countdown, setCountdown] = useState(0); // 用于倒计时的 state
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null); // 用于存储 interval ID
 
-  // const { fetchMenu } = useMenuStore();
-  // const { login, register } = useAuthStore();
+  // Zustand store
+  const { setAuth, setLoading: setAuthLoading } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>("login");
   const router = useRouter();
   // 清理 interval 的 effect
@@ -91,31 +71,22 @@ export function AuthForm() {
     if (countdown > 0) return; // 如果正在倒计时，则不执行
     try {
       const { email } = await form.validateFields(["email"]);
-
       setSendCodeLoading(true);
-      const response = await fetch("/api/auth/verification", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-      const result = await response.json();
-
-      if (result.code === "0") {
-        toast.success(result.msg || "验证码已发送，请检查您的邮箱。");
+      const { code, message } = await authApi.sendVerificationCode({ email });
+      if (code === 200) {
+        toast.success(message);
         startCountdown(60); // 发送成功后开始60秒倒计时
       } else {
-        toast.error(result.msg || "发送验证码失败。");
-        if (result.msg && result.msg.includes("秒后重试")) {
-          const match = result.msg.match(/(\d+)\s*秒后重试/);
+        toast.error(message);
+        if (message && message.includes("秒后重试")) {
+          const match = message.match(/(\d+)\s*秒后重试/);
           if (match && match[1]) {
             startCountdown(parseInt(match[1], 10));
           }
         }
       }
     } catch (errorInfo) {
-      // ...
+      toast.error("发送验证码失败，请稍后重试");
     } finally {
       setSendCodeLoading(false);
     }
@@ -123,25 +94,47 @@ export function AuthForm() {
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
   };
+  const login = async (values: any) => {
+    try {
+      setLoading(true);
+      setAuthLoading(true);
+      const { code, message, data } = await authApi.login(values);
+      if (code === 200) {
+        toast.success(message);
+        setAuth(data!);
+        router.push(callbackUrl);
+      } else {
+        toast.error(message);
+      }
+    } catch (error) {
+      toast.error("登录失败，请稍后重试");
+    } finally {
+      setLoading(false);
+      setAuthLoading(false);
+    }
+  };
+
   const register = async (value: any) => {
     try {
       setLoading(true);
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify(value),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-      const { code, msg } = await response.json();
-      if (code == 200) {
-        toast.success(msg);
-        form.resetFields();
-        setMode("login");
+      setAuthLoading(true);
+      const { code, message, data } = await authApi.register(value);
+
+      if (code === 200) {
+        toast.success(message);
+        // 存储认证信息到Zustand store
+        setAuth(data!);
+
+        // 跳转到回调URL或仪表板
+        router.push(callbackUrl);
+      } else {
+        toast.error(message);
       }
     } catch (error) {
+      toast.error("注册失败，请稍后重试");
     } finally {
       setLoading(false);
+      setAuthLoading(false);
     }
   };
   useEffect(() => {
@@ -192,14 +185,14 @@ export function AuthForm() {
             <Form
               name="login"
               initialValues={{ remember: true }}
-              onFinish={() => {}}
+              onFinish={login}
               className="w-full"
             >
               <Form.Item
-                name="username"
+                name="email"
                 rules={[{ required: true, message: "Please input your Username!" }]}
               >
-                <Input prefix={<User size="20" />} placeholder="用户名/邮箱" />
+                <Input prefix={<User size="20" />} placeholder="邮箱" />
               </Form.Item>
               <Form.Item
                 name="password"
@@ -208,7 +201,7 @@ export function AuthForm() {
                 <Input prefix={<Lock size="20" />} type="password" placeholder="Password" />
               </Form.Item>
               <Form.Item>
-                <Button block type="primary" htmlType="submit">
+                <Button block type="primary" htmlType="submit" loading={loading}>
                   登录
                 </Button>
               </Form.Item>
@@ -247,19 +240,40 @@ export function AuthForm() {
           >
             <Form name="register" onFinish={register} className="w-full" form={form}>
               <Form.Item
-                name="username"
+                name="email"
                 rules={[
                   {
                     required: true,
-                    message: "请输入用户名",
-                    whitespace: true
+                    type: "email",
+                    message: "请输入有效邮箱地址"
                   }
                 ]}
               >
-                <Input
-                  prefix={<User size="20" />}
-                  placeholder="请输入用户名"
-                  autoComplete="username"
+                <Input prefix={<Mail size="20" />} type="email" placeholder="请输入邮箱地址" />
+              </Form.Item>
+              <Form.Item
+                name="code"
+                rules={[
+                  {
+                    required: true,
+                    message: "请输入验证码"
+                  }
+                ]}
+              >
+                <Search
+                  prefix={<ShieldCheck size="20" />}
+                  placeholder="请输入验证码"
+                  enterButton={
+                    <Button
+                      type="primary"
+                      loading={sendCodeLoading}
+                      disabled={countdown > 0 || sendCodeLoading} // 倒计时期间或加载中禁用按钮
+                    >
+                      {countdown > 0 ? `${countdown}秒后重发` : "发送验证码"}
+                    </Button>
+                  }
+                  onSearch={handleSendCode}
+                  type="number"
                 />
               </Form.Item>
               <Form.Item
@@ -304,45 +318,8 @@ export function AuthForm() {
                   autoComplete="new-password"
                 />
               </Form.Item>
-              <Form.Item
-                name="email"
-                rules={[
-                  {
-                    required: true,
-                    type: "email",
-                    message: "请输入有效邮箱地址"
-                  }
-                ]}
-              >
-                <Input prefix={<Mail size="20" />} type="email" placeholder="请输入邮箱地址" />
-              </Form.Item>
-              <Form.Item
-                name="code"
-                rules={[
-                  {
-                    required: true,
-                    message: "请输入验证码"
-                  }
-                ]}
-              >
-                <Search
-                  prefix={<ShieldCheck size="20" />}
-                  placeholder="请输入验证码"
-                  enterButton={
-                    <Button
-                      type="primary"
-                      loading={sendCodeLoading}
-                      disabled={countdown > 0 || sendCodeLoading} // 倒计时期间或加载中禁用按钮
-                    >
-                      {countdown > 0 ? `${countdown}秒后重发` : "发送验证码"}
-                    </Button>
-                  }
-                  onSearch={handleSendCode}
-                  type="number"
-                />
-              </Form.Item>
               <Form.Item>
-                <Button block type="primary" htmlType="submit">
+                <Button block type="primary" htmlType="submit" loading={loading}>
                   注册
                 </Button>
               </Form.Item>

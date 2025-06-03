@@ -19,14 +19,17 @@
     "@prisma/extension-optimize": "^1.1.8",
     "@tanstack/react-query": "^5.76.1",
     "@tanstack/react-query-devtools": "^5.76.1",
+    "@types/axios": "^0.14.4",
     "@vercel/analytics": "^1.5.0",
     "@vercel/blob": "^1.1.1",
     "@vercel/speed-insights": "^1.2.0",
     "antd": "^5.25.1",
+    "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "cos-nodejs-sdk-v5": "^2.15.0",
     "framer-motion": "^12.4.10",
+    "jose": "^6.0.11",
     "lucide-react": "^0.487.0",
     "next": "15.3.2",
     "prisma": "^6.7.0",
@@ -39,7 +42,7 @@
     "tencentcloud-sdk-nodejs-ses": "^4.1.29",
     "tsx": "^4.19.4",
     "zod": "^3.24.2",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "typescript": "^5",

@@ -44,31 +44,13 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            {/* <Link href="/auth">
+            <Link href="/auth">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button className="auth-button text-lg font-medium px-8 py-6 h-auto " type={"primary"} size='large'>
                   登录系统
                 </Button>
               </motion.div>
-            </Link> */}
-            <Button
-              className="auth-button text-lg font-medium px-8 py-6 h-auto "
-              type={"primary"}
-              size="large"
-              onClick={async() => {
-                const response = await fetch("/api/cos", {
-                  method: "POST",
-                  body: JSON.stringify({a:1}),
-                  headers: {
-                    "Content-Type": "application/json"
-                  }
-                });
-                const result = await response.json();
-                console.log('%c [ result ]-67', 'font-size:13px; background:pink; color:#bf2c9f;', result)
-              }}
-            >
-              登录系统
-            </Button>
+            </Link>
           </motion.div>
         </motion.div>
       </div>

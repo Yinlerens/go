@@ -44,7 +44,7 @@ export const useUpload = (options: UseUploadOptions) => {
             access: "public",
             handleUploadUrl: "/api/upload/token", // 需要创建这个API路由
             onUploadProgress: progressEvent => {
-              // progressEvent 有 loaded, total, percentage 属性
+              // progressEvent 有 loaded,total , percentage 属性
               handleProgress(progressEvent.loaded, progressEvent.total);
             }
           });
