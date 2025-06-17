@@ -1,8 +1,9 @@
 // API响应基础类型
 export interface ApiResponse<T = unknown> {
-  data: T;
+  data: T | null;
   message: string;
   code: number;
+  success: boolean;
 }
 
 // 分页参数
