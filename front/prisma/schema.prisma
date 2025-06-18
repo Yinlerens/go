@@ -452,7 +452,7 @@ enum DataScope {
 }
 
 // 菜单类型枚举
-enum MenuType {
+ enum MenuType {
   DIRECTORY  // 目录（只用于分组，无实际页面）
   MENU       // 菜单（对应实际页面）
   BUTTON     // 按钮/操作（页面内的功能按钮）

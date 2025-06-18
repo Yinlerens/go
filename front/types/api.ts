@@ -3,7 +3,7 @@ export interface ApiResponse<T = unknown> {
   data: T | null;
   message: string;
   code: number;
-  success: boolean;
+  success?: boolean;
 }
 
 // 分页参数
