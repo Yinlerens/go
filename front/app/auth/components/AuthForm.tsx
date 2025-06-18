@@ -192,13 +192,18 @@ export function AuthForm() {
                 name="email"
                 rules={[{ required: true, message: "Please input your Username!" }]}
               >
-                <Input prefix={<User size="20" />} placeholder="邮箱" />
+                <Input prefix={<User size="20" />} placeholder="邮箱" autoComplete="username" />
               </Form.Item>
               <Form.Item
                 name="password"
                 rules={[{ required: true, message: "Please input your Password!" }]}
               >
-                <Input prefix={<Lock size="20" />} type="password" placeholder="Password" />
+                <Input
+                  prefix={<Lock size="20" />}
+                  type="password"
+                  placeholder="Password"
+                  autoComplete="password"
+                />
               </Form.Item>
               <Form.Item>
                 <Button block type="primary" htmlType="submit" loading={loading}>

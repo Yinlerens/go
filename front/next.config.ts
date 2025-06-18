@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   transpilePackages: ["lucide-react"],
   eslint: {
     ignoreDuringBuilds: true
+  },
+  experimental: {
+    reactCompiler: true
   }
 };
 

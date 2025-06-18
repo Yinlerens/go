@@ -12,7 +12,7 @@ datasource db {
 }
 
 // ====================================
-// 1. 用户认证系统模型
+// 1. 用户认证系统模型（保持原有不变）
 // ====================================
 
 model User {
@@ -48,15 +48,21 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // 新增：组织架构关系
+  departmentId String? // 部门ID，可选字段
+  department   Department? @relation(fields: [departmentId], references: [id])
+
   // 关系
   refreshTokens      RefreshToken[]
   verificationTokens VerificationToken[]
   userRoles          UserRole[]
+  auditLogs          AuditLog[] // 新增：审计日志关系
 
   @@index([email])
   @@index([status])
   @@index([isDeleted])
   @@index([profileCompleted])
+  @@index([departmentId]) // 新增索引
   @@map("users")
 }
 
@@ -125,226 +131,353 @@ model RefreshToken {
 }
 
 // ====================================
-// 2. 菜单管理系统模型
+// 2. 组织架构模型
 // ====================================
 
-model Menu {
-  id        String  @id @default(cuid())
-  name      String  @db.VarChar(100)
-  path      String? @db.VarChar(255) // 路由路径
-  component String? @db.VarChar(255) // 组件路径
-
-  // 菜单显示信息
-  icon     String? @db.VarChar(100) // 图标名称或图标组件
-  title    String  @db.VarChar(100) // 菜单标题
-  subtitle String? @db.VarChar(200) // 菜单副标题
-
-  // 菜单层级结构
-  parentId String?
-  level    Int     @default(1) // 菜单层级
-  sort     Int     @default(0) // 排序字段
-
-  // 菜单配置
-  type   MenuType   @default(MENU) // 菜单类型
-  target MenuTarget @default(SELF) // 打开方式
-
-  // 显示控制
-  isVisible Boolean @default(true) // 是否显示
-  isEnabled Boolean @default(true) // 是否启用
-
-  // 权限控制
-  requireAuth Boolean  @default(true) // 是否需要认证
-  permissions String[] @default([]) // 需要的权限代码数组
-
+model Department {
+  id       String  @id @default(cuid()) // 部门唯一标识
+  name     String  @db.VarChar(100)    // 部门名称
+  code     String  @unique @db.VarChar(50) // 部门编码，用于快速查询
+  parentId String? // 父部门ID，用于构建树形结构
+  level    Int     @default(1)          // 部门层级，根部门为1
+  sort     Int     @default(0)          // 同级排序
+  
+  // 部门负责人信息
+  leaderId   String? // 部门负责人用户ID
+  leaderName String? @db.VarChar(50) // 冗余存储负责人姓名，避免关联查询
+  
+  // 部门状态
+  isActive  Boolean @default(true)     // 是否启用
+  
   // 软删除
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime?
-
+  isDeleted Boolean   @default(false)  // 是否删除
+  deletedAt DateTime? // 删除时间
+  
   // 时间戳
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now())   // 创建时间
+  updatedAt DateTime @updatedAt        // 更新时间
+  
   // 关系
-  parent   Menu?  @relation("MenuHierarchy", fields: [parentId], references: [id])
-  children Menu[] @relation("MenuHierarchy")
-
+  parent   Department?  @relation("DepartmentTree", fields: [parentId], references: [id])
+  children Department[] @relation("DepartmentTree")
+  users    User[]       // 部门下的用户
+  
+  @@index([code])
   @@index([parentId])
-  @@index([sort])
   @@index([level])
-  @@index([isVisible])
+  @@index([isActive])
   @@index([isDeleted])
-  @@map("menus")
+  @@map("departments")
 }
 
 // ====================================
-// 3. 角色管理系统模型
+// 3. 角色管理模型（简化版）
 // ====================================
 
 model Role {
-  id          String  @id @default(cuid())
-  name        String  @unique @db.VarChar(100)
-  code        String  @unique @db.VarChar(50) // 角色代码，用于程序中判断
-  description String? @db.VarChar(500)
-
-  // 系统角色标识
-  isSystem  Boolean @default(false) // 是否为系统内置角色
-  isDefault Boolean @default(false) // 是否为默认角色
-
+  id          String     @id @default(cuid())          // 角色唯一标识
+  name        String     @unique @db.VarChar(100)     // 角色名称
+  code        String     @unique @db.VarChar(50)      // 角色代码，如 ADMIN, USER
+  description String?    @db.VarChar(500)             // 角色描述
+  type        RoleType   @default(CUSTOM)             // 角色类型：系统预设或自定义
+  level       Int        @default(100)                // 角色级别，数字越小权限越大
+  
+  // 数据权限配置
+  dataScope   DataScope  @default(SELF)               // 数据权限范围
+  
   // 角色状态
-  isActive Boolean @default(true)
-
+  isActive    Boolean    @default(true)               // 是否启用
+  
+  // 系统标识
+  isSystem    Boolean    @default(false)              // 是否为系统内置角色，不可删除
+  isDefault   Boolean    @default(false)              // 是否为默认角色，新用户自动分配
+  
   // 软删除
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime?
-
+  isDeleted   Boolean    @default(false)              // 是否删除
+  deletedAt   DateTime?  // 删除时间
+  
   // 时间戳
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt   DateTime   @default(now())              // 创建时间
+  updatedAt   DateTime   @updatedAt                   // 更新时间
+  
   // 关系
-  userRoles       UserRole[]
-  rolePermissions RolePermission[]
-
+  userRoles   UserRole[] // 用户角色关联
+  menus       Menu[]     // 角色可访问的菜单（多对多）
+  abilities   Ability[]  // 角色拥有的功能权限（多对多）
+  
   @@index([code])
+  @@index([type])
+  @@index([level])
   @@index([isActive])
   @@index([isDeleted])
   @@map("roles")
 }
 
 model UserRole {
-  id     String @id @default(cuid())
-  userId String
-  roleId String
-
+  id          String    @id @default(cuid())          // 关联唯一标识
+  userId      String    // 用户ID
+  roleId      String    // 角色ID
+  
   // 分配信息
-  assignedBy String? // 分配者ID
-  assignedAt DateTime @default(now())
-
-  // 有效期
-  expiresAt DateTime?
-  isActive  Boolean   @default(true)
-
+  assignedBy  String?   // 分配者用户ID
+  assignedAt  DateTime  @default(now())              // 分配时间
+  
+  // 有效期控制
+  expiresAt   DateTime? // 过期时间，null表示永久有效
+  isActive    Boolean   @default(true)               // 是否激活
+  
   // 时间戳
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt   DateTime  @default(now())              // 创建时间
+  updatedAt   DateTime  @updatedAt                   // 更新时间
+  
   // 关系
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roleId])
+  
+  @@unique([userId, roleId]) // 用户和角色的组合必须唯一
   @@index([userId])
   @@index([roleId])
   @@index([isActive])
+  @@index([expiresAt])
   @@map("user_roles")
 }
 
 // ====================================
-// 4. 权限管理系统模型
+// 4. 功能权限模型（替代细粒度的Permission）
 // ====================================
 
-model Permission {
-  id          String  @id @default(cuid())
-  name        String  @db.VarChar(100)
-  code        String  @unique @db.VarChar(100) // 权限代码，如 "user:create"
-  description String? @db.VarChar(500)
-
-  // 权限分类
-  resource String             @db.VarChar(50) // 资源名称，如 "user", "role", "menu"
-  action   String             @db.VarChar(50) // 操作名称，如 "create", "read", "update", "delete"
-  category PermissionCategory @default(BUSINESS) // 权限分类
-
-  // 权限层级
-  parentId String?
-  level    Int     @default(1)
-
-  // 系统权限标识
-  isSystem Boolean @default(false) // 是否为系统内置权限
-
-  // 权限状态
-  isActive Boolean @default(true)
-
-  // 软删除
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime?
-
+model Ability {
+  id          String   @id @default(cuid())           // 功能权限唯一标识
+  name        String   @db.VarChar(100)               // 功能名称，如"用户管理"
+  code        String   @unique @db.VarChar(50)        // 功能代码，如"user_management"
+  module      String   @db.VarChar(50)                // 所属模块，如"system"
+  
+  // 权限配置
+  actions     Json     // 允许的操作，如 ["create", "read", "update", "delete", "export", "import"]
+  
+  // 扩展配置
+  config      Json?    // 额外配置，如字段级权限、条件限制等
+  
+  // 功能描述
+  description String?  @db.VarChar(500)               // 功能描述
+  
+  // 状态控制
+  isActive    Boolean  @default(true)                 // 是否启用
+  isSystem    Boolean  @default(false)                // 是否为系统功能，不可删除
+  
   // 时间戳
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt   DateTime @default(now())                // 创建时间
+  updatedAt   DateTime @updatedAt                     // 更新时间
+  
   // 关系
-  parent          Permission?      @relation("PermissionHierarchy", fields: [parentId], references: [id])
-  children        Permission[]     @relation("PermissionHierarchy")
-  rolePermissions RolePermission[]
-
+  roles       Role[]   // 拥有此功能的角色（多对多）
+  
   @@index([code])
-  @@index([resource])
-  @@index([action])
-  @@index([category])
+  @@index([module])
+  @@index([isActive])
+  @@map("abilities")
+}
+
+// ====================================
+// 5. 菜单管理模型
+// ====================================
+
+model Menu {
+  id          String   @id @default(cuid())           // 菜单唯一标识
+  name        String   @db.VarChar(100)               // 菜单名称
+  code        String   @unique @db.VarChar(50)        // 菜单代码，与前端路由对应
+  type        MenuType @default(MENU)                 // 菜单类型
+  
+  // 路由信息
+  path        String?  @db.VarChar(255)               // 路由路径，如 /system/user
+  component   String?  @db.VarChar(255)               // 组件路径，如 @/views/system/user/index.vue
+  redirect    String?  @db.VarChar(255)               // 重定向路径
+  
+  // 显示信息
+  title       String   @db.VarChar(100)               // 菜单标题，支持i18n key
+  icon        String?  @db.VarChar(50)                // 图标名称或图标组件
+  badge       String?  @db.VarChar(50)                // 徽标，可以是数字或文字
+  
+  // 层级结构
+  parentId    String?  // 父菜单ID
+  level       Int      @default(1)                    // 菜单层级，根菜单为1
+  sort        Int      @default(0)                    // 同级排序，数字越小越靠前
+  
+  // 菜单配置
+  meta        Json?    // 扩展配置：如 keepAlive, hidden, affix, target等
+  
+  // 权限配置
+  permission  String?  @db.VarChar(100)               // 按钮权限标识，用于控制页面内按钮
+  
+  // 显示控制
+  isVisible   Boolean  @default(true)                 // 是否在菜单中显示
+  isActive    Boolean  @default(true)                 // 是否启用
+  isCache     Boolean  @default(false)                // 是否缓存页面
+  isAffix     Boolean  @default(false)                // 是否固定在标签页
+  
+  // 软删除
+  isDeleted   Boolean  @default(false)                // 是否删除
+  deletedAt   DateTime? // 删除时间
+  
+  // 时间戳
+  createdAt   DateTime @default(now())                // 创建时间
+  updatedAt   DateTime @updatedAt                     // 更新时间
+  
+  // 关系
+  parent      Menu?    @relation("MenuTree", fields: [parentId], references: [id])
+  children    Menu[]   @relation("MenuTree")
+  roles       Role[]   // 可访问此菜单的角色（多对多）
+  
+  @@index([code])
   @@index([parentId])
+  @@index([level])
+  @@index([sort])
+  @@index([isVisible])
   @@index([isActive])
   @@index([isDeleted])
-  @@map("permissions")
+  @@map("menus")
 }
 
-model RolePermission {
-  id           String @id @default(cuid())
-  roleId       String
-  permissionId String
+// ====================================
+// 6. 角色模板（用于快速创建角色）
+// ====================================
 
-  // 分配信息
-  assignedBy String? // 分配者ID
-  assignedAt DateTime @default(now())
-
+model RoleTemplate {
+  id          String   @id @default(cuid())           // 模板唯一标识
+  name        String   @unique @db.VarChar(100)       // 模板名称
+  code        String   @unique @db.VarChar(50)        // 模板代码
+  description String?  @db.VarChar(500)               // 模板描述
+  
+  // 模板配置
+  config      Json     // 包含menus、abilities、dataScope等完整配置
+  
+  // 使用统计
+  useCount    Int      @default(0)                    // 使用次数
+  
+  // 状态
+  isActive    Boolean  @default(true)                 // 是否启用
+  
   // 时间戳
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())                // 创建时间
+  updatedAt   DateTime @updatedAt                     // 更新时间
+  
+  @@index([code])
+  @@index([isActive])
+  @@map("role_templates")
+}
 
+// ====================================
+// 7. 审计日志
+// ====================================
+
+model AuditLog {
+  id          String   @id @default(cuid())           // 日志唯一标识
+  userId      String?  // 操作用户ID，可能为空（系统操作）
+  userName    String?  @db.VarChar(50)                // 操作用户名，冗余存储
+  userEmail   String?  @db.VarChar(255)               // 操作用户邮箱，冗余存储
+  
+  // 操作信息
+  module      String   @db.VarChar(50)                // 操作模块，如 AUTH, USER, ROLE
+  action      String   @db.VarChar(50)                // 操作类型，如 LOGIN, CREATE, UPDATE
+  target      String   @db.VarChar(100)               // 操作对象，如 User, Role
+  targetId    String?  // 操作对象ID
+  targetName  String?  @db.VarChar(255)               // 操作对象名称，冗余存储
+  
+  // 操作详情
+  method      String?  @db.VarChar(10)                // HTTP方法
+  path        String?  @db.VarChar(500)               // 请求路径
+  params      Json?    // 请求参数
+  result      Json?    // 操作结果
+  changes     Json?    // 数据变更内容（before/after）
+  
+  // 请求信息
+  ip          String?  @db.VarChar(45)                // 操作IP
+  userAgent   String?  @db.Text                       // 用户代理
+  
+  // 操作结果
+  status      String   @default("SUCCESS")            // 操作状态：SUCCESS, FAILED
+  errorMsg    String?  @db.Text                       // 错误信息
+  
+  // 执行时间
+  duration    Int?     // 执行时长（毫秒）
+  
+  // 时间戳
+  createdAt   DateTime @default(now())                // 创建时间
+  
   // 关系
-  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, permissionId])
-  @@index([roleId])
-  @@index([permissionId])
-  @@map("role_permissions")
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([module])
+  @@index([action])
+  @@index([target])
+  @@index([status])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 // ====================================
-// 5. 枚举定义
+// 8. 枚举定义
 // ====================================
 
+// 用户状态枚举
 enum UserStatus {
-  ACTIVE // 活跃（注册成功默认状态）
-  INACTIVE // 非活跃
+  ACTIVE    // 活跃
+  INACTIVE  // 非活跃
   SUSPENDED // 暂停
-  BANNED // 禁用
+  BANNED    // 禁用
 }
 
+// 验证类型枚举
 enum VerificationType {
   EMAIL_REGISTRATION // 邮箱注册验证
-  PASSWORD_RESET // 密码重置
-  EMAIL_CHANGE // 邮箱变更验证
+  PASSWORD_RESET     // 密码重置
+  EMAIL_CHANGE       // 邮箱变更验证
   LOGIN_VERIFICATION // 登录验证（可选的二次验证）
 }
 
+// 角色类型枚举
+enum RoleType {
+  SYSTEM  // 系统预设角色，不可删除
+  CUSTOM  // 自定义角色
+}
+
+// 数据权限范围枚举
+enum DataScope {
+  ALL              // 全部数据
+  DEPARTMENT       // 本部门数据
+  DEPARTMENT_TREE  // 本部门及子部门数据
+  SELF             // 仅本人数据
+  CUSTOM           // 自定义数据权限（通过额外配置实现）
+}
+
+// 菜单类型枚举
 enum MenuType {
-  MENU // 菜单
-  BUTTON // 按钮
-  IFRAME // 内嵌页面
-  EXTERNAL // 外部链接
+  DIRECTORY  // 目录（只用于分组，无实际页面）
+  MENU       // 菜单（对应实际页面）
+  BUTTON     // 按钮/操作（页面内的功能按钮）
+  EXTERNAL   // 外部链接
 }
 
-enum MenuTarget {
-  SELF // 当前窗口
-  BLANK // 新窗口
-  PARENT // 父窗口
-  TOP // 顶级窗口
-}
-
-enum PermissionCategory {
-  SYSTEM // 系统权限
-  BUSINESS // 业务权限
-  DATA // 数据权限
-  OPERATION // 操作权限
-}
+// ====================================
+// 9. 预设数据说明（在seed.ts中实现）
+// ====================================
+// 
+// 系统预设角色：
+// - SUPER_ADMIN (level: 1): 超级管理员，拥有所有权限
+// - ADMIN (level: 10): 管理员，拥有除系统设置外的所有权限  
+// - MANAGER (level: 50): 主管，拥有业务管理权限
+// - USER (level: 100): 普通用户，拥有基础业务权限
+//
+// 预设功能权限示例：
+// - system_management: ["settings", "logs", "cache", "monitor"]
+// - user_management: ["create", "read", "update", "delete", "export", "import"]
+// - role_management: ["create", "read", "update", "delete", "assign"]
+// - menu_management: ["create", "read", "update", "delete", "sort"]
+// - department_management: ["create", "read", "update", "delete", "tree"]
+//
+// 使用流程：
+// 1. 用户注册后自动分配默认角色（isDefault=true的角色）
+// 2. 根据用户角色获取可访问菜单（直接关联）
+// 3. 根据用户角色获取功能权限（用于按钮级控制）
+// 4. 使用dataScope控制数据访问范围
