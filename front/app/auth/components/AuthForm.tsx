@@ -1,6 +1,6 @@
 "use client";
 import "@ant-design/v5-patch-for-react-19";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthMode } from "@/types/auth";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,7 +9,10 @@ import { Lock, Mail, ShieldCheck, User } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { authApi } from "@/services/api/auth";
+import { useCountdown } from "@/hooks/useCountdown";
+
 const { Search, Password } = Input;
+
 const formVariants = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: {
@@ -37,47 +40,26 @@ export function AuthForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [loading, setLoading] = useState(false);
   const [sendCodeLoading, setSendCodeLoading] = useState(false);
-  const [countdown, setCountdown] = useState(0); // 用于倒计时的 state
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null); // 用于存储 interval ID
-
-  // Zustand store
+  const { countdown, start: startCountdown } = useCountdown();
   const { setAuth, setLoading: setAuthLoading } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>("login");
   const router = useRouter();
-  // 清理 interval 的 effect
-  useEffect(() => {
-    return () => {
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
-    };
-  }, []);
-  const startCountdown = (seconds: number) => {
-    setCountdown(seconds);
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-    }
-    countdownIntervalRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownIntervalRef.current!);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
+
   const handleSendCode = async () => {
-    if (countdown > 0) return; // 如果正在倒计时，则不执行
+    // ✅ 使用countdown判断是否可以发送
+    if (countdown > 0) return;
+
     try {
       const { email } = await form.validateFields(["email"]);
       setSendCodeLoading(true);
       const { code, message } = await authApi.sendVerificationCode({ email });
+
       if (code === 200) {
         toast.success(message);
-        startCountdown(60); // 发送成功后开始60秒倒计时
+        startCountdown(60);
       } else {
         toast.error(message);
+        // 如果服务器返回剩余等待时间
         if (message && message.includes("秒后重试")) {
           const match = message.match(/(\d+)\s*秒后重试/);
           if (match && match[1]) {
@@ -91,9 +73,11 @@ export function AuthForm() {
       setSendCodeLoading(false);
     }
   };
+
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
   };
+
   const login = async (values: any) => {
     try {
       setLoading(true);
@@ -122,10 +106,7 @@ export function AuthForm() {
 
       if (code === 200) {
         toast.success(message);
-        // 存储认证信息到Zustand store
         setAuth(data!);
-
-        // 跳转到回调URL或仪表板
         router.push(callbackUrl);
       } else {
         toast.error(message);
@@ -137,9 +118,11 @@ export function AuthForm() {
       setAuthLoading(false);
     }
   };
+
   useEffect(() => {
     router.prefetch("/dashboard");
   }, [router]);
+
   return (
     <AnimatePresence mode="wait">
       {mode === "login" ? (
@@ -188,20 +171,14 @@ export function AuthForm() {
               onFinish={login}
               className="w-full"
             >
-              <Form.Item
-                name="email"
-                rules={[{ required: true, message: "Please input your Username!" }]}
-              >
+              <Form.Item name="email" rules={[{ required: true, message: "请输入邮箱!" }]}>
                 <Input prefix={<User size="20" />} placeholder="邮箱" autoComplete="username" />
               </Form.Item>
-              <Form.Item
-                name="password"
-                rules={[{ required: true, message: "Please input your Password!" }]}
-              >
+              <Form.Item name="password" rules={[{ required: true, message: "请输入密码!" }]}>
                 <Input
                   prefix={<Lock size="20" />}
                   type="password"
-                  placeholder="Password"
+                  placeholder="密码"
                   autoComplete="password"
                 />
               </Form.Item>
@@ -272,9 +249,10 @@ export function AuthForm() {
                     <Button
                       type="primary"
                       loading={sendCodeLoading}
-                      disabled={countdown > 0 || sendCodeLoading} // 倒计时期间或加载中禁用按钮
+                      disabled={countdown > 0 || sendCodeLoading} // ✅ 使用countdown
                     >
-                      {countdown > 0 ? `${countdown}秒后重发` : "发送验证码"}
+                      {countdown > 0 ? `${countdown}秒后重发` : "发送验证码"}{" "}
+                      {/* ✅ 使用countdown */}
                     </Button>
                   }
                   onSearch={handleSendCode}

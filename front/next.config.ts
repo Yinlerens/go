@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
-
 const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["lucide-react"],
@@ -9,7 +8,8 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true
   },
   experimental: {
-    reactCompiler: true
+    reactCompiler: true,
+    optimizePackageImports: ["@ant-design/pro-components"]
   }
 };
 

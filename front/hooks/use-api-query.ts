@@ -54,7 +54,7 @@ export function useApiInfiniteQuery<TData = unknown>(
     initialPageParam: 1,
     getNextPageParam: (lastPage, pages) => {
       const currentPage = pages.length;
-      const totalPages = lastPage.data.totalPages;
+      const totalPages = lastPage?.data?.totalPages || 0;
       return currentPage < totalPages ? currentPage + 1 : undefined;
     },
     ...options
