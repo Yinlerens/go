@@ -83,7 +83,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // 处理菜单数据
   useEffect(() => {
-    if (menusResponse?.data) {
+    if (menusResponse?.data && Array.isArray(menusResponse.data)) {
       const formatMenus = (menus: any[]): any[] => {
         return menus.map(menu => ({
           key: menu.id,
@@ -98,59 +98,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [menusResponse]);
 
-  // // 未登录跳转
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     router.push("/auth/login");
-  //   }
-  // }, [isAuthenticated, router]);
-
-  // 默认菜单数据（开发时使用）
-  const defaultMenus = [
-    {
-      path: "/dashboard",
-      name: "仪表盘",
-      icon: <LayoutDashboard size={16} />
-    },
-    {
-      path: "/system",
-      name: "系统管理",
-      icon: <Settings size={16} />,
-      children: [
-        {
-          path: "/system/user",
-          name: "用户管理",
-          icon: <Users size={16} />
-        },
-        {
-          path: "/system/role",
-          name: "角色管理",
-          icon: <Shield size={16} />
-        },
-        {
-          path: "/system/menu",
-          name: "菜单管理",
-          icon: <Menu size={16} />
-        },
-        {
-          path: "/system/department",
-          name: "部门管理",
-          icon: <Building2 size={16} />
-        },
-        {
-          path: "/system/ability",
-          name: "权限管理",
-          icon: <Key size={16} />
-        }
-      ]
-    },
-    {
-      path: "/audit",
-      name: "审计日志",
-      icon: <FileSearch size={16} />
-    }
-  ];
-
   // 退出登录
   const handleLogout = async () => {
     setLoading(true);
@@ -158,7 +105,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       await httpClient.post("/auth/logout");
       // logout();
       message.success("退出成功");
-      router.push("/auth/login");
+      router.push("/login");
     } catch (error) {
       message.error("退出失败");
     } finally {
@@ -225,8 +172,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           menu={{
             loading: menuLoading,
             request: async () => {
-              // 如果有真实菜单数据则使用，否则使用默认菜单
-              return menuData.length > 0 ? menuData : defaultMenus;
+              return menuData;
             }
           }}
           avatarProps={{
@@ -291,9 +237,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             },
             ...routers
           ]}
-          onSettingChange={settings => {
-            setSetting(settings);
-          }}
+          // onSettingChange={settings => {
+          //   setSetting(settings);
+          // }}
         >
           <PageContainer
             header={{

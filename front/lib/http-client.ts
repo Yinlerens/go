@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from "axios";
 import { ApiResponse, ApiError } from "@/types/api";
+import AuthUtils from "@/store/authStore";
 
 const createHttpClient = () => {
   const instance: AxiosInstance = axios.create({
@@ -9,13 +10,6 @@ const createHttpClient = () => {
       "Content-Type": "application/json"
     }
   });
-
-  const getAuthToken = (): string | null => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("authToken");
-    }
-    return null;
-  };
 
   const handleUnauthorized = (): void => {
     if (typeof window !== "undefined") {
@@ -27,11 +21,10 @@ const createHttpClient = () => {
   // 请求拦截器
   instance.interceptors.request.use(
     config => {
-      const token = getAuthToken();
+      const token = AuthUtils.getAuthHeader();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-
       if (config.method === "get") {
         config.params = {
           ...config.params,

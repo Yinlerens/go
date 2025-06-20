@@ -44,7 +44,7 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <Link href="/auth">
+            <Link href="/login">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button className="auth-button text-lg font-medium px-8 py-6 h-auto " type={"primary"} size='large'>
                   登录系统

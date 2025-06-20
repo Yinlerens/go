@@ -617,7 +617,7 @@ export default function MenuManagementPage() {
           });
           return true;
         }}
-        initialValues={currentRow}
+        // initialValues={currentRow}
         layout="horizontal"
         labelCol={{ span: 6 }}
         wrapperCol={{ span: 16 }}
