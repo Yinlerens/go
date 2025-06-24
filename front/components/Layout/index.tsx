@@ -1,256 +1,160 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+'use client';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link'; // 【新增】导入 Link 组件
 import {
   GithubFilled,
   InfoCircleFilled,
   LogoutOutlined,
   QuestionCircleFilled,
   SettingOutlined,
-  UserOutlined
-} from "@ant-design/icons";
-import { PageContainer, ProCard, ProConfigProvider, ProSettings } from "@ant-design/pro-components";
-import { ConfigProvider, Dropdown, theme, Avatar, Space, message } from "antd";
-import {
-  Shield,
-  Users,
-  FileText,
-  Building2,
-  Key,
-  Menu,
-  LayoutDashboard,
-  FileSearch,
-  Settings,
-  Database
-} from "lucide-react";
-import { useAuthStore } from "@/store/authStore";
-import { useApiQuery } from "@/hooks/use-api-query";
-import { httpClient } from "@/lib/http-client";
-import zhCN from "antd/locale/zh_CN";
-import dynamic from "next/dynamic";
-import DynamicIcon from "../icon/DynamicIcon";
-const ProLayout = dynamic(() => import("@ant-design/pro-layout"), {
-  ssr: false
-});
-// 菜单图标映射
-const IconMap: Record<string, React.ReactNode> = {
-  dashboard: <DynamicIcon name="layout-dashboard" />,
-  system: <DynamicIcon name="settings" />,
-  user: <DynamicIcon name="user" />,
-  role: <DynamicIcon name="shield" />,
-  menu: <DynamicIcon name="menu" />,
-  department: <DynamicIcon name="building-2" />,
-  ability: <DynamicIcon name="key" />,
-  audit: <DynamicIcon name="file-search" />,
-  database: <DynamicIcon name="database" />
-};
+  UserOutlined,
+} from '@ant-design/icons';
+import { PageContainer, ProConfigProvider } from '@ant-design/pro-components';
+import { Dropdown, MenuProps, Space } from 'antd';
+import { useAuthStore } from '@/store/authStore';
+import { useApiMutation } from '@/hooks/use-api-query';
+import dynamic from 'next/dynamic';
+import { toast } from 'sonner';
+import { DynamicIcon, IconName } from 'lucide-react/dynamic';
+import { userApi } from '@/services/api/users';
+import { MenuNode, ProLayoutMenuItem } from '@/types/menu';
 
-// ProLayout 设置
-const defaultSettings: ProSettings = {
-  layout: "mix",
-  splitMenus: false,
-  fixedHeader: true,
-  fixSiderbar: true,
-  siderMenuType: "group",
-  title: "权限管理系统",
-  colorPrimary: "#1772b4",
-  contentWidth: "Fluid"
-};
+const ProLayout = dynamic(() => import('@ant-design/pro-layout'), {
+  ssr: false,
+});
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const router = useRouter();
+  const router = useRouter(); // router 实例不再需要在 menuItemRender 中使用
   const pathname = usePathname();
-  const { user, isAuthenticated } = useAuthStore();
-  const [settings, setSetting] = useState<ProSettings>(defaultSettings);
-  const [menuData, setMenuData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // 获取当前用户菜单
-  const { data: menusResponse, isLoading: menuLoading } = useApiQuery(
-    ["user-menus"],
-    "/user/menus",
-    {},
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const { data, isLoading, isError, error } = userApi.getUserMenus();
+  const { mutate: logout, isPending: isLoggingOut } = useApiMutation(
+    '/auth/logout',
+    'post',
     {
-      enabled: isAuthenticated,
-      retry: 1
+      onSuccess: () => {
+        clearAuth();
+        toast.success('您已成功退出登录');
+        router.push('/auth/login');
+      },
+      onError: error => {
+        toast.error(error.message || '退出失败，请稍后重试');
+        clearAuth();
+        router.push('/auth/login');
+      },
     }
   );
 
-  // 处理菜单数据
-  useEffect(() => {
-    if (menusResponse?.data && Array.isArray(menusResponse.data)) {
-      const formatMenus = (menus: any[]): any[] => {
-        return menus.map(menu => ({
-          key: menu.id,
-          path: menu.path || `/${menu.code}`,
-          name: menu.title || menu.name,
-          icon: IconMap[menu.icon] || IconMap[menu.code] || <FileText size={16} />,
-          hideInMenu: !menu.isVisible,
-          children: menu.children ? formatMenus(menu.children) : undefined
-        }));
+  const transformMenuData = (menus: MenuNode[]): ProLayoutMenuItem[] => {
+    return menus.map(menu => {
+      const item: ProLayoutMenuItem = {
+        path: menu.path,
+        name: menu.title || menu.name,
+        component: menu.component,
+        hideInMenu: !menu.isVisible,
+        redirect: menu.redirect,
+        ...menu.meta,
       };
-      setMenuData(formatMenus(menusResponse.data));
-    }
-  }, [menusResponse]);
+      if (menu.icon) {
+        item.icon = <DynamicIcon name={menu.icon as IconName} />;
+      }
+      // 递归处理子菜单
+      if (menu.children && menu.children.length > 0) {
+        item.routes = transformMenuData(menu.children);
+      }
 
-  // 退出登录
-  const handleLogout = async () => {
-    setLoading(true);
-    try {
-      await httpClient.post("/auth/logout");
-      // logout();
-      message.success("退出成功");
-      router.push("/login");
-    } catch (error) {
-      message.error("退出失败");
-    } finally {
-      setLoading(false);
-    }
+      return item;
+    });
   };
 
-  // 用户下拉菜单
-  const userMenuItems = [
+  const menuData = data?.data ? transformMenuData(data.data) : [];
+
+  const userMenuItems: MenuProps['items'] = [
     {
-      key: "profile",
+      key: 'profile',
       icon: <UserOutlined />,
-      label: "个人中心",
-      onClick: () => router.push("/profile")
+      label: '个人中心',
+      onClick: () => router.push('/profile'),
     },
     {
-      key: "settings",
+      key: 'settings',
       icon: <SettingOutlined />,
-      label: "个人设置",
-      onClick: () => router.push("/settings")
+      label: '个人设置',
+      onClick: () => router.push('/settings'),
     },
     {
-      type: "divider" as const
+      type: 'divider' as const,
     },
     {
-      key: "logout",
+      key: 'logout',
       icon: <LogoutOutlined />,
-      label: "退出登录",
-      onClick: handleLogout,
-      danger: true
-    }
+      label: '退出登录',
+      onClick: () => logout(),
+      disabled: isLoggingOut,
+      danger: true,
+    },
   ];
 
   return (
     <ProConfigProvider hashed={false}>
-      <ConfigProvider
-        locale={zhCN}
-        theme={{
-          cssVar: true,
-          token: {
-            colorPrimary: settings.colorPrimary || "#1772b4"
-          }
+      <ProLayout
+        layout="mix"
+        title="Yinlerens"
+        logo="https://docs.sentry.io/_next/static/media/sentry-logo-dark.fc8e1eeb.svg"
+        location={{ pathname }}
+        menu={{
+          request: async () => menuData,
+          loading: isLoading,
         }}
-      >
-        <ProLayout
-          title="权限管理系统"
-          logo="https://docs.sentry.io/_next/static/media/sentry-logo-dark.fc8e1eeb.svg"
-          {...settings}
-          location={{
-            pathname
-          }}
-          token={{
-            header: {
-              colorBgMenuItemSelected: "rgba(0,0,0,0.04)"
-            },
-            sider: {
-              colorMenuBackground: "#fff",
-              colorMenuItemDivider: "#dfdfdf",
-              colorTextMenu: "#595959",
-              colorTextMenuSelected: "#1772b4",
-              colorBgMenuItemSelected: "#e6f4ff"
-            }
-          }}
-          menu={{
-            loading: menuLoading,
-            request: async () => {
-              return menuData;
-            }
-          }}
-          avatarProps={{
-            src: user?.avatar || undefined,
-            size: "small",
-            icon: !user?.avatar && <UserOutlined />,
-            title: user?.nickname || user?.email || "用户",
-            render: (_, dom) => {
-              return (
-                <Dropdown
-                  menu={{
-                    items: userMenuItems
-                  }}
-                  placement="bottomRight"
-                >
-                  <Space style={{ cursor: "pointer" }}>
-                    {dom}
-                    <span style={{ color: "#595959", fontSize: 14 }}>
-                      {user?.nickname || user?.email?.split("@")[0] || "用户"}
-                    </span>
-                  </Space>
-                </Dropdown>
-              );
-            }
-          }}
-          actionsRender={props => {
-            if (props.isMobile) return [];
-            return [
-              <InfoCircleFilled key="InfoCircleFilled" />,
-              <QuestionCircleFilled key="QuestionCircleFilled" />,
-              <GithubFilled key="GithubFilled" />
-            ];
-          }}
-          menuFooterRender={props => {
-            if (props?.collapsed) return undefined;
-            return (
-              <div
-                style={{
-                  textAlign: "center",
-                  paddingBlockStart: 20
-                }}
-              >
-                <div>© 2025 权限管理系统</div>
-                <div>Powered by ProComponents</div>
-              </div>
-            );
-          }}
-          onMenuHeaderClick={e => router.push("/dashboard")}
-          menuItemRender={(item, dom) => (
-            <div
-              onClick={() => {
-                router.push(item.path || "/dashboard");
-              }}
-            >
-              {dom}
+        menuItemRender={(item, dom) => <Link href={item.path!}>{dom}</Link>}
+        subMenuItemRender={(item, dom) => dom}
+        onMenuHeaderClick={() => router.push('/dashboard')}
+        avatarProps={{
+          src: user?.avatar || undefined,
+          size: 'small',
+          icon: !user?.avatar && <UserOutlined />,
+          title: user?.nickname || user?.email || '用户',
+          render: (_, dom) => (
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                {dom}
+                <span style={{ color: '#595959', fontSize: 14 }}>
+                  {user?.nickname || user?.email?.split('@')[0] || '用户'}
+                </span>
+              </Space>
+            </Dropdown>
+          ),
+        }}
+        actionsRender={props => {
+          if (props.isMobile) return [];
+          return [
+            <InfoCircleFilled key="InfoCircleFilled" />,
+            <QuestionCircleFilled key="QuestionCircleFilled" />,
+            <GithubFilled key="GithubFilled" />,
+          ];
+        }}
+        menuFooterRender={props => {
+          if (props?.collapsed) return undefined;
+          return (
+            <div style={{ textAlign: 'center', paddingBlockStart: 20 }}>
+              <div>© 2025 权限管理系统</div>
+              <div>Powered by ProComponents</div>
             </div>
-          )}
-          breadcrumbRender={(routers = []) => [
-            {
-              path: "/",
-              breadcrumbName: "首页"
-            },
-            ...routers
-          ]}
-          // onSettingChange={settings => {
-          //   setSetting(settings);
-          // }}
-        >
-          <PageContainer
-            header={{
-              title: null,
-              ghost: true
-            }}
-          >
-            {loading ? <ProCard loading style={{ minHeight: "60vh" }} /> : children}
-          </PageContainer>
-        </ProLayout>
-      </ConfigProvider>
+          );
+        }}
+        breadcrumbRender={(routers = []) => [
+          { path: '/', breadcrumbName: '首页' },
+          ...routers,
+        ]}
+      >
+        <PageContainer header={{ title: null, ghost: true }}>
+          {children}
+        </PageContainer>
+      </ProLayout>
     </ProConfigProvider>
   );
 }

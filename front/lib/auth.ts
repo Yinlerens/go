@@ -47,9 +47,8 @@ export async function verifyAuth(request: NextRequest): Promise<VerifyAuthResult
       userId: payload.userId as string,
       email: payload.email as string
     };
-  } catch (error) {
-    console.error("Auth verification error:", error);
-    return { success: false, error: "Invalid token" };
+  } catch (error: any) {
+    return { success: false, error: error?.code };
   }
 }
 

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from 'react';
 import {
   ProTable,
   ProColumns,
@@ -12,8 +12,8 @@ import {
   ModalForm,
   ProFormRadio,
   ProCard,
-  ProFormTreeSelect
-} from "@ant-design/pro-components";
+  ProFormTreeSelect,
+} from '@ant-design/pro-components';
 import {
   Button,
   Space,
@@ -25,8 +25,8 @@ import {
   Badge,
   Tooltip,
   Alert,
-  Table
-} from "antd";
+  Table,
+} from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -40,10 +40,10 @@ import {
   FolderOutlined,
   FileTextOutlined,
   LinkOutlined,
-  AppstoreOutlined
-} from "@ant-design/icons";
-import { useApiQuery, useApiMutation } from "@/hooks/use-api-query";
-import { httpClient } from "@/lib/http-client";
+  AppstoreOutlined,
+} from '@ant-design/icons';
+import { useApiQuery, useApiMutation } from '@/hooks/use-api-query';
+import { httpClient } from '@/lib/http-client';
 import {
   Menu,
   FolderOpen,
@@ -54,15 +54,17 @@ import {
   Eye,
   EyeOff,
   Settings2,
-  MoreVertical
-} from "lucide-react";
-type MenuType = "DIRECTORY" | "MENU" | "BUTTON" | "EXTERNAL";
+  MoreVertical,
+} from 'lucide-react';
+type MenuType = 'DIRECTORY' | 'MENU' | 'EXTERNAL';
 // 菜单类型配置
-const menuTypeConfig: Record<MenuType, { label: string; icon: React.ReactNode; color: string }> = {
-  DIRECTORY: { label: "目录", icon: <FolderOutlined />, color: "blue" },
-  MENU: { label: "菜单", icon: <FileTextOutlined />, color: "green" },
-  BUTTON: { label: "按钮", icon: <AppstoreOutlined />, color: "orange" },
-  EXTERNAL: { label: "外链", icon: <LinkOutlined />, color: "purple" }
+const menuTypeConfig: Record<
+  MenuType,
+  { label: string; icon: React.ReactNode; color: string }
+> = {
+  DIRECTORY: { label: '目录', icon: <FolderOutlined />, color: 'blue' },
+  MENU: { label: '菜单', icon: <FileTextOutlined />, color: 'green' },
+  EXTERNAL: { label: '外链', icon: <LinkOutlined />, color: 'purple' },
 };
 
 // 菜单数据类型
@@ -97,15 +99,15 @@ const IconSelector: React.FC<{
   onChange?: (value: string) => void;
 }> = ({ value, onChange }) => {
   const icons = [
-    { key: "dashboard", icon: <Layers size={16} />, label: "仪表盘" },
-    { key: "system", icon: <Settings2 size={16} />, label: "系统" },
-    { key: "user", icon: <Menu size={16} />, label: "用户" },
-    { key: "role", icon: <Menu size={16} />, label: "角色" },
-    { key: "menu", icon: <Menu size={16} />, label: "菜单" },
-    { key: "department", icon: <Menu size={16} />, label: "部门" },
-    { key: "ability", icon: <Menu size={16} />, label: "权限" },
-    { key: "audit", icon: <FileText size={16} />, label: "审计" },
-    { key: "database", icon: <Menu size={16} />, label: "数据库" }
+    { key: 'dashboard', icon: <Layers size={16} />, label: '仪表盘' },
+    { key: 'system', icon: <Settings2 size={16} />, label: '系统' },
+    { key: 'user', icon: <Menu size={16} />, label: '用户' },
+    { key: 'role', icon: <Menu size={16} />, label: '角色' },
+    { key: 'menu', icon: <Menu size={16} />, label: '菜单' },
+    { key: 'department', icon: <Menu size={16} />, label: '部门' },
+    { key: 'ability', icon: <Menu size={16} />, label: '权限' },
+    { key: 'audit', icon: <FileText size={16} />, label: '审计' },
+    { key: 'database', icon: <Menu size={16} />, label: '数据库' },
   ];
 
   return (
@@ -120,11 +122,11 @@ const IconSelector: React.FC<{
             {item.label}
           </Space>
         ),
-        value: item.key
+        value: item.key,
       }))}
       fieldProps={{
         value,
-        onChange
+        onChange,
       }}
     />
   );
@@ -138,212 +140,141 @@ export default function MenuManagementPage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [tableData, setTableData] = useState<MenuItem[]>([]);
-  // 获取菜单列表
-  const { refetch: refetchMenus } = useApiQuery(
-    ["menus"],
-    "/menus/list",
-    {},
-    {
-      enabled: false
-    }
-  );
 
   // 获取菜单树
   const { data: menuTreeData, refetch: refetchMenuTree } = useApiQuery(
-    ["menu-tree"],
-    "/menus/tree",
+    ['menu-tree'],
+    '/menus/tree',
     {},
     {
-      enabled: true
-    }
-  );
-
-  // 创建菜单
-  const createMutation = useApiMutation((data: any) => httpClient.post("/menus/create", data), {
-    onSuccess: () => {
-      message.success("创建成功");
-      setCreateModalOpen(false);
-      actionRef.current?.reload();
-      refetchMenuTree();
-    },
-    onError: () => {
-      message.error("创建失败");
-    }
-  });
-
-  // 更新菜单
-  const updateMutation = useApiMutation((data: any) => httpClient.post("/menus/update", data), {
-    onSuccess: () => {
-      message.success("更新成功");
-      setUpdateModalOpen(false);
-      actionRef.current?.reload();
-      refetchMenuTree();
-    },
-    onError: () => {
-      message.error("更新失败");
-    }
-  });
-
-  // 删除菜单
-  const deleteMutation = useApiMutation((id: string) => httpClient.post("/menus/delete", { id }), {
-    onSuccess: () => {
-      message.success("删除成功");
-      actionRef.current?.reload();
-      refetchMenuTree();
-    },
-    onError: () => {
-      message.error("删除失败");
-    }
-  });
-
-  // 批量删除
-  const batchDeleteMutation = useApiMutation(
-    (ids: string[]) => httpClient.post("/menus/batch-delete", { ids }),
-    {
-      onSuccess: () => {
-        message.success("批量删除成功");
-        setSelectedRowKeys([]);
-        actionRef.current?.reload();
-        refetchMenuTree();
-      },
-      onError: () => {
-        message.error("批量删除失败");
-      }
-    }
-  );
-
-  // 更新排序
-  const updateSortMutation = useApiMutation(
-    (data: { id: string; parentId?: string; sort: number }) =>
-      httpClient.post("/menus/update-sort", data),
-    {
-      onSuccess: () => {
-        message.success("排序更新成功");
-        actionRef.current?.reload();
-      }
+      enabled: true,
     }
   );
 
   // 表格列定义
   const columns: ProColumns<MenuItem>[] = [
     {
-      title: "菜单名称",
-      dataIndex: "name",
+      title: '菜单名称',
+      dataIndex: 'name',
       width: 200,
-      fixed: "left",
+      fixed: 'left',
       render: (_, record) => (
         <Space>
           {menuTypeConfig[record.type].icon}
           <span>{record.name}</span>
-          {record.badge && <Badge count={record.badge} style={{ marginLeft: 8 }} />}
+          {record.badge && (
+            <Badge count={record.badge} style={{ marginLeft: 8 }} />
+          )}
         </Space>
-      )
+      ),
     },
     {
-      title: "菜单标题",
-      dataIndex: "title",
+      title: '菜单标题',
+      dataIndex: 'title',
       width: 150,
-      ellipsis: true
+      ellipsis: true,
     },
     {
-      title: "菜单类型",
-      dataIndex: "type",
+      title: '菜单类型',
+      dataIndex: 'type',
       width: 100,
-      valueType: "select",
+      valueType: 'select',
       valueEnum: {
-        DIRECTORY: { text: "目录", status: "Processing" },
-        MENU: { text: "菜单", status: "Success" },
-        BUTTON: { text: "按钮", status: "Warning" },
-        EXTERNAL: { text: "外链", status: "Default" }
+        DIRECTORY: { text: '目录', status: 'Processing' },
+        MENU: { text: '菜单', status: 'Success' },
+        BUTTON: { text: '按钮', status: 'Warning' },
+        EXTERNAL: { text: '外链', status: 'Default' },
       },
       render: (_, record) => (
-        <Tag color={menuTypeConfig[record.type].color}>{menuTypeConfig[record.type].label}</Tag>
-      )
+        <Tag color={menuTypeConfig[record.type].color}>
+          {menuTypeConfig[record.type].label}
+        </Tag>
+      ),
     },
     {
-      title: "菜单编码",
-      dataIndex: "code",
+      title: '菜单编码',
+      dataIndex: 'code',
       width: 120,
       copyable: true,
-      ellipsis: true
+      ellipsis: true,
     },
     {
-      title: "路由路径",
-      dataIndex: "path",
+      title: '路由路径',
+      dataIndex: 'path',
       width: 180,
       ellipsis: true,
       copyable: true,
       render: (_, record) => {
-        if (record.type === "EXTERNAL") {
+        if (record.type === 'EXTERNAL') {
           return (
             <a href={record.path} target="_blank" rel="noopener noreferrer">
               {record.path} <LinkOutlined />
             </a>
           );
         }
-        return record.path || "-";
-      }
+        return record.path || '-';
+      },
     },
     {
-      title: "组件路径",
-      dataIndex: "component",
+      title: '组件路径',
+      dataIndex: 'component',
       width: 200,
       ellipsis: true,
       copyable: true,
-      hideInSearch: true
+      hideInSearch: true,
     },
     {
-      title: "权限标识",
-      dataIndex: "permission",
+      title: '权限标识',
+      dataIndex: 'permission',
       width: 150,
       ellipsis: true,
-      render: text => (text ? <Tag color="blue">{text}</Tag> : "-")
+      render: text => (text ? <Tag color="blue">{text}</Tag> : '-'),
     },
     {
-      title: "排序",
-      dataIndex: "sort",
+      title: '排序',
+      dataIndex: 'sort',
       width: 80,
       hideInSearch: true,
-      sorter: true
+      sorter: true,
     },
     {
-      title: "状态",
+      title: '状态',
       width: 280,
       hideInSearch: true,
       render: (_, record) => (
         <Space size={0}>
-          <Tooltip title={record.isVisible ? "显示" : "隐藏"}>
-            <Tag color={record.isVisible ? "success" : "default"}>
+          <Tooltip title={record.isVisible ? '显示' : '隐藏'}>
+            <Tag color={record.isVisible ? 'success' : 'default'}>
               {record.isVisible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
             </Tag>
           </Tooltip>
-          <Tooltip title={record.isActive ? "启用" : "禁用"}>
-            <Tag color={record.isActive ? "success" : "error"}>
-              {record.isActive ? "启用" : "禁用"}
+          <Tooltip title={record.isActive ? '启用' : '禁用'}>
+            <Tag color={record.isActive ? 'success' : 'error'}>
+              {record.isActive ? '启用' : '禁用'}
             </Tag>
           </Tooltip>
-          <Tooltip title={record.isCache ? "缓存" : "不缓存"}>
-            <Tag color={record.isCache ? "processing" : "default"}>缓存</Tag>
+          <Tooltip title={record.isCache ? '缓存' : '不缓存'}>
+            <Tag color={record.isCache ? 'processing' : 'default'}>缓存</Tag>
           </Tooltip>
-          <Tooltip title={record.isAffix ? "固定" : "不固定"}>
-            <Tag color={record.isAffix ? "warning" : "default"}>固定</Tag>
+          <Tooltip title={record.isAffix ? '固定' : '不固定'}>
+            <Tag color={record.isAffix ? 'warning' : 'default'}>固定</Tag>
           </Tooltip>
         </Space>
-      )
+      ),
     },
     {
-      title: "创建时间",
-      dataIndex: "createdAt",
-      valueType: "dateTime",
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      valueType: 'dateTime',
       width: 160,
       hideInSearch: true,
-      sorter: true
+      sorter: true,
     },
     {
-      title: "操作",
-      valueType: "option",
+      title: '操作',
+      valueType: 'option',
       width: 180,
-      fixed: "right",
+      fixed: 'right',
       render: (_, record) => [
         <Button
           key="edit"
@@ -361,9 +292,11 @@ export default function MenuManagementPage() {
           key="delete"
           title="确定要删除此菜单吗？"
           description={
-            record.children && record.children.length > 0 ? "删除后，子菜单也会被删除！" : undefined
+            record.children && record.children.length > 0
+              ? '删除后，子菜单也会被删除！'
+              : undefined
           }
-          onConfirm={() => deleteMutation.mutate(record.id)}
+          // onConfirm={() => deleteMutation.mutate(record.id)}
           okText="确定"
           cancelText="取消"
         >
@@ -376,21 +309,21 @@ export default function MenuManagementPage() {
           menu={{
             items: [
               {
-                key: "addChild",
-                label: "添加子菜单",
+                key: 'addChild',
+                label: '添加子菜单',
                 icon: <PlusOutlined />,
                 onClick: () => {
                   setCurrentRow({
                     ...record,
                     parentId: record.id,
-                    id: ""
+                    id: '',
                   } as any);
                   setCreateModalOpen(true);
-                }
+                },
               },
               {
-                key: "copy",
-                label: "复制菜单",
+                key: 'copy',
+                label: '复制菜单',
                 icon: <EditOutlined />,
                 onClick: () => {
                   const newData = { ...record };
@@ -398,16 +331,15 @@ export default function MenuManagementPage() {
                   delete newData.children;
                   newData.name = `${record.name}-副本`;
                   newData.code = `${record.code}_copy`;
-                  createMutation.mutate(newData);
-                }
-              }
-            ]
+                },
+              },
+            ],
           }}
         >
           <Button type="link" size="small" icon={<MoreVertical size={14} />} />
-        </Dropdown>
-      ]
-    }
+        </Dropdown>,
+      ],
+    },
   ];
 
   // 表单基础字段
@@ -421,61 +353,65 @@ export default function MenuManagementPage() {
         fieldProps={{
           treeData: Array.isArray(menuTreeData?.data) ? menuTreeData.data : [],
           fieldNames: {
-            label: "title",
-            value: "id"
+            label: 'title',
+            value: 'id',
           },
           showSearch: true,
-          treeNodeFilterProp: "title"
+          treeNodeFilterProp: 'title',
         }}
       />
       <ProFormText
         name="name"
         label="菜单名称"
         placeholder="请输入菜单名称"
-        rules={[{ required: true, message: "请输入菜单名称" }]}
+        rules={[{ required: true, message: '请输入菜单名称' }]}
       />
       <ProFormText
         name="title"
         label="菜单标题"
         placeholder="请输入菜单标题（支持i18n）"
-        rules={[{ required: true, message: "请输入菜单标题" }]}
+        rules={[{ required: true, message: '请输入菜单标题' }]}
       />
       <ProFormText
         name="code"
         label="菜单编码"
         placeholder="请输入菜单编码"
         rules={[
-          { required: true, message: "请输入菜单编码" },
+          { required: true, message: '请输入菜单编码' },
           {
             pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
-            message: "只能包含字母、数字和下划线，且以字母开头"
-          }
+            message: '只能包含字母、数字和下划线，且以字母开头',
+          },
         ]}
       />
       <ProFormRadio.Group
         name="type"
         label="菜单类型"
         radioType="button"
-        rules={[{ required: true, message: "请选择菜单类型" }]}
+        rules={[{ required: true, message: '请选择菜单类型' }]}
         options={[
-          { label: "目录", value: "DIRECTORY" },
-          { label: "菜单", value: "MENU" },
-          { label: "按钮", value: "BUTTON" },
-          { label: "外链", value: "EXTERNAL" }
+          { label: '目录', value: 'DIRECTORY' },
+          { label: '菜单', value: 'MENU' },
+          { label: '按钮', value: 'BUTTON' },
+          { label: '外链', value: 'EXTERNAL' },
         ]}
       />
       <ProFormText
         name="path"
         label="路由路径"
         placeholder="请输入路由路径"
-        rules={[{ required: true, message: "请输入路由路径" }]}
+        rules={[{ required: true, message: '请输入路由路径' }]}
       />
       <ProFormText
         name="component"
         label="组件路径"
         placeholder="请输入组件路径，如：@/views/system/menu/index"
       />
-      <ProFormText name="redirect" label="重定向路径" placeholder="请输入重定向路径" />
+      <ProFormText
+        name="redirect"
+        label="重定向路径"
+        placeholder="请输入重定向路径"
+      />
       <IconSelector />
       <ProFormText name="badge" label="徽标" placeholder="请输入徽标内容" />
       <ProFormText
@@ -512,10 +448,10 @@ export default function MenuManagementPage() {
         columns={columns}
         actionRef={actionRef}
         request={async (params, sort, filter) => {
-          const { data, code } = await httpClient.post("/menus/list", {
+          const { data, code } = await httpClient.post('/menus/list', {
             ...params,
             ...filter,
-            sort
+            sort,
           });
 
           const list = data?.list || [];
@@ -524,34 +460,34 @@ export default function MenuManagementPage() {
           return {
             data: list,
             total: data?.total || 0,
-            success: code === 200
+            success: code === 200,
           };
         }}
         rowKey="id"
         pagination={{
           pageSize: 20,
-          showSizeChanger: true
+          showSizeChanger: true,
         }}
         search={{
-          labelWidth: "auto",
-          span: 6
+          labelWidth: 'auto',
+          span: 6,
         }}
         scroll={{ x: 1800 }}
         expandable={{
           expandedRowKeys,
-          onExpandedRowsChange: keys => setExpandedRowKeys(keys as string[])
+          onExpandedRowsChange: keys => setExpandedRowKeys(keys as string[]),
         }}
         rowSelection={{
           selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
           preserveSelectedRowKeys: true,
           selectedRowKeys,
-          onChange: keys => setSelectedRowKeys(keys as string[])
+          onChange: keys => setSelectedRowKeys(keys as string[]),
         }}
         options={{
           density: true,
           fullScreen: true,
           reload: true,
-          setting: true
+          setting: true,
         }}
         dateFormatter="string"
         headerTitle="菜单列表"
@@ -563,7 +499,7 @@ export default function MenuManagementPage() {
               setExpandedRowKeys(expandedRowKeys.length === 0 ? allKeys : []);
             }}
           >
-            {expandedRowKeys.length === 0 ? "展开全部" : "收起全部"}
+            {expandedRowKeys.length === 0 ? '展开全部' : '收起全部'}
           </Button>,
           <Button
             type="primary"
@@ -579,11 +515,11 @@ export default function MenuManagementPage() {
           selectedRowKeys.length > 0 && (
             <Popconfirm
               title={`确定要删除选中的 ${selectedRowKeys.length} 个菜单吗？`}
-              onConfirm={() => batchDeleteMutation.mutate(selectedRowKeys)}
+              // onConfirm={() => batchDeleteMutation.mutate(selectedRowKeys)}
             >
               <Button danger>批量删除</Button>
             </Popconfirm>
-          )
+          ),
         ]}
       />
 
@@ -593,7 +529,7 @@ export default function MenuManagementPage() {
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
         onFinish={async values => {
-          await createMutation.mutateAsync(values);
+          // await createMutation.mutateAsync(values);
           return true;
         }}
         initialValues={currentRow}
@@ -611,10 +547,10 @@ export default function MenuManagementPage() {
         open={updateModalOpen}
         onOpenChange={setUpdateModalOpen}
         onFinish={async values => {
-          await updateMutation.mutateAsync({
-            ...values,
-            id: currentRow?.id
-          });
+          // await updateMutation.mutateAsync({
+          //   ...values,
+          //   id: currentRow?.id,
+          // });
           return true;
         }}
         // initialValues={currentRow}

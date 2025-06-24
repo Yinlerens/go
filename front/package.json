@@ -9,15 +9,18 @@
     "lint": "next lint",
     "analyze": "cross-env ANALYZE=true pnpm build"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.0.2",
     "@ant-design/pro-components": "^2.8.7",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@marsidev/react-turnstile": "^1.1.0",
     "@next/bundle-analyzer": "^15.3.2",
-    "@prisma/client": "^6.7.0",
-    "@prisma/extension-accelerate": "^1.3.0",
-    "@prisma/extension-optimize": "^1.1.8",
+    "@prisma/client": "^6.10.1",
+    "@prisma/extension-accelerate": "^2.0.1",
+    "@prisma/extension-optimize": "^2.0.0",
     "@sentry/nextjs": "^9.29.0",
     "@tanstack/react-query": "^5.76.1",
     "@tanstack/react-query-devtools": "^5.76.1",
@@ -33,9 +36,9 @@
     "cos-nodejs-sdk-v5": "^2.15.0",
     "framer-motion": "^12.4.10",
     "jose": "^6.0.11",
-    "lucide-react": "^0.487.0",
+    "lucide-react": "^0.518.0",
     "next": "15.3.2",
-    "prisma": "^6.7.0",
+    "prisma": "^6.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sonner": "^2.0.3",

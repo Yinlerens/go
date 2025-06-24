@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
   experimental: {
     reactCompiler: true,
     optimizePackageImports: ["@ant-design/pro-components"]
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        poll: false,
+        ignored: /node_modules/
+      };
+    }
+    return config;
   }
 };
 
