@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { ApiResponse } from "@/types/api";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { ApiResponse } from '@/types/api';
 
-export async function POST(
+export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ): Promise<NextResponse<ApiResponse>> {
@@ -13,33 +13,39 @@ export async function POST(
     const role = await prisma.role.findUnique({
       where: { id: roleId },
       include: {
-        menus: {
-          where: { isDeleted: false },
-          select: {
-            id: true,
-            name: true,
-            title: true
-          }
-        }
-      }
+        roleMenus: {
+          include: {
+            menu: {
+              select: {
+                id: true,
+                name: true,
+                path: true,
+                icon: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!role || role.isDeleted) {
+    if (!role) {
       return NextResponse.json(
         {
           data: null,
           code: 404,
-          message: "角色不存在"
+          message: '角色不存在',
         },
         { status: 200 }
       );
     }
 
+    const menus = role.roleMenus.map(rm => rm.menu);
+
     return NextResponse.json(
       {
-        data: role.menus,
+        data: menus,
         code: 200,
-        message: "获取成功"
+        message: '获取成功',
       },
       { status: 200 }
     );
@@ -48,7 +54,7 @@ export async function POST(
       {
         data: null,
         code: 500,
-        message: "服务器错误"
+        message: '服务器错误',
       },
       { status: 200 }
     );

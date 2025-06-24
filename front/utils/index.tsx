@@ -1,5 +1,5 @@
-import { SignJWT, jwtVerify, JWTPayload } from "jose";
-import crypto from "crypto";
+import { SignJWT, jwtVerify, JWTPayload } from 'jose';
+import crypto from 'crypto';
 
 // 定义更灵活的 payload 类型
 type TokenPayload = JWTPayload & Record<string, any>;
@@ -9,8 +9,8 @@ type TokenPayload = JWTPayload & Record<string, any>;
  * @returns 生成的验证码字符串
  */
 export function generateVerificationCode(): string {
-  const characterSet = "0123456789";
-  let code = "";
+  const characterSet = '0123456789';
+  let code = '';
   const characterSetLength = characterSet.length;
   // 生成验证码
   for (let i = 0; i < 6; i++) {
@@ -25,7 +25,7 @@ export function generateVerificationCode(): string {
  * @returns 生成的token字符串
  */
 export function generateToken(): string {
-  return crypto.randomBytes(32).toString("hex");
+  return crypto.randomBytes(32).toString('hex');
 }
 
 /**
@@ -36,12 +36,12 @@ export function generateToken(): string {
  */
 export async function generateAccessToken(
   payload: TokenPayload,
-  expiresIn: string = "1h"
+  expiresIn: string = '1h'
 ): Promise<string> {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
   const jwt = new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(expiresIn);
 
@@ -56,12 +56,12 @@ export async function generateAccessToken(
  */
 export async function generateRefreshToken(
   payload: TokenPayload,
-  expiresIn: string = "7d"
+  expiresIn: string = '7d'
 ): Promise<string> {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
   const jwt = new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(expiresIn);
 
@@ -73,15 +73,17 @@ export async function generateRefreshToken(
  * @param token JWT令牌
  * @returns 解码后的payload或null
  */
-export async function verifyToken(token: string): Promise<TokenPayload | null> {
+export async function verifyToken(token: string): Promise<any> {
   try {
     const secretKey = process.env.JWT_SECRET;
-
     const secret = new TextEncoder().encode(secretKey);
     const { payload } = await jwtVerify(token, secret);
-    return payload;
+    return { valid: true, payload };
   } catch (error) {
-    return null;
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : 'Invalid token',
+    };
   }
 }
 
@@ -91,16 +93,23 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
  * @returns IP地址
  */
 export function getClientIP(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const realIP = request.headers.get("x-real-ip");
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
 
   if (forwarded) {
-    return forwarded.split(",")[0].trim();
+    return forwarded.split(',')[0].trim();
   }
 
   if (realIP) {
     return realIP;
   }
 
-  return "127.0.0.1";
+  return '127.0.0.1';
+}
+
+export function getUserFromHeaders(headers: Headers) {
+  return {
+    userId: headers.get('x-user-id'),
+    email: headers.get('x-user-email'),
+  };
 }

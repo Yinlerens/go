@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { ApiResponse } from "@/types/api";
-import { z } from "zod";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { ApiResponse } from '@/types/api';
+import { z } from 'zod';
 
 const updateSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, "角色名称不能为空"),
-  description: z.string().optional(),
-  level: z.number().min(1).max(999),
-  dataScope: z.enum(["ALL", "DEPARTMENT", "DEPARTMENT_TREE", "SELF", "CUSTOM"]),
+  name: z.string().min(1, '角色名称不能为空').max(100),
+  code: z.string().min(1, '角色代码不能为空').max(50),
+  description: z.string().max(500).optional().nullable(),
   isActive: z.boolean(),
-  isDefault: z.boolean()
 });
 
-export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<ApiResponse>> {
   try {
     const body = await request.json();
     const validationResult = updateSchema.safeParse(body);
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         {
           data: null,
           code: 400,
-          message: validationResult.error.issues[0].message
+          message: validationResult.error.issues[0].message,
         },
         { status: 200 }
       );
@@ -33,44 +33,57 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
     // 检查角色是否存在
     const existingRole = await prisma.role.findUnique({
-      where: { id }
+      where: { id },
     });
 
-    if (!existingRole || existingRole.isDeleted) {
+    if (!existingRole) {
       return NextResponse.json(
         {
           data: null,
           code: 404,
-          message: "角色不存在"
+          message: '角色不存在',
         },
         { status: 200 }
       );
     }
 
-    // 系统角色只能修改部分字段
-    if (existingRole.isSystem) {
-      delete (data as any).isDefault;
-    }
+    // 检查名称和代码是否与其他角色冲突
+    const conflictRole = await prisma.role.findFirst({
+      where: {
+        AND: [
+          { id: { not: id } },
+          {
+            OR: [{ name: data.name }, { code: data.code }],
+          },
+        ],
+      },
+    });
 
-    // 如果设置为默认角色，先取消其他默认角色
-    if (data.isDefault && !existingRole.isDefault) {
-      await prisma.role.updateMany({
-        where: { isDefault: true, id: { not: id } },
-        data: { isDefault: false }
-      });
+    if (conflictRole) {
+      return NextResponse.json(
+        {
+          data: null,
+          code: 400,
+          message:
+            conflictRole.name === data.name
+              ? '角色名称已存在'
+              : '角色代码已存在',
+        },
+        { status: 200 }
+      );
     }
 
     // 更新角色
     const role = await prisma.role.update({
       where: { id },
-      data
+      data,
     });
 
     return NextResponse.json(
       {
         data: role,
         code: 200,
-        message: "更新成功"
+        message: '更新成功',
       },
       { status: 200 }
     );
@@ -79,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       {
         data: null,
         code: 500,
-        message: "服务器错误"
+        message: '服务器错误',
       },
       { status: 200 }
     );

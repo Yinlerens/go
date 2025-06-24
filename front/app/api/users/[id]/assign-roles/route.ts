@@ -3,17 +3,18 @@ import prisma from '@/lib/prisma';
 import { ApiResponse } from '@/types/api';
 import { z } from 'zod';
 
-const updatePermissionsSchema = z.object({
-  roleId: z.string(),
-  menuIds: z.array(z.string()),
+const assignRolesSchema = z.object({
+  roleIds: z.array(z.string()),
 });
 
 export async function POST(
-  request: NextRequest
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ): Promise<NextResponse<ApiResponse>> {
   try {
+    const userId = params.id;
     const body = await request.json();
-    const validationResult = updatePermissionsSchema.safeParse(body);
+    const validationResult = assignRolesSchema.safeParse(body);
 
     if (!validationResult.success) {
       return NextResponse.json(
@@ -26,37 +27,37 @@ export async function POST(
       );
     }
 
-    const { roleId, menuIds } = validationResult.data;
+    const { roleIds } = validationResult.data;
 
-    // 检查角色是否存在
-    const role = await prisma.role.findUnique({
-      where: { id: roleId },
+    // 检查用户是否存在
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!role) {
+    if (!user) {
       return NextResponse.json(
         {
           data: null,
           code: 404,
-          message: '角色不存在',
+          message: '用户不存在',
         },
         { status: 200 }
       );
     }
 
-    // 使用事务更新权限
+    // 使用事务更新用户角色
     await prisma.$transaction(async tx => {
-      // 删除原有的角色-菜单关联
-      await tx.roleMenu.deleteMany({
-        where: { roleId },
+      // 删除原有的用户-角色关联
+      await tx.userRole.deleteMany({
+        where: { userId },
       });
 
-      // 创建新的角色-菜单关联
-      if (menuIds.length > 0) {
-        await tx.roleMenu.createMany({
-          data: menuIds.map(menuId => ({
+      // 创建新的用户-角色关联
+      if (roleIds.length > 0) {
+        await tx.userRole.createMany({
+          data: roleIds.map(roleId => ({
+            userId,
             roleId,
-            menuId,
           })),
         });
       }
@@ -66,7 +67,7 @@ export async function POST(
       {
         data: null,
         code: 200,
-        message: '权限更新成功',
+        message: '角色分配成功',
       },
       { status: 200 }
     );
