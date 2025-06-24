@@ -1,26 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { ApiResponse } from "@/types/api";
-import { z } from "zod";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { ApiResponse } from '@/types/api';
+import { z } from 'zod';
 
 // 请求参数验证
 const listSchema = z.object({
   current: z.number().default(1),
   pageSize: z.number().default(20),
   name: z.string().optional(),
-  title: z.string().optional(),
-  type: z.enum(["DIRECTORY", "MENU", "BUTTON", "EXTERNAL"]).optional(),
-  code: z.string().optional(),
   path: z.string().optional(),
   sort: z
     .object({
-      createdAt: z.enum(["ascend", "descend"]).optional(),
-      sort: z.enum(["ascend", "descend"]).optional()
+      createdAt: z.enum(['ascend', 'descend']).optional(),
+      sort: z.enum(['ascend', 'descend']).optional(),
     })
-    .optional()
+    .optional(),
 });
 
-export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<ApiResponse>> {
   try {
     const body = await request.json();
     const validationResult = listSchema.safeParse(body);
@@ -30,30 +29,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         {
           data: null,
           code: 400,
-          message: "请求参数错误"
+          message: '请求参数错误',
         },
         { status: 200 }
       );
     }
 
-    const { current, pageSize, name, title, type, code, path, sort } = validationResult.data;
+    const { current, pageSize, name, path, sort } = validationResult.data;
 
     // 构建查询条件
-    const where: any = {
-      isDeleted: false
-    };
+    const where: any = {};
 
     if (name) {
       where.name = { contains: name };
-    }
-    if (title) {
-      where.title = { contains: title };
-    }
-    if (type) {
-      where.type = type;
-    }
-    if (code) {
-      where.code = { contains: code };
     }
     if (path) {
       where.path = { contains: path };
@@ -62,24 +50,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     // 构建排序条件
     const orderBy: any = [];
     if (sort?.createdAt) {
-      orderBy.push({ createdAt: sort.createdAt === "ascend" ? "asc" : "desc" });
+      orderBy.push({ createdAt: sort.createdAt === 'ascend' ? 'asc' : 'desc' });
     }
     if (sort?.sort) {
-      orderBy.push({ sort: sort.sort === "ascend" ? "asc" : "desc" });
+      orderBy.push({ sort: sort.sort === 'ascend' ? 'asc' : 'desc' });
     }
     if (orderBy.length === 0) {
-      orderBy.push({ sort: "asc" }, { createdAt: "desc" });
+      orderBy.push({ sort: 'asc' }, { createdAt: 'desc' });
     }
 
     // 获取根级菜单
     const rootMenus = await prisma.menu.findMany({
       where: {
         ...where,
-        parentId: null
+        parentId: null,
       },
       orderBy,
       skip: (current - 1) * pageSize,
-      take: pageSize
+      take: pageSize,
     });
 
     // 递归获取子菜单
@@ -87,9 +75,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       const children = await prisma.menu.findMany({
         where: {
           parentId,
-          isDeleted: false
         },
-        orderBy: [{ sort: "asc" }, { createdAt: "desc" }]
+        orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
       });
 
       const childrenWithSubChildren = await Promise.all(
@@ -97,7 +84,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
           const subChildren = await getChildren(child.id);
           return {
             ...child,
-            children: subChildren.length > 0 ? subChildren : undefined
+            children: subChildren.length > 0 ? subChildren : undefined,
           };
         })
       );
@@ -111,7 +98,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         const children = await getChildren(menu.id);
         return {
           ...menu,
-          children: children.length > 0 ? children : undefined
+          children: children.length > 0 ? children : undefined,
         };
       })
     );
@@ -120,18 +107,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     const total = await prisma.menu.count({
       where: {
         ...where,
-        parentId: null
-      }
+        parentId: null,
+      },
     });
 
     return NextResponse.json(
       {
         data: {
           list: menusWithChildren,
-          total
+          total,
         },
         code: 200,
-        message: "获取成功"
+        message: '获取成功',
       },
       { status: 200 }
     );
@@ -140,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       {
         data: null,
         code: 500,
-        message: "服务器错误"
+        message: '服务器错误',
       },
       { status: 200 }
     );

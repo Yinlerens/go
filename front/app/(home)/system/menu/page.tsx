@@ -1,73 +1,28 @@
 'use client';
-
-import { useState, useRef, useEffect } from 'react';
-import {
-  ProTable,
-  ProColumns,
-  ActionType,
-  ProFormText,
-  ProFormSelect,
-  ProFormDigit,
-  ProFormSwitch,
-  ModalForm,
-  ProFormRadio,
-  ProCard,
-  ProFormTreeSelect,
-} from '@ant-design/pro-components';
+import { useState, useRef, useEffect, Key } from 'react';
 import {
   Button,
   Space,
   Popconfirm,
   message,
   Tag,
-  Dropdown,
-  Tree,
-  Badge,
-  Tooltip,
-  Alert,
-  Table,
+  Form,
+  Modal,
+  Input,
+  Radio,
+  InputNumber,
+  Switch,
+  TreeSelect,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  DownOutlined,
-  ReloadOutlined,
-  SettingOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined,
-  MenuOutlined,
-  FolderOutlined,
-  FileTextOutlined,
-  LinkOutlined,
-  AppstoreOutlined,
-} from '@ant-design/icons';
+import { ProTable, ProColumns, ActionType } from '@ant-design/pro-components';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useApiQuery, useApiMutation } from '@/hooks/use-api-query';
 import { httpClient } from '@/lib/http-client';
-import {
-  Menu,
-  FolderOpen,
-  FileText,
-  ExternalLink,
-  Layers,
-  Hash,
-  Eye,
-  EyeOff,
-  Settings2,
-  MoreVertical,
-} from 'lucide-react';
-type MenuType = 'DIRECTORY' | 'MENU' | 'EXTERNAL';
-// 菜单类型配置
-const menuTypeConfig: Record<
-  MenuType,
-  { label: string; icon: React.ReactNode; color: string }
-> = {
-  DIRECTORY: { label: '目录', icon: <FolderOutlined />, color: 'blue' },
-  MENU: { label: '菜单', icon: <FileTextOutlined />, color: 'green' },
-  EXTERNAL: { label: '外链', icon: <LinkOutlined />, color: 'purple' },
-};
+import { useQueryClient } from '@tanstack/react-query';
+import { DynamicIcon, IconName } from 'lucide-react/dynamic';
 
 // 菜单数据类型
+type MenuType = 'DIRECTORY' | 'MENU' | 'EXTERNAL';
 interface MenuItem {
   id: string;
   name: string;
@@ -75,200 +30,181 @@ interface MenuItem {
   type: MenuType;
   path?: string;
   component?: string;
-  redirect?: string;
   title: string;
   icon?: string;
-  badge?: string;
   parentId?: string;
-  level: number;
   sort: number;
-  meta?: any;
-  permission?: string;
   isVisible: boolean;
   isActive: boolean;
   isCache: boolean;
   isAffix: boolean;
-  createdAt: string;
-  updatedAt: string;
   children?: MenuItem[];
 }
 
-// 图标选择器组件
-const IconSelector: React.FC<{
-  value?: string;
-  onChange?: (value: string) => void;
-}> = ({ value, onChange }) => {
-  const icons = [
-    { key: 'dashboard', icon: <Layers size={16} />, label: '仪表盘' },
-    { key: 'system', icon: <Settings2 size={16} />, label: '系统' },
-    { key: 'user', icon: <Menu size={16} />, label: '用户' },
-    { key: 'role', icon: <Menu size={16} />, label: '角色' },
-    { key: 'menu', icon: <Menu size={16} />, label: '菜单' },
-    { key: 'department', icon: <Menu size={16} />, label: '部门' },
-    { key: 'ability', icon: <Menu size={16} />, label: '权限' },
-    { key: 'audit', icon: <FileText size={16} />, label: '审计' },
-    { key: 'database', icon: <Menu size={16} />, label: '数据库' },
-  ];
-
-  return (
-    <ProFormSelect
-      name="icon"
-      label="菜单图标"
-      placeholder="请选择图标"
-      options={icons.map(item => ({
-        label: (
-          <Space>
-            {item.icon}
-            {item.label}
-          </Space>
-        ),
-        value: item.key,
-      }))}
-      fieldProps={{
-        value,
-        onChange,
-      }}
-    />
-  );
+// 菜单类型配置
+const menuTypeConfig: Record<MenuType, { label: string; color: string }> = {
+  DIRECTORY: { label: '目录', color: 'blue' },
+  MENU: { label: '菜单', color: 'green' },
+  EXTERNAL: { label: '外链', color: 'purple' },
 };
 
 export default function MenuManagementPage() {
+  const [form] = Form.useForm();
   const actionRef = useRef<ActionType>(null);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [currentRow, setCurrentRow] = useState<MenuItem>();
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
-  const [tableData, setTableData] = useState<MenuItem[]>([]);
+  const queryClient = useQueryClient();
 
-  // 获取菜单树
-  const { data: menuTreeData, refetch: refetchMenuTree } = useApiQuery(
+  // 状态管理
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<MenuItem | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  // ========== 数据查询 Hooks ==========
+  const { data: menuTreeData, isLoading: isTreeLoading } = useApiQuery(
     ['menu-tree'],
     '/menus/tree',
     {},
+    {}
+  );
+
+  // ========== 数据变更 Hooks (Mutation) ==========
+
+  // 通用的 onSuccess 回调，用于刷新所有相关数据
+  const onMutationSuccess = (successMessage: string) => {
+    message.success(successMessage);
+    setIsModalOpen(false);
+    setEditingRecord(null);
+    setSelectedRowKeys([]);
+    actionRef.current?.reload(); // 刷新表格
+    // 实现与 Layout 菜单的联动
+    queryClient.invalidateQueries({ queryKey: ['user-menus'] }); // 刷新ProLayout菜单
+    queryClient.invalidateQueries({ queryKey: ['menu-tree'] }); // 刷新表单里的上级菜单树
+  };
+
+  const createMutation = useApiMutation('/menus/create', 'post', {
+    onSuccess: () => onMutationSuccess('新建成功！'),
+    onError: err => message.error(err.message || '新建失败'),
+  });
+
+  const updateMutation = useApiMutation('/menus/update', 'post', {
+    onSuccess: () => onMutationSuccess('更新成功！'),
+    onError: err => message.error(err.message || '更新失败'),
+  });
+
+  const deleteMutation = useApiMutation<any, { id: string }>(
+    '/menus/delete',
+    'post',
     {
-      enabled: true,
+      onSuccess: () => onMutationSuccess('删除成功！'),
+      onError: err => message.error(err.message || '删除失败'),
     }
   );
 
-  // 表格列定义
+  const batchDeleteMutation = useApiMutation<any, { ids: Key[] }>(
+    '/menus/batch-delete',
+    'post',
+    {
+      onSuccess: () => onMutationSuccess('批量删除成功！'),
+      onError: err => message.error(err.message || '批量删除失败'),
+    }
+  );
+
+  // ========== 事件处理函数 ==========
+
+  const showModal = (record?: MenuItem) => {
+    setEditingRecord(record || null);
+    setIsModalOpen(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setEditingRecord(null);
+  };
+
+  // 表单提交处理
+  const handleFormSubmit = async (values: any) => {
+    const payload = { ...values };
+    try {
+      if (editingRecord) {
+        // 更新操作
+        await updateMutation.mutateAsync({ ...payload, id: editingRecord.id });
+      } else {
+        // 新建操作
+        await createMutation.mutateAsync(payload);
+      }
+    } catch (e) {
+      // 错误已在 mutation 的 onError 中处理
+    }
+  };
+
+  // 删除单项
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate({ id });
+  };
+
+  // 批量删除
+  const handleBatchDelete = () => {
+    batchDeleteMutation.mutate({ ids: selectedRowKeys });
+  };
+
+  // ========== Effects ==========
+
+  // 当编辑记录或弹窗状态变化时，设置表单值
+  useEffect(() => {
+    if (isModalOpen) {
+      if (editingRecord) {
+        form.setFieldsValue(editingRecord);
+      } else {
+        form.resetFields();
+        // 设置新建时的默认值
+        form.setFieldsValue({
+          type: 'MENU',
+          sort: 0,
+          isVisible: true,
+          isActive: true,
+          isCache: false,
+          isAffix: false,
+        });
+      }
+    }
+  }, [isModalOpen, editingRecord, form]);
+
+  // ========== 表格列定义 ==========
   const columns: ProColumns<MenuItem>[] = [
     {
       title: '菜单名称',
       dataIndex: 'name',
       width: 200,
-      fixed: 'left',
       render: (_, record) => (
         <Space>
-          {menuTypeConfig[record.type].icon}
+          <DynamicIcon name={record.icon as IconName} />
           <span>{record.name}</span>
-          {record.badge && (
-            <Badge count={record.badge} style={{ marginLeft: 8 }} />
-          )}
         </Space>
       ),
-    },
-    {
-      title: '菜单标题',
-      dataIndex: 'title',
-      width: 150,
-      ellipsis: true,
-    },
-    {
-      title: '菜单类型',
-      dataIndex: 'type',
-      width: 100,
-      valueType: 'select',
-      valueEnum: {
-        DIRECTORY: { text: '目录', status: 'Processing' },
-        MENU: { text: '菜单', status: 'Success' },
-        BUTTON: { text: '按钮', status: 'Warning' },
-        EXTERNAL: { text: '外链', status: 'Default' },
-      },
-      render: (_, record) => (
-        <Tag color={menuTypeConfig[record.type].color}>
-          {menuTypeConfig[record.type].label}
-        </Tag>
-      ),
-    },
-    {
-      title: '菜单编码',
-      dataIndex: 'code',
-      width: 120,
-      copyable: true,
-      ellipsis: true,
     },
     {
       title: '路由路径',
       dataIndex: 'path',
       width: 180,
-      ellipsis: true,
       copyable: true,
-      render: (_, record) => {
-        if (record.type === 'EXTERNAL') {
-          return (
-            <a href={record.path} target="_blank" rel="noopener noreferrer">
-              {record.path} <LinkOutlined />
-            </a>
-          );
-        }
-        return record.path || '-';
-      },
-    },
-    {
-      title: '组件路径',
-      dataIndex: 'component',
-      width: 200,
-      ellipsis: true,
-      copyable: true,
-      hideInSearch: true,
-    },
-    {
-      title: '权限标识',
-      dataIndex: 'permission',
-      width: 150,
-      ellipsis: true,
-      render: text => (text ? <Tag color="blue">{text}</Tag> : '-'),
     },
     {
       title: '排序',
       dataIndex: 'sort',
       width: 80,
-      hideInSearch: true,
-      sorter: true,
     },
     {
       title: '状态',
-      width: 280,
-      hideInSearch: true,
+      width: 120,
       render: (_, record) => (
-        <Space size={0}>
-          <Tooltip title={record.isVisible ? '显示' : '隐藏'}>
-            <Tag color={record.isVisible ? 'success' : 'default'}>
-              {record.isVisible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-            </Tag>
-          </Tooltip>
-          <Tooltip title={record.isActive ? '启用' : '禁用'}>
-            <Tag color={record.isActive ? 'success' : 'error'}>
-              {record.isActive ? '启用' : '禁用'}
-            </Tag>
-          </Tooltip>
-          <Tooltip title={record.isCache ? '缓存' : '不缓存'}>
-            <Tag color={record.isCache ? 'processing' : 'default'}>缓存</Tag>
-          </Tooltip>
-          <Tooltip title={record.isAffix ? '固定' : '不固定'}>
-            <Tag color={record.isAffix ? 'warning' : 'default'}>固定</Tag>
-          </Tooltip>
+        <Space>
+          <Tag color={record.isVisible ? 'success' : 'default'}>
+            {record.isVisible ? '显示' : '隐藏'}
+          </Tag>
+          <Tag color={record.isActive ? 'success' : 'error'}>
+            {record.isActive ? '启用' : '禁用'}
+          </Tag>
         </Space>
       ),
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      valueType: 'dateTime',
-      width: 160,
-      hideInSearch: true,
-      sorter: true,
     },
     {
       title: '操作',
@@ -276,246 +212,62 @@ export default function MenuManagementPage() {
       width: 180,
       fixed: 'right',
       render: (_, record) => [
-        <Button
-          key="edit"
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => {
-            setCurrentRow(record);
-            setUpdateModalOpen(true);
-          }}
-        >
+        <a key="edit" onClick={() => showModal(record)}>
+          <EditOutlined style={{ marginRight: 8 }} />
           编辑
-        </Button>,
+        </a>,
         <Popconfirm
           key="delete"
-          title="确定要删除此菜单吗？"
-          description={
-            record.children && record.children.length > 0
-              ? '删除后，子菜单也会被删除！'
-              : undefined
-          }
-          // onConfirm={() => deleteMutation.mutate(record.id)}
-          okText="确定"
-          cancelText="取消"
+          title="确定删除吗？"
+          description="删除后，其子菜单也会被一并删除！"
+          onConfirm={() => handleDelete(record.id)}
         >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+          <a key="delete-link" style={{ color: 'red' }}>
+            <DeleteOutlined style={{ marginRight: 8 }} />
             删除
-          </Button>
+          </a>
         </Popconfirm>,
-        <Dropdown
-          key="more"
-          menu={{
-            items: [
-              {
-                key: 'addChild',
-                label: '添加子菜单',
-                icon: <PlusOutlined />,
-                onClick: () => {
-                  setCurrentRow({
-                    ...record,
-                    parentId: record.id,
-                    id: '',
-                  } as any);
-                  setCreateModalOpen(true);
-                },
-              },
-              {
-                key: 'copy',
-                label: '复制菜单',
-                icon: <EditOutlined />,
-                onClick: () => {
-                  const newData = { ...record };
-                  delete (newData as any).id;
-                  delete newData.children;
-                  newData.name = `${record.name}-副本`;
-                  newData.code = `${record.code}_copy`;
-                },
-              },
-            ],
-          }}
-        >
-          <Button type="link" size="small" icon={<MoreVertical size={14} />} />
-        </Dropdown>,
       ],
     },
   ];
 
-  // 表单基础字段
-  const baseFormItems = (
-    <>
-      <ProFormTreeSelect
-        name="parentId"
-        label="上级菜单"
-        placeholder="请选择上级菜单"
-        allowClear
-        fieldProps={{
-          treeData: Array.isArray(menuTreeData?.data) ? menuTreeData.data : [],
-          fieldNames: {
-            label: 'title',
-            value: 'id',
-          },
-          showSearch: true,
-          treeNodeFilterProp: 'title',
-        }}
-      />
-      <ProFormText
-        name="name"
-        label="菜单名称"
-        placeholder="请输入菜单名称"
-        rules={[{ required: true, message: '请输入菜单名称' }]}
-      />
-      <ProFormText
-        name="title"
-        label="菜单标题"
-        placeholder="请输入菜单标题（支持i18n）"
-        rules={[{ required: true, message: '请输入菜单标题' }]}
-      />
-      <ProFormText
-        name="code"
-        label="菜单编码"
-        placeholder="请输入菜单编码"
-        rules={[
-          { required: true, message: '请输入菜单编码' },
-          {
-            pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
-            message: '只能包含字母、数字和下划线，且以字母开头',
-          },
-        ]}
-      />
-      <ProFormRadio.Group
-        name="type"
-        label="菜单类型"
-        radioType="button"
-        rules={[{ required: true, message: '请选择菜单类型' }]}
-        options={[
-          { label: '目录', value: 'DIRECTORY' },
-          { label: '菜单', value: 'MENU' },
-          { label: '按钮', value: 'BUTTON' },
-          { label: '外链', value: 'EXTERNAL' },
-        ]}
-      />
-      <ProFormText
-        name="path"
-        label="路由路径"
-        placeholder="请输入路由路径"
-        rules={[{ required: true, message: '请输入路由路径' }]}
-      />
-      <ProFormText
-        name="component"
-        label="组件路径"
-        placeholder="请输入组件路径，如：@/views/system/menu/index"
-      />
-      <ProFormText
-        name="redirect"
-        label="重定向路径"
-        placeholder="请输入重定向路径"
-      />
-      <IconSelector />
-      <ProFormText name="badge" label="徽标" placeholder="请输入徽标内容" />
-      <ProFormText
-        name="permission"
-        label="权限标识"
-        placeholder="请输入权限标识，如：system:menu:list"
-      />
-      <ProFormDigit
-        name="sort"
-        label="排序"
-        placeholder="请输入排序号"
-        fieldProps={{ min: 0 }}
-        initialValue={0}
-      />
-      <ProFormSwitch name="isVisible" label="是否显示" initialValue={true} />
-      <ProFormSwitch name="isActive" label="是否启用" initialValue={true} />
-      <ProFormSwitch name="isCache" label="是否缓存" initialValue={false} />
-      <ProFormSwitch name="isAffix" label="是否固定" initialValue={false} />
-    </>
-  );
-
   return (
-    <ProCard>
-      <Alert
-        message="菜单管理说明"
-        description="支持多级菜单配置，可通过拖拽调整菜单顺序和层级关系。目录类型只用于分组，菜单类型对应实际页面，按钮类型用于页面内权限控制，外链类型用于跳转外部链接。"
-        type="info"
-        showIcon
-        closable
-        style={{ marginBottom: 16 }}
-      />
-
+    <>
       <ProTable<MenuItem>
         columns={columns}
         actionRef={actionRef}
-        request={async (params, sort, filter) => {
-          const { data, code } = await httpClient.post('/menus/list', {
-            ...params,
-            ...filter,
-            sort,
-          });
-
-          const list = data?.list || [];
-          setTableData(list); // 保存数据到状态
-
+        request={async params => {
+          const { data, code } = await httpClient.post('/menus/list', params);
           return {
-            data: list,
+            data: data?.list || [],
             total: data?.total || 0,
             success: code === 200,
           };
         }}
         rowKey="id"
-        pagination={{
-          pageSize: 20,
-          showSizeChanger: true,
-        }}
-        search={{
-          labelWidth: 'auto',
-          span: 6,
-        }}
-        scroll={{ x: 1800 }}
-        expandable={{
-          expandedRowKeys,
-          onExpandedRowsChange: keys => setExpandedRowKeys(keys as string[]),
-        }}
+        pagination={{ pageSize: 20 }}
+        search={{ labelWidth: 'auto' }}
+        scroll={{ x: 1300 }}
+        expandable={{}}
         rowSelection={{
-          selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
-          preserveSelectedRowKeys: true,
           selectedRowKeys,
-          onChange: keys => setSelectedRowKeys(keys as string[]),
+          onChange: setSelectedRowKeys,
         }}
-        options={{
-          density: true,
-          fullScreen: true,
-          reload: true,
-          setting: true,
-        }}
-        dateFormatter="string"
         headerTitle="菜单列表"
         toolBarRender={() => [
           <Button
-            key="expand"
-            onClick={() => {
-              const allKeys = tableData.map(item => item.id);
-              setExpandedRowKeys(expandedRowKeys.length === 0 ? allKeys : []);
-            }}
-          >
-            {expandedRowKeys.length === 0 ? '展开全部' : '收起全部'}
-          </Button>,
-          <Button
             type="primary"
-            key="primary"
+            key="create"
             icon={<PlusOutlined />}
-            onClick={() => {
-              setCurrentRow(undefined);
-              setCreateModalOpen(true);
-            }}
+            onClick={() => showModal()}
           >
             新建菜单
           </Button>,
           selectedRowKeys.length > 0 && (
             <Popconfirm
-              title={`确定要删除选中的 ${selectedRowKeys.length} 个菜单吗？`}
-              // onConfirm={() => batchDeleteMutation.mutate(selectedRowKeys)}
+              key="batch-delete"
+              title="确定删除选中的菜单吗？"
+              onConfirm={handleBatchDelete}
             >
               <Button danger>批量删除</Button>
             </Popconfirm>
@@ -523,44 +275,73 @@ export default function MenuManagementPage() {
         ]}
       />
 
-      {/* 创建菜单弹窗 */}
-      <ModalForm
-        title="新建菜单"
-        open={createModalOpen}
-        onOpenChange={setCreateModalOpen}
-        onFinish={async values => {
-          // await createMutation.mutateAsync(values);
-          return true;
-        }}
-        initialValues={currentRow}
-        layout="horizontal"
-        labelCol={{ span: 6 }}
-        wrapperCol={{ span: 16 }}
-        width={600}
+      {/* 新建/编辑弹窗 (使用标准 Antd Modal 和 Form) */}
+      <Modal
+        title={editingRecord ? '编辑菜单' : '新建菜单'}
+        open={isModalOpen}
+        onCancel={handleCancel}
+        onOk={() => form.submit()}
+        confirmLoading={createMutation.isPending || updateMutation.isPending}
+        destroyOnHidden // 关闭时销毁内部组件，避免数据缓存问题
+        width={680}
       >
-        {baseFormItems}
-      </ModalForm>
-
-      {/* 编辑菜单弹窗 */}
-      <ModalForm
-        title="编辑菜单"
-        open={updateModalOpen}
-        onOpenChange={setUpdateModalOpen}
-        onFinish={async values => {
-          // await updateMutation.mutateAsync({
-          //   ...values,
-          //   id: currentRow?.id,
-          // });
-          return true;
-        }}
-        // initialValues={currentRow}
-        layout="horizontal"
-        labelCol={{ span: 6 }}
-        wrapperCol={{ span: 16 }}
-        width={600}
-      >
-        {baseFormItems}
-      </ModalForm>
-    </ProCard>
+        <Form
+          form={form}
+          layout="horizontal"
+          labelCol={{ span: 5 }}
+          wrapperCol={{ span: 18 }}
+          onFinish={handleFormSubmit}
+          style={{ paddingTop: 24 }}
+        >
+          <Form.Item name="parentId" label="上级菜单">
+            <TreeSelect
+              showSearch
+              style={{ width: '100%' }}
+              placeholder="请选择上级菜单 (不选则为顶级)"
+              allowClear
+              treeDefaultExpandAll
+              treeNodeFilterProp="title"
+              treeData={menuTreeData?.data}
+              loading={isTreeLoading}
+              fieldNames={{ label: 'title', value: 'id' }}
+            />
+          </Form.Item>
+          <Form.Item
+            name="name"
+            label="菜单名称"
+            rules={[{ required: true, message: '请输入菜单名称' }]}
+          >
+            <Input placeholder="例如：用户管理" />
+          </Form.Item>
+          <Form.Item
+            name="path"
+            label="路由路径"
+            rules={[{ required: true, message: '请输入路由路径' }]}
+          >
+            <Input placeholder="例如：/system/user" />
+          </Form.Item>
+          <Form.Item name="icon" label="菜单图标">
+            <Input placeholder="请输入图标名称,如:user" />
+          </Form.Item>
+          <Form.Item
+            name="sort"
+            label="排序号"
+            rules={[{ required: true, message: '请输入排序号' }]}
+          >
+            <InputNumber min={0} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="状态">
+            <Space>
+              <Form.Item name="isVisible" valuePropName="checked" noStyle>
+                <Switch checkedChildren="显示" unCheckedChildren="隐藏" />
+              </Form.Item>
+              <Form.Item name="isActive" valuePropName="checked" noStyle>
+                <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+              </Form.Item>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   );
 }

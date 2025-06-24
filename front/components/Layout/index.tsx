@@ -56,12 +56,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         name: menu.title || menu.name,
         component: menu.component,
         hideInMenu: !menu.isVisible,
-        redirect: menu.redirect,
+        icon: menu.icon,
         ...menu.meta,
       };
-      if (menu.icon) {
-        item.icon = <DynamicIcon name={menu.icon as IconName} />;
-      }
       // 递归处理子菜单
       if (menu.children && menu.children.length > 0) {
         item.routes = transformMenuData(menu.children);
@@ -106,12 +103,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         title="Yinlerens"
         logo="https://docs.sentry.io/_next/static/media/sentry-logo-dark.fc8e1eeb.svg"
         location={{ pathname }}
+        route={{
+          path: '/',
+          routes: menuData,
+        }}
         menu={{
-          request: async () => menuData,
           loading: isLoading,
         }}
-        menuItemRender={(item, dom) => <Link href={item.path!}>{dom}</Link>}
-        subMenuItemRender={(item, dom) => dom}
+        menuItemRender={(item, dom) => {
+          return (
+            <Link href={item.path!} className="flex items-center gap-2">
+              <DynamicIcon name={item.icon as IconName} />
+              {item.name}
+            </Link>
+          );
+        }}
+        subMenuItemRender={(item, dom) => {
+          return (
+            <div className="flex items-center gap-2">
+              <DynamicIcon name={item.icon as IconName} />
+              {item.name}
+            </div>
+          );
+        }}
         onMenuHeaderClick={() => router.push('/dashboard')}
         avatarProps={{
           src: user?.avatar || undefined,
