@@ -1,5 +1,4 @@
 import { SignJWT, jwtVerify, JWTPayload } from 'jose';
-import crypto from 'crypto';
 
 // 定义更灵活的 payload 类型
 type TokenPayload = JWTPayload & Record<string, any>;
@@ -25,7 +24,9 @@ export function generateVerificationCode(): string {
  * @returns 生成的token字符串
  */
 export function generateToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(32).padStart(2, '0')).join('');
 }
 
 /**
