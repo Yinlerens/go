@@ -301,7 +301,7 @@ export default function MenuManagementPage() {
               allowClear
               treeDefaultExpandAll
               treeNodeFilterProp="title"
-              treeData={menuTreeData?.data}
+              treeData={(menuTreeData?.data || []) as any[]}
               loading={isTreeLoading}
               fieldNames={{ label: 'title', value: 'id' }}
             />

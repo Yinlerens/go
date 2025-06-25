@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { ApiResponse } from '@/types/api';
-
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const roleId = params.id;
+    const { id } = await params;
 
     // 获取角色的菜单权限
     const role = await prisma.role.findUnique({
-      where: { id: roleId },
+      where: { id },
       include: {
         roleMenus: {
           include: {

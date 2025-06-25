@@ -5,14 +5,13 @@ import { z } from 'zod';
 
 const assignRolesSchema = z.object({
   roleIds: z.array(z.string()),
+  userId: z.string(),
 });
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const userId = params.id;
     const body = await request.json();
     const validationResult = assignRolesSchema.safeParse(body);
 
@@ -27,7 +26,7 @@ export async function POST(
       );
     }
 
-    const { roleIds } = validationResult.data;
+    const { roleIds, userId } = validationResult.data;
 
     // 检查用户是否存在
     const user = await prisma.user.findUnique({
