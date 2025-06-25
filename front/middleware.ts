@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from './utils';
 
-
 // 需要保护的 API 路径
 const PROTECTED_PATHS = [
   '/api/menus',
@@ -9,7 +8,6 @@ const PROTECTED_PATHS = [
   '/api/roles',
   '/api/upload',
 ];
-
 
 // 检查路径是否需要保护
 function isProtectedPath(pathname: string): boolean {

@@ -1,5 +1,4 @@
 'use client';
-import "@ant-design/v5-patch-for-react-19";
 import { motion } from 'framer-motion';
 import { Logo } from '@/components/branding/Logo';
 import { AnimatedBackground } from '@/components/animated-background';

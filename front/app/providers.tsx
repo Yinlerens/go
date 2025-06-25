@@ -1,14 +1,14 @@
-"use client";
-
-import { ConfigProvider } from "antd";
-import zhCN from "antd/locale/zh_CN";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Toaster } from "sonner";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { queryClient } from "@/lib/query-client";
-import { ReactNode } from "react";
+'use client';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Toaster } from 'sonner';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { queryClient } from '@/lib/query-client';
+import { ReactNode } from 'react';
+import '@ant-design/v5-patch-for-react-19';
 
 interface QueryProviderProps {
   children: ReactNode;
@@ -20,8 +20,8 @@ export function QueryProvider({ children }: QueryProviderProps) {
       theme={{
         cssVar: true,
         token: {
-          colorPrimary: "#1772b4"
-        }
+          colorPrimary: '#1772b4',
+        },
       }}
     >
       <QueryClientProvider client={queryClient}>

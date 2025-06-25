@@ -1,8 +1,9 @@
 // components/UniversalUpload.tsx
-import React, { useState } from "react";
-import { Upload, message, UploadProps } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
-import type { UploadFile, RcFile } from "antd/es/upload";
+import React, { useState } from 'react';
+import { Upload, UploadProps } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import type { UploadFile, RcFile } from 'antd/es/upload';
+import { toast } from 'sonner';
 
 const { Dragger } = Upload;
 
@@ -23,7 +24,7 @@ const UniversalUpload: React.FC<UniversalUploadProps> = ({
   maxSize,
   beforeUpload,
   disabled = false,
-  multiple = false
+  multiple = false,
 }) => {
   const [uploading, setUploading] = useState(false);
 
@@ -39,7 +40,7 @@ const UniversalUpload: React.FC<UniversalUploadProps> = ({
 
     // 文件大小检查
     if (maxSize && file.size > maxSize * 1024 * 1024) {
-      message.error(`文件大小不能超过 ${maxSize}MB`);
+      toast.error(`文件大小不能超过 ${maxSize}MB`);
       return false;
     }
 
@@ -56,11 +57,11 @@ const UniversalUpload: React.FC<UniversalUploadProps> = ({
         uploadUrl = await uploadToTencentCOS(file);
       }
 
-      message.success(`上传成功: ${file.name}`);
+      toast.success(`上传成功: ${file.name}`);
       onUploadSuccess?.(uploadUrl, file);
     } catch (error) {
       const err = error as Error;
-      message.error(`上传失败: ${err.message}`);
+      toast.error(`上传失败: ${err.message}`);
       onUploadError?.(err, file);
     } finally {
       setUploading(false);
@@ -72,16 +73,16 @@ const UniversalUpload: React.FC<UniversalUploadProps> = ({
   // Vercel Blob 上传
   const uploadToVercelBlob = async (file: RcFile): Promise<string> => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
-    const response = await fetch("/api/upload/vercel", {
-      method: "POST",
-      body: formData
+    const response = await fetch('/api/upload/vercel', {
+      method: 'POST',
+      body: formData,
     });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(error || "上传失败");
+      throw new Error(error || '上传失败');
     }
 
     const data = await response.json();
@@ -91,16 +92,16 @@ const UniversalUpload: React.FC<UniversalUploadProps> = ({
   // 腾讯云 COS 上传（服务端代理方案，更安全）
   const uploadToTencentCOS = async (file: RcFile): Promise<string> => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
-    const response = await fetch("/api/upload/cos", {
-      method: "POST",
-      body: formData
+    const response = await fetch('/api/upload/cos', {
+      method: 'POST',
+      body: formData,
     });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(error || "上传失败");
+      throw new Error(error || '上传失败');
     }
 
     const data = await response.json();
@@ -108,12 +109,12 @@ const UniversalUpload: React.FC<UniversalUploadProps> = ({
   };
 
   const uploadProps: UploadProps = {
-    name: "file",
+    name: 'file',
     multiple,
     accept,
     showUploadList: false,
     beforeUpload: handleUpload,
-    disabled: disabled || uploading
+    disabled: disabled || uploading,
   };
 
   return (
@@ -123,10 +124,10 @@ const UniversalUpload: React.FC<UniversalUploadProps> = ({
       </p>
       <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
       <p className="ant-upload-hint">
-        {multiple ? "支持多文件上传" : "支持单文件上传"}
+        {multiple ? '支持多文件上传' : '支持单文件上传'}
         {maxSize && `，单个文件最大 ${maxSize}MB`}
       </p>
-      {uploading && <p style={{ color: "#1890ff" }}>上传中...</p>}
+      {uploading && <p style={{ color: '#1890ff' }}>上传中...</p>}
     </Dragger>
   );
 };

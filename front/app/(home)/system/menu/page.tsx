@@ -4,7 +4,6 @@ import {
   Button,
   Space,
   Popconfirm,
-  message,
   Tag,
   Form,
   Modal,
@@ -20,6 +19,7 @@ import { useApiQuery, useApiMutation } from '@/hooks/use-api-query';
 import { httpClient } from '@/lib/http-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { DynamicIcon, IconName } from 'lucide-react/dynamic';
+import { toast } from 'sonner';
 
 // 菜单数据类型
 type MenuType = 'DIRECTORY' | 'MENU' | 'EXTERNAL';
@@ -70,7 +70,7 @@ export default function MenuManagementPage() {
 
   // 通用的 onSuccess 回调，用于刷新所有相关数据
   const onMutationSuccess = (successMessage: string) => {
-    message.success(successMessage);
+    toast.success(successMessage);
     setIsModalOpen(false);
     setEditingRecord(null);
     setSelectedRowKeys([]);
@@ -82,12 +82,12 @@ export default function MenuManagementPage() {
 
   const createMutation = useApiMutation('/menus/create', 'post', {
     onSuccess: () => onMutationSuccess('新建成功！'),
-    onError: err => message.error(err.message || '新建失败'),
+    onError: err => toast.error(err.message || '新建失败'),
   });
 
   const updateMutation = useApiMutation('/menus/update', 'post', {
     onSuccess: () => onMutationSuccess('更新成功！'),
-    onError: err => message.error(err.message || '更新失败'),
+    onError: err => toast.error(err.message || '更新失败'),
   });
 
   const deleteMutation = useApiMutation<any, { id: string }>(
@@ -95,7 +95,7 @@ export default function MenuManagementPage() {
     'post',
     {
       onSuccess: () => onMutationSuccess('删除成功！'),
-      onError: err => message.error(err.message || '删除失败'),
+      onError: err => toast.error(err.message || '删除失败'),
     }
   );
 
@@ -104,7 +104,7 @@ export default function MenuManagementPage() {
     'post',
     {
       onSuccess: () => onMutationSuccess('批量删除成功！'),
-      onError: err => message.error(err.message || '批量删除失败'),
+      onError: err => toast.error(err.message || '批量删除失败'),
     }
   );
 

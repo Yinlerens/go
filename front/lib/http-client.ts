@@ -1,20 +1,20 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from "axios";
-import { ApiResponse, ApiError } from "@/types/api";
-import AuthUtils from "@/store/authStore";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
+import { ApiResponse, ApiError } from '@/types/api';
+import AuthUtils from '@/store/authStore';
 
 const createHttpClient = () => {
   const instance: AxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api",
+    baseURL: '/api',
     timeout: 30000,
     headers: {
-      "Content-Type": "application/json"
-    }
+      'Content-Type': 'application/json',
+    },
   });
 
   const handleUnauthorized = (): void => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("authToken");
-      window.location.href = "/login";
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      window.location.href = '/login';
     }
   };
 
@@ -25,10 +25,10 @@ const createHttpClient = () => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      if (config.method === "get") {
+      if (config.method === 'get') {
         config.params = {
           ...config.params,
-          _t: Date.now()
+          _t: Date.now(),
         };
       }
 
@@ -49,13 +49,13 @@ const createHttpClient = () => {
             handleUnauthorized();
             break;
           case 403:
-            console.error("Access forbidden");
+            console.error('Access forbidden');
             break;
           case 404:
-            console.error("Resource not found");
+            console.error('Resource not found');
             break;
           case 500:
-            console.error("Server error");
+            console.error('Server error');
             break;
         }
       }
@@ -65,7 +65,10 @@ const createHttpClient = () => {
   );
 
   return {
-    get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+    get: async <T = any>(
+      url: string,
+      config?: AxiosRequestConfig
+    ): Promise<ApiResponse<T>> => {
       const response = await instance.get<ApiResponse<T>>(url, config);
       return response.data;
     },
@@ -97,10 +100,13 @@ const createHttpClient = () => {
       return response.data;
     },
 
-    delete: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+    delete: async <T = any>(
+      url: string,
+      config?: AxiosRequestConfig
+    ): Promise<ApiResponse<T>> => {
       const response = await instance.delete<ApiResponse<T>>(url, config);
       return response.data;
-    }
+    },
   };
 };
 
