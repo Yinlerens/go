@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 // 用户信息类型
 export interface User {
@@ -18,12 +18,11 @@ interface AuthState {
   // 状态
   user: User | null;
   accessToken: string;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
-  setAuth: (data: { user: User; accessToken: string; refreshToken: string }) => void;
+  setAuth: (data: { user: User; accessToken: string }) => void;
   setAccessToken: (token: string) => void;
   setUser: (user: User) => void;
   clearAuth: () => void;
@@ -36,8 +35,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       // 初始状态
       user: null,
-      accessToken: "",
-      refreshToken: null,
+      accessToken: '',
       isAuthenticated: false,
       isLoading: false,
 
@@ -46,8 +44,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: data.user,
           accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-          isAuthenticated: true
+          isAuthenticated: true,
         });
       },
 
@@ -62,26 +59,23 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => {
         set({
           user: null,
-          accessToken: "",
-          refreshToken: null,
-          isAuthenticated: false
+          accessToken: '',
+          isAuthenticated: false,
         });
       },
 
       setLoading: loading => {
         set({ isLoading: loading });
-      }
+      },
     }),
     {
-      name: "auth-storage",
+      name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      // 只持久化必要的字段
       partialize: state => ({
         user: state.user,
         accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated
-      })
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
@@ -95,13 +89,13 @@ export class AuthUtils {
   // 检查token是否即将过期（提前5分钟刷新）
   static isTokenExpiringSoon(token: string): boolean {
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
+      const payload = JSON.parse(atob(token.split('.')[1]));
       const exp = payload.exp * 1000; // 转换为毫秒
       const now = Date.now();
       const fiveMinutes = 5 * 60 * 1000; // 5分钟
       return exp - now < fiveMinutes;
     } catch (error) {
-      console.error("解析token失败:", error);
+      console.error('解析token失败:', error);
       return true; // 如果解析失败，认为需要刷新
     }
   }
@@ -109,13 +103,13 @@ export class AuthUtils {
   // 检查token是否已过期
   static isTokenExpired(token: string): boolean {
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
+      const payload = JSON.parse(atob(token.split('.')[1]));
       const exp = payload.exp * 1000; // 转换为毫秒
       const now = Date.now();
 
       return now >= exp;
     } catch (error) {
-      console.error("解析token失败:", error);
+      console.error('解析token失败:', error);
       return true; // 如果解析失败，认为已过期
     }
   }

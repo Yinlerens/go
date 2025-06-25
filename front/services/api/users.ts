@@ -47,7 +47,9 @@ export const userApi = {
 
   // 删除用户
   deleteUser: (id: string) => httpClient.delete<void>(`/users/${id}`),
-
+  //刷新token
+  refreshToken: () => httpClient.post<any>('/auth/refresh'),
+  //获取菜单
   getUserMenus: () => {
     return useApiQuery<any[]>(
       ['user-menus'], // queryKey

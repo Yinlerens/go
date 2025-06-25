@@ -41,13 +41,6 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
-// 菜单类型配置
-const menuTypeConfig: Record<MenuType, { label: string; color: string }> = {
-  DIRECTORY: { label: '目录', color: 'blue' },
-  MENU: { label: '菜单', color: 'green' },
-  EXTERNAL: { label: '外链', color: 'purple' },
-};
-
 export default function MenuManagementPage() {
   const [form] = Form.useForm();
   const actionRef = useRef<ActionType>(null);
@@ -300,10 +293,10 @@ export default function MenuManagementPage() {
               placeholder="请选择上级菜单 (不选则为顶级)"
               allowClear
               treeDefaultExpandAll
-              treeNodeFilterProp="title"
+              treeNodeFilterProp="name"
               treeData={(menuTreeData?.data || []) as any[]}
               loading={isTreeLoading}
-              fieldNames={{ label: 'title', value: 'id' }}
+              fieldNames={{ label: 'name', value: 'id' }}
             />
           </Form.Item>
           <Form.Item

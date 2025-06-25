@@ -37,7 +37,7 @@ export function generateToken(): string {
  */
 export async function generateAccessToken(
   payload: TokenPayload,
-  expiresIn: string = '1h'
+  expiresIn: string = '24h'
 ): Promise<string> {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 

@@ -7,6 +7,7 @@ const PROTECTED_PATHS = [
   '/api/user',
   '/api/roles',
   '/api/upload',
+  '/api/users',
 ];
 
 // 检查路径是否需要保护
@@ -33,7 +34,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Access denied',
-        message: 'No token provided',
+        message: '无token',
+        code: 1001,
       },
       { status: 401 }
     );
@@ -45,8 +47,9 @@ export async function middleware(request: NextRequest) {
   if (!valid) {
     return NextResponse.json(
       {
+        code: 1002,
         error: 'Access denied',
-        message: error || 'Invalid token',
+        message: 'token已过期',
       },
       { status: 401 }
     );
@@ -71,5 +74,6 @@ export const config = {
     '/api/user/:path*',
     '/api/roles/:path*',
     '/api/upload/:path*',
+    '/api/users/:path*',
   ],
 };

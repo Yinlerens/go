@@ -1,4 +1,3 @@
-// /app/api/roles/list/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { ApiResponse } from '@/types/api';
@@ -7,8 +6,10 @@ import { z } from 'zod';
 const listSchema = z.object({
   current: z.number().default(1),
   pageSize: z.number().default(10),
-  name: z.string().optional(),
-  code: z.string().optional(),
+  nickname: z.string().optional(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'BANNED']).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -30,44 +31,58 @@ export async function POST(
       );
     }
 
-    const { current, pageSize, name, code, isActive } = validationResult.data;
+    const { current, pageSize, nickname, email, phone, status, isActive } =
+      validationResult.data;
 
     // 构建查询条件
-    const where: any = {};
+    const where: any = {
+      isDeleted: false,
+    };
 
-    if (name) {
-      where.name = { contains: name };
+    if (nickname) {
+      where.nickname = { contains: nickname };
     }
-    if (code) {
-      where.code = { contains: code };
+    if (email) {
+      where.email = { contains: email };
+    }
+    if (phone) {
+      where.phone = { contains: phone };
+    }
+    if (status) {
+      where.status = status;
     }
     if (isActive !== undefined) {
       where.isActive = isActive;
     }
 
-    // 查询角色列表
-    const [roles, total] = await Promise.all([
-      prisma.role.findMany({
+    // 查询用户列表
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }],
         skip: (current - 1) * pageSize,
         take: pageSize,
         include: {
-          _count: {
-            select: {
-              userRoles: true,
-              roleMenus: true,
+          userRoles: {
+            include: {
+              role: {
+                select: {
+                  id: true,
+                  name: true,
+                  code: true,
+                },
+              },
             },
           },
         },
       }),
-      prisma.role.count({ where }),
+      prisma.user.count({ where }),
     ]);
 
     return NextResponse.json(
       {
         data: {
-          list: roles,
+          list: users,
           total,
         },
         code: 200,
